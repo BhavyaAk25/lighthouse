@@ -1,0 +1,6 @@
+region_id,name,state,store_count,dc_id,pattern_provenance
+R-WEST,West,CA,12,DC-P01,REAL
+R-SCEN,South Central,TX,11,DC-P01,REAL
+R-MWST,Midwest,WI,10,DC-P02,REAL
+R-MATL,Mid-Atlantic,VA,9,DC-P02,GENERATED
+R-SEST,Southeast,GA,8,DC-P01,GENERATED

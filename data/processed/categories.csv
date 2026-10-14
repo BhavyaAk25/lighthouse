@@ -1,0 +1,13 @@
+category_id,name,source_dept,provenance,mix_share,gross_margin_pct,avg_unit_price,ecom_share_base,digital_conversion_base,elasticity,elasticity_source,measured_elasticity,measured_events,event_uplift_pct,halo_ratio,regulated
+C01,Grocery - Pantry,FOODS_3,REAL,0.22,24.0,3.1,0.17,6.2,-0.7,BENCHMARK_ASSUMPTION,0.781,6987.0,0.27,0.5,False
+C02,Grocery - Fresh & Deli,FOODS_1,REAL,0.14,30.0,3.6,0.14,5.4,-0.6,BENCHMARK_ASSUMPTION,0.039,1779.0,-3.49,0.5,False
+C03,Snacks & Beverages,FOODS_2,REAL,0.12,32.0,3.4,0.16,5.9,-1.0,BENCHMARK_ASSUMPTION,0.427,8428.0,-6.37,0.45,True
+C04,Household Essentials,HOUSEHOLD_1,REAL,0.09,28.0,5.4,0.22,4.8,-0.8,BENCHMARK_ASSUMPTION,1.046,2449.0,-0.94,0.4,True
+C05,Home & Kitchen,HOUSEHOLD_2,REAL,0.06,35.0,6.9,0.27,3.9,-1.0,BENCHMARK_ASSUMPTION,1.96,739.0,0.47,0.25,False
+C06,Toys & Hobbies,HOBBIES_1,REAL,0.04,33.0,7.8,0.3,3.6,-1.2,BENCHMARK_ASSUMPTION,0.498,1931.0,-4.05,0.2,True
+C07,Crafts & Seasonal,HOBBIES_2,REAL,0.02,38.0,4.2,0.24,3.1,-0.9,BENCHMARK_ASSUMPTION,1.179,164.0,-7.77,0.2,False
+C08,Health & Wellness (OTC),HOUSEHOLD_1,GENERATED,0.11,30.0,9.4,0.18,5.1,-0.7,BENCHMARK_ASSUMPTION,,,-0.94,0.35,True
+C09,Beauty & Personal Care,HOUSEHOLD_2,GENERATED,0.06,36.0,8.6,0.24,4.4,-0.8,BENCHMARK_ASSUMPTION,,,0.47,0.3,True
+C10,Electronics,HOBBIES_1,GENERATED,0.06,18.0,46.0,0.38,2.6,-1.4,BENCHMARK_ASSUMPTION,,,-4.05,0.15,False
+C11,Apparel,HOBBIES_2,GENERATED,0.05,40.0,14.5,0.29,3.3,-1.1,BENCHMARK_ASSUMPTION,,,-7.77,0.25,False
+C12,Baby & Kids,FOODS_2,GENERATED,0.03,27.0,12.0,0.26,4.0,-0.7,BENCHMARK_ASSUMPTION,,,-6.37,0.45,True

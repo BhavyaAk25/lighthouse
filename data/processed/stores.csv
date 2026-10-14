@@ -1,0 +1,51 @@
+store_id,name,city,region_id,region,state,dc_id,m5_source_store,wm45_source_store,relative_size,format,pattern_provenance,annual_sales_target
+WMT-P001,Pilot Supercenter #001,Fresno,R-WEST,West,CA,DC-P01,CA_1,39,1.3856,Supercenter,REAL,135004810.0
+WMT-P002,Pilot Supercenter #002,Bakersfield,R-WEST,West,CA,DC-P01,CA_2,37,0.4956,Supercenter,REAL,48290876.0
+WMT-P003,Pilot Supercenter #003,Riverside,R-WEST,West,CA,DC-P01,CA_3,33,0.2482,Supercenter,REAL,24183738.0
+WMT-P004,Pilot Supercenter #004,Stockton,R-WEST,West,CA,DC-P01,CA_4,32,1.1142,Supercenter,REAL,108565363.0
+WMT-P005,Pilot Supercenter #005,Modesto,R-WEST,West,CA,DC-P01,CA_1,34,0.9234,Supercenter,REAL,89972447.0
+WMT-P006,Pilot Supercenter #006,Ontario,R-WEST,West,CA,DC-P01,CA_2,20,2.0131,Supercenter,REAL,196148595.0
+WMT-P007,Pilot Supercenter #007,Visalia,R-WEST,West,CA,DC-P01,CA_3,30,0.4189,Supercenter,REAL,40815922.0
+WMT-P008,Pilot Supercenter #008,Chico,R-WEST,West,CA,DC-P01,CA_4,21,0.7222,Supercenter,REAL,70362725.0
+WMT-P009,Pilot Supercenter #009,Redding,R-WEST,West,CA,DC-P01,CA_1,12,0.9637,Supercenter,REAL,93901609.0
+WMT-P010,Pilot Supercenter #010,Merced,R-WEST,West,CA,DC-P01,CA_2,23,1.3275,Supercenter,REAL,129346185.0
+WMT-P011,Pilot Supercenter #011,Lodi,R-WEST,West,CA,DC-P01,CA_3,4,2.0007,Supercenter,REAL,194942124.0
+WMT-P012,Pilot Supercenter #012,Temecula,R-WEST,West,CA,DC-P01,CA_4,45,0.7507,Supercenter,REAL,73146483.0
+WMT-P013,Pilot Supercenter #013,San Antonio,R-SCEN,South Central,TX,DC-P01,TX_1,28,1.2642,Supercenter,REAL,123172120.0
+WMT-P014,Pilot Supercenter #014,Waco,R-SCEN,South Central,TX,DC-P01,TX_2,2,1.8394,Supercenter,REAL,179217899.0
+WMT-P015,Pilot Supercenter #015,Killeen,R-SCEN,South Central,TX,DC-P01,TX_3,1,1.4855,Supercenter,REAL,144738945.0
+WMT-P016,Pilot Supercenter #016,Tyler,R-SCEN,South Central,TX,DC-P01,TX_1,40,0.9209,Supercenter,REAL,89725500.0
+WMT-P017,Pilot Supercenter #017,Abilene,R-SCEN,South Central,TX,DC-P01,TX_2,44,0.2892,Supercenter,REAL,28174985.0
+WMT-P018,Pilot Supercenter #018,Round Rock,R-SCEN,South Central,TX,DC-P01,TX_3,26,0.9579,Supercenter,REAL,93334871.0
+WMT-P019,Pilot Supercenter #019,Temple,R-SCEN,South Central,TX,DC-P01,TX_1,19,1.3802,Supercenter,REAL,134477222.0
+WMT-P020,Pilot Supercenter #020,McAllen,R-SCEN,South Central,TX,DC-P01,TX_2,35,0.8785,Supercenter,REAL,85593179.0
+WMT-P021,Pilot Supercenter #021,Laredo,R-SCEN,South Central,TX,DC-P01,TX_3,14,1.9303,Supercenter,REAL,188080099.0
+WMT-P022,Pilot Supercenter #022,Bryan,R-SCEN,South Central,TX,DC-P01,TX_1,18,1.0361,Supercenter,REAL,100948109.0
+WMT-P023,Pilot Supercenter #023,Midland,R-SCEN,South Central,TX,DC-P01,TX_2,6,1.4945,Supercenter,REAL,145619682.0
+WMT-P024,Pilot Supercenter #024,Madison,R-MWST,Midwest,WI,DC-P02,WI_1,16,0.496,Supercenter,REAL,48323210.0
+WMT-P025,Pilot Supercenter #025,Green Bay,R-MWST,Midwest,WI,DC-P02,WI_2,36,0.3568,Supercenter,REAL,34760477.0
+WMT-P026,Pilot Supercenter #026,Appleton,R-MWST,Midwest,WI,DC-P02,WI_3,7,0.545,Supercenter,REAL,53103863.0
+WMT-P027,Pilot Supercenter #027,Eau Claire,R-MWST,Midwest,WI,DC-P02,WI_1,43,0.6049,Supercenter,REAL,58939658.0
+WMT-P028,Pilot Supercenter #028,Oshkosh,R-MWST,Midwest,WI,DC-P02,WI_2,8,0.868,Supercenter,REAL,84571760.0
+WMT-P029,Pilot Supercenter #029,Janesville,R-MWST,Midwest,WI,DC-P02,WI_3,17,0.8535,Supercenter,REAL,83160155.0
+WMT-P030,Pilot Supercenter #030,La Crosse,R-MWST,Midwest,WI,DC-P02,WI_1,41,1.2112,Supercenter,REAL,118016677.0
+WMT-P031,Pilot Supercenter #031,Wausau,R-MWST,Midwest,WI,DC-P02,WI_2,13,1.9137,Supercenter,REAL,186464687.0
+WMT-P032,Pilot Supercenter #032,Kenosha,R-MWST,Midwest,WI,DC-P02,WI_3,38,0.3684,Supercenter,REAL,35897686.0
+WMT-P033,Pilot Supercenter #033,Sheboygan,R-MWST,Midwest,WI,DC-P02,WI_1,11,1.2955,Supercenter,REAL,126230282.0
+WMT-P034,Pilot Supercenter #034,Richmond,R-MATL,Mid-Atlantic,VA,DC-P02,WI_1,3,0.3846,Supercenter,GENERATED,37477239.0
+WMT-P035,Pilot Supercenter #035,Roanoke,R-MATL,Mid-Atlantic,VA,DC-P02,TX_2,9,0.5196,Supercenter,GENERATED,50624943.0
+WMT-P036,Pilot Supercenter #036,Lynchburg,R-MATL,Mid-Atlantic,VA,DC-P02,CA_2,10,1.8142,Supercenter,GENERATED,176767828.0
+WMT-P037,Pilot Supercenter #037,Fredericksburg,R-MATL,Mid-Atlantic,VA,DC-P02,WI_1,22,0.9824,Supercenter,GENERATED,95716301.0
+WMT-P038,Pilot Supercenter #038,Harrisonburg,R-MATL,Mid-Atlantic,VA,DC-P02,TX_2,24,1.2959,Supercenter,GENERATED,126264926.0
+WMT-P039,Pilot Supercenter #039,Winchester,R-MATL,Mid-Atlantic,VA,DC-P02,CA_2,5,0.3037,Supercenter,GENERATED,29595414.0
+WMT-P040,Pilot Supercenter #040,Danville,R-MATL,Mid-Atlantic,VA,DC-P02,WI_1,29,0.5153,Supercenter,GENERATED,50203445.0
+WMT-P041,Pilot Supercenter #041,Chesapeake,R-MATL,Mid-Atlantic,VA,DC-P02,TX_2,27,1.6956,Supercenter,GENERATED,165208514.0
+WMT-P042,Pilot Supercenter #042,Charlottesville,R-MATL,Mid-Atlantic,VA,DC-P02,CA_2,31,1.3333,Supercenter,GENERATED,129908009.0
+WMT-P043,Pilot Supercenter #043,Macon,R-SEST,Southeast,GA,DC-P01,TX_1,25,0.675,Supercenter,GENERATED,65770251.0
+WMT-P044,Pilot Supercenter #044,Augusta,R-SEST,Southeast,GA,DC-P01,TX_3,15,0.5954,Supercenter,GENERATED,58007880.0
+WMT-P045,Pilot Supercenter #045,Savannah,R-SEST,Southeast,GA,DC-P01,CA_3,42,0.5314,Supercenter,GENERATED,51781104.0
+WMT-P046,Pilot Supercenter #046,Athens,R-SEST,Southeast,GA,DC-P01,TX_1,39,1.4785,Supercenter,GENERATED,144059872.0
+WMT-P047,Pilot Supercenter #047,Columbus,R-SEST,Southeast,GA,DC-P01,TX_3,37,0.5155,Supercenter,GENERATED,50225016.0
+WMT-P048,Pilot Supercenter #048,Valdosta,R-SEST,Southeast,GA,DC-P01,CA_3,33,0.2675,Supercenter,GENERATED,26066441.0
+WMT-P049,Pilot Supercenter #049,Albany,R-SEST,Southeast,GA,DC-P01,TX_1,32,1.0675,Supercenter,GENERATED,104010495.0
+WMT-P050,Pilot Supercenter #050,Dalton,R-SEST,Southeast,GA,DC-P01,TX_3,34,0.9348,Supercenter,GENERATED,91080377.0

@@ -1,0 +1,182 @@
+{
+  "built_at": "2026-10-14T19:03:59",
+  "seed": 4210,
+  "pilot_window": [
+    "2025-10-12",
+    "2026-10-11"
+  ],
+  "pilot_clock": "2026-10-12",
+  "source_window": [
+    "2014-10-12",
+    "2015-10-11"
+  ],
+  "shift_days": 4018,
+  "sources": [
+    {
+      "name": "M5 Forecasting - Accuracy (Walmart)",
+      "url": "https://www.kaggle.com/competitions/m5-forecasting-accuracy",
+      "provenance": "REAL",
+      "used_for": "Daily demand shape, seasonality, events, prices, price elasticity, promo detection",
+      "rows_read": 22227210,
+      "price_rows": 3012268
+    },
+    {
+      "name": "Walmart 45-store weekly sales",
+      "url": "https://www.kaggle.com/datasets/yasserh/walmart-dataset",
+      "provenance": "REAL",
+      "used_for": "Relative store size distribution for the 50 pilot stores",
+      "rows_read": 6435
+    },
+    {
+      "name": "Walmart Inc. FY2026 Form 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000055/wmt-20260131.htm",
+      "provenance": "PUBLIC",
+      "used_for": "Average sales per store level calibration ($4.8B for 50 stores) and eCommerce share"
+    }
+  ],
+  "tables": {
+    "categories": 12,
+    "regions": 5,
+    "stores": 50,
+    "dcs": 2,
+    "sales_daily": 219000,
+    "ops_daily": 217506,
+    "dc_daily": 730,
+    "legal_rules": 250,
+    "decision_cases": 5000
+  },
+  "outages": [
+    {
+      "stores": [
+        "WMT-P047",
+        "WMT-P048",
+        "WMT-P049",
+        "WMT-P050"
+      ],
+      "category": null,
+      "start": "2026-01-12",
+      "end": "2026-01-21",
+      "label": "Store ops feed outage"
+    },
+    {
+      "stores": [
+        "WMT-P047",
+        "WMT-P048",
+        "WMT-P049",
+        "WMT-P050"
+      ],
+      "category": null,
+      "start": "2026-05-11",
+      "end": "2026-05-20",
+      "label": "Store ops feed outage"
+    },
+    {
+      "stores": [
+        "WMT-P047",
+        "WMT-P048",
+        "WMT-P049",
+        "WMT-P050"
+      ],
+      "category": null,
+      "start": "2026-08-17",
+      "end": "2026-08-26",
+      "label": "Store ops feed outage"
+    },
+    {
+      "stores": [
+        "WMT-P034",
+        "WMT-P035",
+        "WMT-P036",
+        "WMT-P037",
+        "WMT-P038",
+        "WMT-P039",
+        "WMT-P040",
+        "WMT-P041",
+        "WMT-P042"
+      ],
+      "category": "C10",
+      "start": "2026-10-06",
+      "end": "2026-10-11",
+      "label": "Electronics inventory feed outage"
+    }
+  ],
+  "elasticity": [
+    {
+      "dept": "FOODS_1",
+      "elasticity_raw": 0.0387,
+      "iqr": 9.2005,
+      "n_events": 1779,
+      "median_depth_pct": 11.1359,
+      "median_unit_uplift_pct": -0.4712,
+      "elasticity": -0.6,
+      "event_uplift": -0.0349,
+      "event_days": 57
+    },
+    {
+      "dept": "FOODS_2",
+      "elasticity_raw": 0.4266,
+      "iqr": 8.2307,
+      "n_events": 8428,
+      "median_depth_pct": 11.0,
+      "median_unit_uplift_pct": -5.3964,
+      "elasticity": -0.6,
+      "event_uplift": -0.0637,
+      "event_days": 57
+    },
+    {
+      "dept": "FOODS_3",
+      "elasticity_raw": 0.7813,
+      "iqr": 7.3392,
+      "n_events": 6987,
+      "median_depth_pct": 16.1074,
+      "median_unit_uplift_pct": -14.0915,
+      "elasticity": -0.6,
+      "event_uplift": 0.0027,
+      "event_days": 57
+    },
+    {
+      "dept": "HOBBIES_1",
+      "elasticity_raw": 0.4985,
+      "iqr": 10.056,
+      "n_events": 1931,
+      "median_depth_pct": 7.0064,
+      "median_unit_uplift_pct": -4.0881,
+      "elasticity": -0.6,
+      "event_uplift": -0.0405,
+      "event_days": 57
+    },
+    {
+      "dept": "HOBBIES_2",
+      "elasticity_raw": 1.1793,
+      "iqr": 6.4434,
+      "n_events": 164,
+      "median_depth_pct": 12.2807,
+      "median_unit_uplift_pct": -22.4205,
+      "elasticity": -0.6,
+      "event_uplift": -0.0777,
+      "event_days": 57
+    },
+    {
+      "dept": "HOUSEHOLD_1",
+      "elasticity_raw": 1.0461,
+      "iqr": 10.0594,
+      "n_events": 2449,
+      "median_depth_pct": 7.1066,
+      "median_unit_uplift_pct": -10.519,
+      "elasticity": -0.6,
+      "event_uplift": -0.0094,
+      "event_days": 57
+    },
+    {
+      "dept": "HOUSEHOLD_2",
+      "elasticity_raw": 1.96,
+      "iqr": 11.4257,
+      "n_events": 739,
+      "median_depth_pct": 7.728,
+      "median_unit_uplift_pct": -21.0505,
+      "elasticity": -0.6,
+      "event_uplift": 0.0047,
+      "event_days": 57
+    }
+  ]
+}

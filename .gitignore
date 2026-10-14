@@ -7,3 +7,7 @@ node_modules/
 data/raw/
 .DS_Store
 *.tmp
+
+# next
+next-env.d.ts
+*.tsbuildinfo

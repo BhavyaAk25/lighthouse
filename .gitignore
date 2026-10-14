@@ -1,0 +1,9 @@
+.env*
+!.env.example
+node_modules/
+.next/
+.vercel/
+.venv/
+data/raw/
+.DS_Store
+*.tmp

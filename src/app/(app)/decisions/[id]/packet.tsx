@@ -11,7 +11,12 @@ import { modelLabel } from "./agent-card";
 
 export interface PacketData {
   synthesized_recommendation: Recommendation;
+  /** Lighthouse's recommendation from the AI agents alone, before department sign-off */
+  ai_recommendation?: Recommendation | null;
   lighthouse_confidence: number;
+  ai_confidence?: number | null;
+  /** headline after department sign-off */
+  signed_headline?: string;
   confidence_breakdown: Record<string, number>;
   conflict_severity: string;
   conflicts: Conflict[];
@@ -45,8 +50,11 @@ const BREAKDOWN_LABEL: Record<string, string> = {
   hard_constraint_factor: "Hard-constraint factor",
 };
 
+const REC_TEXT: Record<string, string> = { PROCEED: "Proceed", PROCEED_WITH_CONDITIONS: "Proceed with conditions", HOLD: "Hold", REJECT: "Reject", REVIEW_REQUIRED: "Review required" };
+
 export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: boolean }) {
   const sev = SEVERITY[p.conflict_severity] ?? SEVERITY.NONE;
+  const changed = !!p.ai_recommendation && p.ai_recommendation !== p.synthesized_recommendation;
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="gradient-border shadow-card">
       <div className="rounded-t-[12px] border-b border-line px-6 py-6">
@@ -54,8 +62,14 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
           <div className="flex min-w-0 flex-1 items-start gap-3.5">
             <LogoMark size={34} />
             <div className="min-w-0">
-              <div className="text-[11.5px] tracking-[0.14em] text-brass-dark uppercase">Lighthouse recommends</div>
-              <h2 className="font-display mt-1 text-[22px] leading-tight text-ink">{p.headline}</h2>
+              <div className="text-[11.5px] tracking-[0.14em] text-brass-dark uppercase">{changed ? "Lighthouse recommends, after sign-off" : "Lighthouse recommends"}</div>
+              <h2 className="font-display mt-1 text-[22px] leading-tight text-ink">{changed ? p.signed_headline || p.headline : p.headline}</h2>
+              {changed && (
+                <p className="mt-1 text-[12.5px] text-muted">
+                  The AI agents alone said {REC_TEXT[p.ai_recommendation!]?.toLowerCase()}
+                  {p.ai_confidence ? ` (${Math.round(p.ai_confidence * 100)}%)` : ""}. Department sign-offs changed it.
+                </p>
+              )}
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <RecBadge rec={p.synthesized_recommendation} className="text-[13px]" />
                 <RiskBadge risk={p.risk_level} />

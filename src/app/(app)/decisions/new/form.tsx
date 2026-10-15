@@ -65,8 +65,8 @@ export function NewCaseForm({
       const r = await createCase(f);
       if (!r.ok) toast.error(r.error);
       else {
-        toast.success(`${r.id} created. Run the agents when ready.`);
-        router.push(`/decisions/${r.id}`);
+        toast.success(`${r.id} created. All four agents are starting.`);
+        router.push(`/decisions/${r.id}?submit=1`);
       }
     });
 

@@ -20,9 +20,9 @@ export default async function LoginPage() {
           <h1 className="font-display relative max-w-[520px] text-[46px] leading-[1.02] text-[#F4F1EA]">
             Four agents.
             <br />
-            One decision.
+            Four owners.
             <br />
-            <span className="text-[#D9B97A]">A human decides.</span>
+            <span className="text-[#D9B97A]">One decision.</span>
           </h1>
         </div>
         <div className="text-[12px] leading-relaxed text-[#9FA9B7]">

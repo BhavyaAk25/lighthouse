@@ -1,18 +1,23 @@
 /**
  * The decision journey: who holds a case at each step and where it is now.
+ * Proposed -> agents analyze (automatic) -> four departments sign off in parallel -> executive decides -> sealed.
  * Pure function so it can run on the server or the client.
  */
+import { EXECUTIVE } from "./personas";
+import { DEPT_NAME, laneSummary, type Lane } from "./signoff";
+
 export type StepState = "done" | "current" | "upcoming" | "skipped" | "blocked";
-export type StepKey = "created" | "analyze" | "legal" | "decide" | "record";
+export type StepKey = "created" | "analyze" | "signoff" | "decide" | "record";
 
 export interface JourneyStep {
   key: StepKey;
   label: string;
   who: string;
-  role: string; // persona role or "AI" / "SYSTEM"
+  role: string; // persona role or "AI" / "SYSTEM" / "LEADS"
   state: StepState;
   detail: string;
   at?: string | null;
+  lanes?: Lane[];
 }
 
 export interface JourneyInput {
@@ -22,79 +27,70 @@ export interface JourneyInput {
   created_by: string;
   hasPacket: boolean;
   analyzedAt?: string | null;
-  requiresLegal?: boolean | null;
-  legalBlocked?: boolean;
-  legal?: { reviewer_name: string; disposition: string; created_at: string } | null;
+  lanes: Lane[];
   final?: { decision: string; by: string | null; at: string | null } | null;
 }
 
-const LEGAL = "Priya Raman";
-
 export function buildJourney(i: JourneyInput): JourneyStep[] {
-  const owner = i.created_by;
   const finalD = i.final?.decision ?? null;
   const decided = finalD === "APPROVED" || finalD === "REJECTED";
-  const revising = i.status === "REVISION_REQUESTED" || (i.status === "DRAFT" && i.revision > 1);
+  const draft = i.status === "DRAFT" || i.status === "REVISION_REQUESTED";
+  const sum = laneSummary(i.lanes);
 
-  const created: JourneyStep = { key: "created", label: "Case opened", who: owner, role: "DECISION_OWNER", state: "done", detail: i.revision > 1 ? `Revision ${i.revision}` : "Draft", at: i.created_at };
-
+  const created: JourneyStep = {
+    key: "created",
+    label: "Proposed",
+    who: i.created_by,
+    role: "PROPOSER",
+    state: draft ? "current" : "done",
+    detail: i.status === "REVISION_REQUESTED" ? "Sent back for changes" : draft ? (i.revision > 1 ? `Revision ${i.revision} · not submitted` : "Not submitted yet") : i.revision > 1 ? `Revision ${i.revision}` : "Submitted",
+    at: i.created_at,
+  };
   const analyze: JourneyStep = {
     key: "analyze",
     label: "Agents analyze",
     who: "4 AI agents",
     role: "AI",
-    state: i.hasPacket && !revising ? "done" : "current",
-    detail: i.hasPacket && !revising ? "Packet ready" : revising ? `Waiting on ${owner} to revise and re-run` : `Waiting on ${owner} to run`,
-    at: i.hasPacket && !revising ? i.analyzedAt : null,
+    state: i.hasPacket && !draft ? "done" : "upcoming",
+    detail: i.hasPacket && !draft ? "Automatic on submit" : "Runs on submit",
+    at: i.hasPacket && !draft ? i.analyzedAt : null,
   };
-
-  let legal: JourneyStep;
-  if (!i.hasPacket || revising) legal = { key: "legal", label: "Legal review", who: LEGAL, role: "LEGAL_REVIEWER", state: "upcoming", detail: "If the Legal agent flags it" };
-  else if (i.legalBlocked) legal = { key: "legal", label: "Legal review", who: "Legal agent", role: "AI", state: "blocked", detail: "Prohibited" };
-  else if (!i.requiresLegal) legal = { key: "legal", label: "Legal review", who: LEGAL, role: "LEGAL_REVIEWER", state: "skipped", detail: "Not needed" };
-  else if (i.legal)
-    legal = {
-      key: "legal",
-      label: "Legal review",
-      who: i.legal.reviewer_name,
-      role: "LEGAL_REVIEWER",
-      state: i.legal.disposition === "REJECTED" ? "blocked" : "done",
-      detail: i.legal.disposition === "REJECTED" ? "Rejected" : i.legal.disposition === "APPROVED" ? "Approved" : "Approved with conditions",
-      at: i.legal.created_at,
-    };
-  else legal = { key: "legal", label: "Legal review", who: LEGAL, role: "LEGAL_REVIEWER", state: "current", detail: "Reviewing" };
-
-  const legalPending = legal.state === "current";
+  const legal = i.lanes.find((l) => l.dept === "LEGAL");
+  const legalStop = legal?.state === "PROHIBITED" || legal?.state === "BLOCKED";
+  const signoff: JourneyStep = {
+    key: "signoff",
+    label: "Department sign-off",
+    who: "4 department leads",
+    role: "LEADS",
+    lanes: i.lanes,
+    state: !i.hasPacket || draft ? "upcoming" : legalStop ? "blocked" : sum.pending.length && !decided ? "current" : "done",
+    detail:
+      !i.hasPacket || draft
+        ? "Only where an agent raises a concern"
+        : legalStop
+          ? legal?.state === "PROHIBITED"
+            ? "Legal rule prohibits it"
+            : "Rejected by Legal"
+          : sum.pending.length && !decided
+            ? `${sum.cleared} of 4 cleared · waiting on ${sum.pending.map((l) => DEPT_NAME[l.dept]).join(", ")}`
+            : `All cleared${sum.auto ? ` · ${sum.auto} automatically` : ""}`,
+  };
   const decide: JourneyStep = decided
-    ? { key: "decide", label: "Decision", who: i.final?.by ?? owner, role: "DECISION_OWNER", state: "done", detail: finalD === "APPROVED" ? "Approved" : "Rejected", at: i.final?.at }
-    : !i.hasPacket || revising
-      ? { key: "decide", label: "Decision", who: owner, role: "DECISION_OWNER", state: "upcoming", detail: "Approve, reject or revise" }
-      : legalPending
-        ? { key: "decide", label: "Decision", who: owner, role: "DECISION_OWNER", state: "upcoming", detail: "Unlocks after legal" }
-        : { key: "decide", label: "Decision", who: owner, role: "DECISION_OWNER", state: "current", detail: "Approve, reject or revise" };
-
+    ? { key: "decide", label: "Executive decides", who: i.final?.by ?? EXECUTIVE.name, role: "DECISION_OWNER", state: "done", detail: finalD === "APPROVED" ? "Approved" : "Rejected", at: i.final?.at }
+    : !i.hasPacket || draft
+      ? { key: "decide", label: "Executive decides", who: EXECUTIVE.name, role: "DECISION_OWNER", state: "upcoming", detail: "Approve, reject or send back" }
+      : sum.ready || sum.escalatable || legalStop
+        ? { key: "decide", label: "Executive decides", who: EXECUTIVE.name, role: "DECISION_OWNER", state: "current", detail: sum.escalatable && !sum.ready ? "Sign-off overdue: can decide" : "Approve, reject or send back" }
+        : { key: "decide", label: "Executive decides", who: EXECUTIVE.name, role: "DECISION_OWNER", state: "upcoming", detail: "After sign-off" };
   const record: JourneyStep = decided
     ? { key: "record", label: "Sealed in audit", who: "Lighthouse", role: "SYSTEM", state: "done", detail: "Hash-chained", at: i.final?.at }
     : { key: "record", label: "Sealed in audit", who: "Lighthouse", role: "SYSTEM", state: "upcoming", detail: "After the decision" };
 
-  return [created, analyze, legal, decide, record];
+  // a blocked legal lane still leaves the executive to record the rejection
+  if (legalStop && !decided) signoff.state = "blocked";
+  return [created, analyze, signoff, decide, record];
 }
 
 export function currentStep(steps: JourneyStep[]) {
   return steps.find((s) => s.state === "current") ?? null;
-}
-
-/** Lightweight version for list rows (from status and two flags). */
-export function quickJourney(status: string, revision: number, requiresLegal: boolean | null, owner: string) {
-  const hasPacket = !["DRAFT", "REVISION_REQUESTED"].includes(status) || false;
-  return buildJourney({
-    status,
-    revision,
-    created_at: "",
-    created_by: owner,
-    hasPacket,
-    requiresLegal,
-    legal: requiresLegal && ["READY_FOR_DECISION", "APPROVED", "REJECTED"].includes(status) ? { reviewer_name: LEGAL, disposition: "APPROVED", created_at: "" } : null,
-    final: ["APPROVED", "REJECTED"].includes(status) ? { decision: status, by: owner, at: null } : null,
-  });
 }

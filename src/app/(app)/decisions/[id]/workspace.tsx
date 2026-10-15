@@ -10,14 +10,15 @@ import { reviseCase } from "@/app/actions";
 import { Button, buttonClass } from "@/components/ui";
 import { cn, dateLabel } from "@/lib/format";
 import type { Persona } from "@/lib/personas";
-import type { RunEvent } from "@/lib/runs";
-import type { AgentOutput, AgentType, CaseStatus, EvidenceItem, Reconciliation } from "@/lib/types";
+import type { Lane } from "@/lib/signoff";
+import type { AgentOutput, AgentType, CaseStatus, EvidenceItem } from "@/lib/types";
 import { AGENTS } from "@/lib/types";
-import type { PacketView, ReviewView, RunView } from "@/lib/views";
-import { AgentCard, type ToolStep } from "./agent-card";
+import type { PacketView, RunView } from "@/lib/views";
+import { AgentCard } from "./agent-card";
 import { DecisionPanel } from "./decision-panel";
 import { EvidenceDrawer } from "./evidence-drawer";
 import { Packet, type PacketData } from "./packet";
+import { useRun } from "./use-run";
 
 interface Props {
   persona: Persona;
@@ -28,8 +29,10 @@ interface Props {
   outputs: Partial<Record<AgentType, AgentOutput>>;
   evidence: EvidenceItem[];
   packet: PacketView | null;
-  reviews: ReviewView[];
+  lanes: Lane[];
   runs: RunView[];
+  proposer: string;
+  autoSubmit: boolean;
   caseParams: { discount_pct: number; duration_weeks: number; claim_text: string; vendor_funding_pct: number; promo_type: string };
   timeline: React.ReactNode;
 }
@@ -37,7 +40,9 @@ interface Props {
 function packetFromView(p: PacketView): PacketData {
   return {
     synthesized_recommendation: p.synthesized_recommendation,
+    ai_recommendation: p.ai_recommendation,
     lighthouse_confidence: p.lighthouse_confidence,
+    ai_confidence: p.ai_confidence,
     confidence_breakdown: p.confidence_breakdown,
     conflict_severity: p.conflict_severity,
     conflicts: p.conflicts,
@@ -45,6 +50,7 @@ function packetFromView(p: PacketView): PacketData {
     risk_level: p.risk_level,
     conditions: p.conditions,
     headline: p.narrative?.headline || p.headline || p.summary.split(". ")[0],
+    signed_headline: p.headline,
     summary: p.narrative?.summary || p.summary,
     decisive_factors: p.narrative?.decisive_factors ?? [],
     dissent_summary: p.narrative?.dissent_summary ?? "",
@@ -59,134 +65,61 @@ function packetFromView(p: PacketView): PacketData {
 
 export function Workspace(props: Props) {
   const { persona, decisionId, status, revision, demoSafe } = props;
-  const router = useRouter();
-  const [running, setRunning] = useState(false);
-  const [liveRunId, setLiveRunId] = useState<string | null>(null);
-  const [liveOutputs, setLiveOutputs] = useState<Partial<Record<AgentType, AgentOutput>>>({});
-  const [liveEvidence, setLiveEvidence] = useState<EvidenceItem[]>([]);
-  const [steps, setSteps] = useState<Record<string, ToolStep[]>>({});
-  const [notes, setNotes] = useState<Partial<Record<AgentType, string>>>({});
-  const [rec, setRec] = useState<Reconciliation | null>(null);
-  const [synth, setSynth] = useState<PacketData | null>(null);
+  const run = useRun(decisionId);
+  const { running } = run;
   const [drawer, setDrawer] = useState<AgentType | null>(null);
-  const startedAt = useRef(0);
-  const [elapsed, setElapsed] = useState(0);
-
-  useEffect(() => {
-    if (!running) return;
-    const t = setInterval(() => setElapsed((Date.now() - startedAt.current) / 1000), 100);
-    return () => clearInterval(t);
-  }, [running]);
 
   // show streamed state until the server has persisted this run, then fall back to server data
-  const live = running || (!!liveRunId && props.packet?.run_id !== liveRunId);
-  const outputs = live ? liveOutputs : props.outputs;
-  const evidence = live && liveEvidence.length ? liveEvidence : props.evidence;
+  const live = running || (!!run.runId && props.packet?.run_id !== run.runId);
+  const outputs = live ? run.outputs : props.outputs;
+  const evidence = live && run.evidence.length ? run.evidence : props.evidence;
   const packetData: PacketData | null = useMemo(() => {
-    if (live && rec) {
-      const s = synth;
+    if (live && run.rec) {
+      const s = run.synth;
+      const r = run.rec;
       return {
-        synthesized_recommendation: rec.synthesized_recommendation,
-        lighthouse_confidence: rec.lighthouse_confidence,
-        confidence_breakdown: rec.confidence_breakdown,
-        conflict_severity: rec.conflict_severity,
-        conflicts: rec.conflicts,
-        gates: rec.gates,
-        risk_level: rec.risk_level,
-        conditions: rec.conditions,
-        headline: s?.headline ?? rec.headline,
-        summary: s?.summary ?? rec.summary,
-        decisive_factors: s?.decisive_factors ?? rec.decisive_factors,
+        synthesized_recommendation: r.synthesized_recommendation,
+        ai_recommendation: r.synthesized_recommendation,
+        lighthouse_confidence: r.lighthouse_confidence,
+        ai_confidence: r.lighthouse_confidence,
+        confidence_breakdown: r.confidence_breakdown,
+        conflict_severity: r.conflict_severity,
+        conflicts: r.conflicts,
+        gates: r.gates,
+        risk_level: r.risk_level,
+        conditions: r.conditions,
+        headline: s?.headline ?? r.headline,
+        signed_headline: r.headline,
+        summary: s?.summary ?? r.summary,
+        decisive_factors: s?.decisive_factors ?? r.decisive_factors,
         dissent_summary: s?.dissent_summary ?? "",
         next_steps: s?.next_steps ?? [],
         provider: s?.provider ?? "",
         model: s?.model ?? "",
-        financial_impact: rec.financial_impact,
-        requires_legal_review: rec.requires_legal_review,
-        expedited_eligible: rec.expedited_eligible,
+        financial_impact: r.financial_impact,
+        requires_legal_review: r.requires_legal_review,
+        expedited_eligible: r.expedited_eligible,
       };
     }
-    if (!props.packet) return null;
-    const base = packetFromView(props.packet);
-    // reflect the human legal disposition recorded after the run
-    const legal = [...props.reviews].reverse().find((r) => r.reviewer_role === "LEGAL_REVIEWER" && r.revision === revision);
-    if (legal)
-      base.gates = base.gates.map((g) =>
-        g.key === "LEGAL_REVIEW" && g.status !== "BLOCKED"
-          ? {
-              ...g,
-              status: legal.disposition === "REJECTED" ? "BLOCKED" : "CLEAR",
-              detail: `${legal.disposition === "REJECTED" ? "Rejected" : legal.disposition === "APPROVED" ? "Approved" : "Approved with conditions"} by ${legal.reviewer_name}: ${legal.condition_text ?? ""}`,
-            }
-          : g,
-      );
-    return base;
-  }, [live, rec, synth, props.packet, props.reviews, revision]);
+    return props.packet ? packetFromView(props.packet) : null;
+  }, [live, run.rec, run.synth, props.packet]);
 
-  const run = async () => {
-    setRunning(true);
-    setLiveOutputs({});
-    setLiveEvidence([]);
-    setSteps({});
-    setNotes({});
-    setRec(null);
-    setSynth(null);
-    startedAt.current = Date.now();
-    setElapsed(0);
-    try {
-      const res = await fetch(`/api/decisions/${decisionId}/run`, { method: "POST" });
-      if (!res.ok || !res.body) {
-        toast.error((await res.text()) || "Run failed");
-        setRunning(false);
-        return;
-      }
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let buf = "";
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const parts = buf.split("\n\n");
-        buf = parts.pop() ?? "";
-        for (const part of parts) {
-          const line = part.split("\n").find((l) => l.startsWith("data: "));
-          if (!line) continue;
-          const ev = JSON.parse(line.slice(6)) as RunEvent;
-          if (ev.type === "run_started") setLiveRunId(ev.run_id);
-          else if (ev.type === "tool") setSteps((s) => ({ ...s, [ev.agent]: [...(s[ev.agent] ?? []), { name: ev.name, detail: ev.detail, ms: ev.ms }] }));
-          else if (ev.type === "agent_output") {
-            setLiveOutputs((o) => ({ ...o, [ev.agent]: ev.output }));
-            setLiveEvidence((e) => [...e.filter((x) => x.agent_type !== ev.agent), ...ev.evidence]);
-            if (ev.note) setNotes((n) => ({ ...n, [ev.agent]: ev.note }));
-          } else if (ev.type === "reconciled") setRec(ev.reconciliation);
-          else if (ev.type === "synthesis")
-            setSynth({
-              ...(null as unknown as PacketData),
-              headline: ev.synthesis.headline,
-              summary: ev.synthesis.summary,
-              decisive_factors: ev.synthesis.decisive_factors,
-              dissent_summary: ev.synthesis.dissent_summary,
-              next_steps: ev.synthesis.next_steps,
-              provider: ev.synthesis.provider,
-              model: ev.synthesis.model,
-            } as PacketData);
-          else if (ev.type === "done") {
-            toast.success(`Recommendation packet ready in ${(ev.duration_ms / 1000).toFixed(1)}s`);
-          } else if (ev.type === "error") toast.error(ev.message);
-        }
-      }
-    } catch (e) {
-      toast.error(String((e as Error).message ?? e));
-    } finally {
-      setRunning(false);
-      router.refresh();
+  const exec = persona.role === "DECISION_OWNER";
+  const final = ["APPROVED", "REJECTED"].includes(status);
+  const draft = status === "DRAFT" || status === "REVISION_REQUESTED";
+  const isProposer = props.proposer === persona.name;
+  const canSubmit = draft && (exec || isProposer);
+  const hasRun = (Object.keys(props.outputs).length === 4 && !draft) || Object.keys(run.outputs).length > 0;
+  const fallbackNotes = Object.values(run.notes).filter((n) => n?.startsWith("AI unavailable"));
+
+  // a brand-new case opens straight into its first run
+  const auto = useRef(false);
+  useEffect(() => {
+    if (props.autoSubmit && canSubmit && !auto.current) {
+      auto.current = true;
+      void run.start();
     }
-  };
-
-  const canRun = persona.role === "DECISION_OWNER" && !["APPROVED", "REJECTED"].includes(status);
-  const hasRun = Object.keys(props.outputs).length === 4 || Object.keys(liveOutputs).length > 0;
-  const fallbackNotes = Object.values(notes).filter((n) => n?.startsWith("AI unavailable"));
+  }, [props.autoSubmit, canSubmit, run]);
 
   return (
     <>
@@ -198,16 +131,24 @@ export function Workspace(props: Props) {
           </span>
           <div className="min-w-0">
             <div className="text-[13.5px] font-semibold">
-              {running ? `Agents working · ${elapsed.toFixed(1)}s` : hasRun ? "Analysis complete" : "Not analyzed yet"}
+              {running
+                ? `${run.only ? `${run.only[0]}${run.only.slice(1).toLowerCase()} agent` : "Four agents"} working · ${run.elapsed.toFixed(1)}s`
+                : hasRun
+                  ? "Analyzed by all four agents"
+                  : draft
+                    ? isProposer
+                      ? "Ready to submit"
+                      : `Not submitted yet · waiting on ${props.proposer}`
+                    : "Not analyzed yet"}
             </div>
             <div className="truncate text-[12px] text-muted">
               {running
                 ? demoSafe
-                  ? "Replaying saved answers"
+                  ? "Replaying saved AI answers"
                   : "Gathering evidence, then reasoning"
-                : props.runs[0]
+                : hasRun && props.runs[0]
                   ? `${dateLabel(props.runs[0].started_at, true)} · ${props.runs[0].provider_summary ?? ""}${props.runs[0].duration_ms ? ` · ${(props.runs[0].duration_ms / 1000).toFixed(1)}s` : ""}`
-                  : "Four agents will analyze this case in parallel"}
+                  : "Submitting runs Sales, Finance, Operations and Legal in parallel. Each lead only signs off where their agent raises a concern."}
             </div>
           </div>
         </div>
@@ -217,14 +158,21 @@ export function Workspace(props: Props) {
               <History className="size-3.5" /> {props.runs.length} runs
             </span>
           )}
-          {persona.role === "DECISION_OWNER" && !["APPROVED", "REJECTED"].includes(status) && <ReviseDialog decisionId={decisionId} params={props.caseParams} />}
-          <Link href={`/packet/${decisionId}`} className={buttonClass("secondary", "md")} target="_blank">
-            <FileDown className="size-4" /> Export packet
-          </Link>
-          {canRun && (
-            <Button onClick={run} disabled={running} size="md">
-              {running ? <Loader2 className="size-4 animate-spin" /> : hasRun ? <RefreshCw className="size-4" /> : <Play className="size-4" />}
-              {running ? "Running" : hasRun ? "Re-run agents" : "Run agents"}
+          {(exec || isProposer) && !final && <ReviseDialog decisionId={decisionId} params={props.caseParams} onRevised={() => void run.start()} />}
+          {hasRun && (
+            <Link href={`/packet/${decisionId}`} className={buttonClass("secondary", "md")} target="_blank">
+              <FileDown className="size-4" /> Export packet
+            </Link>
+          )}
+          {canSubmit && (
+            <Button onClick={() => run.start()} disabled={running} size="md">
+              {running ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+              {running ? "Running" : "Submit for review"}
+            </Button>
+          )}
+          {exec && !draft && !final && (
+            <Button variant="secondary" onClick={() => run.start()} disabled={running} size="md" title="Runs all four agents again; department sign-offs reset">
+              {running ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} Re-run all
             </Button>
           )}
         </div>
@@ -235,18 +183,28 @@ export function Workspace(props: Props) {
         </div>
       )}
 
-      {/* agents */}
+      {/* agents, each owned by a department lead */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {AGENTS.map((a, i) => (
-          <AgentCard key={a} index={i} agent={a} output={outputs[a]} running={running} steps={steps[a] ?? []} note={notes[a]} onEvidence={() => setDrawer(a)} />
+          <AgentCard
+            key={a}
+            index={i}
+            agent={a}
+            output={outputs[a]}
+            running={running && (!run.only || run.only === a)}
+            steps={run.steps[a] ?? []}
+            note={run.notes[a]}
+            onEvidence={() => setDrawer(a)}
+            lane={live ? undefined : props.lanes.find((l) => l.dept === a)}
+          />
         ))}
       </div>
 
       {/* packet + decision */}
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="min-w-0 space-y-6">
-          {packetData ? (
-            <Packet p={packetData} synthesizing={running && !!rec && !synth} />
+          {packetData && hasRun ? (
+            <Packet p={packetData} synthesizing={running && !!run.rec && !run.synth} />
           ) : (
             <div className="rounded-[12px] border border-dashed border-line px-6 py-12 text-center">
               <p className="font-display text-[19px] text-ink">Lighthouse’s recommendation will appear here.</p>
@@ -255,7 +213,7 @@ export function Workspace(props: Props) {
           {props.timeline}
         </div>
         <div id={hasRun ? "act" : undefined} className="scroll-mt-24 space-y-4">
-          <DecisionPanel persona={persona} decisionId={decisionId} status={status} revision={revision} packet={running ? null : props.packet} reviews={props.reviews} hasRun={hasRun && !running} />
+          <DecisionPanel persona={persona} decisionId={decisionId} status={status} packet={running || !hasRun ? null : props.packet} lanes={props.lanes} />
         </div>
       </div>
 
@@ -264,7 +222,7 @@ export function Workspace(props: Props) {
   );
 }
 
-function ReviseDialog({ decisionId, params }: { decisionId: string; params: Props["caseParams"] }) {
+function ReviseDialog({ decisionId, params, onRevised }: { decisionId: string; params: Props["caseParams"]; onRevised: () => void }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
@@ -287,7 +245,7 @@ function ReviseDialog({ decisionId, params }: { decisionId: string; params: Prop
           <div className="flex items-start justify-between">
             <div>
               <Dialog.Title className="text-[17px] font-semibold">Revise decision case</Dialog.Title>
-              <Dialog.Description className="mt-1 text-[13px] text-muted">Creates a new revision. Earlier reviews stay attached to the old revision; agents must run again.</Dialog.Description>
+              <Dialog.Description className="mt-1 text-[13px] text-muted">Creates a new revision and runs all four agents again. Earlier sign-offs stay on the old revision.</Dialog.Description>
             </div>
             <Dialog.Close className="rounded-lg p-1 text-muted hover:bg-line-2">
               <X className="size-4" />
@@ -326,6 +284,7 @@ function ReviseDialog({ decisionId, params }: { decisionId: string; params: Prop
                   toast.success(r.message ?? "Revised");
                   setOpen(false);
                   router.refresh();
+                  onRevised();
                 }
               })
             }

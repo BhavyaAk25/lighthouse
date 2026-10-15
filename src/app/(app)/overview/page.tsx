@@ -32,10 +32,10 @@ export default async function Overview() {
   await requireSession();
   const sql = db();
   const clock = await getPilotClock();
-  const [[k], weekly, mix, dissent, demo, activity] = await Promise.all([
+  const [[k], weekly, mix, dissent, demo, activity, signoffs] = await Promise.all([
     sql`select
-          (select count(*) from decision_cases where status in ('AWAITING_LEGAL_REVIEW','READY_FOR_DECISION'))::int as open,
-          (select count(*) from decision_cases where status = 'AWAITING_LEGAL_REVIEW')::int as legal,
+          (select count(*) from decision_cases where status in ('IN_REVIEW','READY_FOR_DECISION'))::int as open,
+          (select count(*) from decision_cases where status = 'IN_REVIEW')::int as legal,
           (select round(100.0 * avg(case when l.conflict_severity in ('MATERIAL','HARD_STOP') then 1 else 0 end), 1)
              from lighthouse_decisions l join decision_cases c using (decision_id) where c.created_at >= ${clock}::date - 90)::float as conflict_rate,
           (select round(avg(lighthouse_confidence), 2) from lighthouse_decisions)::float as avg_conf,
@@ -48,7 +48,7 @@ export default async function Overview() {
                count(*) filter (where c.status = 'APPROVED')::int as "APPROVED",
                count(*) filter (where c.status = 'REJECTED')::int as "REJECTED",
                count(*) filter (where c.status = 'REVISION_REQUESTED')::int as "REVISION_REQUESTED",
-               count(*) filter (where c.status in ('DRAFT','AWAITING_LEGAL_REVIEW','READY_FOR_DECISION'))::int as "OPEN"
+               count(*) filter (where c.status in ('DRAFT','IN_REVIEW','READY_FOR_DECISION'))::int as "OPEN"
         from decision_cases c where c.created_at >= ${clock}::date - 182 group by 1, 2 order by 2`,
     sql`select synthesized_recommendation as rec, count(*)::int as n from lighthouse_decisions group by 1 order by 2 desc`,
     sql`select agent_type, round(100.0 * avg(case when recommendation in ('HOLD','REJECT','REVIEW_REQUIRED') then 1 else 0 end), 1)::float as dissent
@@ -56,6 +56,13 @@ export default async function Overview() {
     sql`select c.decision_id, c.title, c.status, c.scenario_tag, l.synthesized_recommendation from decision_cases c
         left join lighthouse_decisions l using (decision_id) where c.decision_id like 'D-2026-0%' order by c.decision_id`,
     sql`select seq, ts, actor, role, action, decision_id from audit_log order by seq desc limit 9`,
+    sql`select o.agent_type, count(distinct o.decision_id)::int lanes, count(r.review_id)::int signed,
+               count(r.review_id) filter (where r.disposition = 'CONFIRMED')::int confirmed,
+               count(r.review_id) filter (where r.disposition = 'ADJUSTED')::int adjusted,
+               count(r.review_id) filter (where r.disposition = 'BLOCKED')::int blocked
+        from agent_outputs o join lighthouse_decisions l on l.run_id = o.run_id
+        left join reviews r on r.decision_id = o.decision_id and r.department = o.agent_type and not r.superseded
+        group by 1`,
   ]);
   const order: AgentType[] = ["SALES", "FINANCE", "OPERATIONS", "LEGAL"];
 
@@ -64,8 +71,8 @@ export default async function Overview() {
       <PageHeader title="Dashboard" subtitle="How the pilot is performing across all 5,000 decisions." />
       <InsightTabs active="overview" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-6">
-        <Stat label="Needs a decision" value={k.open} sub="Ready or awaiting legal" />
-        <Stat label="Awaiting legal" value={k.legal} sub="Approval locked" />
+        <Stat label="Open cases" value={k.open} sub="In sign-off or with the executive" />
+        <Stat label="In department sign-off" value={k.legal} sub="Waiting on a lead" />
         <Stat label="Material conflicts" value={`${k.conflict_rate ?? 0}%`} sub="Last 90 days" />
         <Stat label="Avg Lighthouse confidence" value={Number(k.avg_conf ?? 0).toFixed(2)} sub="Synthesis score" />
         <Stat label="Approved value" value={money(k.approved_value)} sub="Revenue + markdown, 90 days" />
@@ -122,6 +129,35 @@ export default async function Overview() {
               <DissentBars
                 data={order.map((a) => ({ agent: AGENT_META[a].name, dissent: Number(dissent.find((d) => d.agent_type === a)?.dissent ?? 0), color: AGENT_META[a].color }))}
               />
+            </div>
+          </Card>
+          <Card>
+            <CardHeader title="Department sign-offs" subtitle="Leads sign only when their agent raises a concern" />
+            <div className="space-y-3 px-5 pb-5">
+              {order.map((a) => {
+                const r = signoffs.find((x) => x.agent_type === a);
+                const signed = Number(r?.signed ?? 0);
+                const lanes = Math.max(1, Number(r?.lanes ?? 1));
+                const w = (v: number) => `${signed ? (100 * v) / signed : 0}%`;
+                return (
+                  <div key={a}>
+                    <div className="flex items-baseline justify-between text-[12.5px]">
+                      <span className="text-ink-2">{AGENT_META[a].name}</span>
+                      <span className="tnum text-muted">needed a person in {Math.round((100 * signed) / lanes)}% of cases</span>
+                    </div>
+                    <div className="mt-1.5 flex h-2 overflow-hidden rounded-full bg-line-2">
+                      <span className="bg-brand-600" style={{ width: w(Number(r?.confirmed ?? 0)) }} title="Confirmed the agent" />
+                      <span className="bg-brass" style={{ width: w(Number(r?.adjusted ?? 0)) }} title="Changed the agent's answer" />
+                      <span className="bg-bad" style={{ width: w(Number(r?.blocked ?? 0)) }} title="Blocked" />
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-[11.5px] text-muted">
+                <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-brand-600" /> Confirmed the agent</span>
+                <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-brass" /> Changed its answer</span>
+                <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-bad" /> Blocked</span>
+              </div>
             </div>
           </Card>
           <Card>

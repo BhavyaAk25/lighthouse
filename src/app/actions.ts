@@ -9,10 +9,14 @@ import { appendAudit } from "@/lib/audit";
 import { adminPin, clearSessionCookie, DEMO_SAFE_COOKIE, requireRole, requireSession, setSessionCookie } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PROMO_LABEL } from "@/lib/engine/common";
+import { refreshCase } from "@/lib/caseflow";
 import { decisionCheck } from "@/lib/governance";
-import { personaById, ROLE_LABEL } from "@/lib/personas";
+import { DEPT_OF, personaById, ROLE_LABEL } from "@/lib/personas";
+import { isProhibited, laneSummary } from "@/lib/signoff";
 import { computeFacts, getCase, getPilotClock } from "@/lib/repo";
 import { DEFAULT_THRESHOLDS, type Thresholds } from "@/lib/types";
+
+const LEAD_ROLES = ["SALES_REVIEWER", "FINANCE_REVIEWER", "OPERATIONS_REVIEWER", "LEGAL_REVIEWER"] as const;
 
 export type ActionResult = { ok: true; message?: string; id?: string } | { ok: false; error: string };
 
@@ -35,7 +39,7 @@ export async function logout() {
 }
 
 export async function setDemoSafe(on: boolean) {
-  const p = await requireSession();
+  const p = await requireRole("ADMIN");
   (await cookies()).set(DEMO_SAFE_COOKIE, on ? "1" : "0", { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 30 });
   await appendAudit(p.name, p.role, on ? "DEMO_SAFE_ENABLED" : "DEMO_SAFE_DISABLED", null, {});
   revalidatePath("/", "layout");
@@ -58,7 +62,7 @@ const CaseInput = z.object({
 });
 
 export async function createCase(input: z.input<typeof CaseInput>): Promise<ActionResult> {
-  const p = await requireRole("DECISION_OWNER");
+  const p = await requireRole("DECISION_OWNER", ...LEAD_ROLES);
   const parsed = CaseInput.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") };
   const v = parsed.data;
@@ -95,9 +99,10 @@ export async function createCase(input: z.input<typeof CaseInput>): Promise<Acti
 }
 
 export async function reviseCase(decisionId: string, changes: { discount_pct?: number; duration_weeks?: number; claim_text?: string; vendor_funding_pct?: number; note?: string }): Promise<ActionResult> {
-  const p = await requireRole("DECISION_OWNER");
+  const p = await requireSession();
   const c = await getCase(decisionId);
   if (!c) return { ok: false, error: "Case not found" };
+  if (p.role !== "DECISION_OWNER" && c.created_by !== p.name) return { ok: false, error: "Only the person who proposed this case (or the executive) can revise it." };
   if (c.status === "APPROVED" || c.status === "REJECTED") return { ok: false, error: "Final decisions cannot be revised" };
   const discount = changes.discount_pct ?? c.discount_pct;
   const weeks = changes.duration_weeks ?? c.duration_weeks;
@@ -115,29 +120,66 @@ export async function reviseCase(decisionId: string, changes: { discount_pct?: n
     note: changes.note ?? "",
   });
   revalidatePath(`/decisions/${decisionId}`);
-  return { ok: true, message: `Revision ${c.revision + 1} created. Run the agents again.` };
+  return { ok: true, message: `Revision ${c.revision + 1} created. The agents are running again.` };
 }
 
-// ---------------------------------------------------------------- decisions & reviews
+// ---------------------------------------------------------------- department sign-off & executive decision
+/**
+ * A department lead signs off on their own agent's position.
+ * position = the department's position after review; "BLOCK" = the department cannot support the case.
+ */
+export async function recordSignoff(
+  decisionId: string,
+  position: "PROCEED" | "PROCEED_WITH_CONDITIONS" | "HOLD" | "BLOCK",
+  note: string,
+  conditions: string[] = [],
+): Promise<ActionResult> {
+  const p = await requireRole(...LEAD_ROLES);
+  const dept = DEPT_OF[p.role]!;
+  const sql = db();
+  const c = await getCase(decisionId);
+  if (!c) return { ok: false, error: "Case not found" };
+  if (!["IN_REVIEW", "READY_FOR_DECISION"].includes(c.status)) return { ok: false, error: "This case is not open for sign-off." };
+  const [pk] = await sql`select run_id from lighthouse_decisions where decision_id = ${decisionId}`;
+  if (!pk) return { ok: false, error: "The agents have not analyzed this case yet." };
+  const [out] = await sql`select recommendation, risk_level from agent_outputs where run_id = ${pk.run_id} and agent_type = ${dept}`;
+  if (!out) return { ok: false, error: "Your agent has no answer for this case yet." };
+  if (dept === "LEGAL" && isProhibited({ recommendation: String(out.recommendation), risk_level: String(out.risk_level) }))
+    return { ok: false, error: "A Legal rule prohibits this case outright; it cannot be signed off as compliant." };
+  if (dept === "LEGAL" && position === "HOLD") return { ok: false, error: "Legal signs off as approve, approve with conditions, or reject." };
+  const ai = String(out.recommendation);
+  const pos = position === "BLOCK" ? "REJECT" : position;
+  const kind = position === "BLOCK" ? "BLOCKED" : pos === ai || (dept === "LEGAL" && ai === "REVIEW_REQUIRED") ? "CONFIRMED" : "ADJUSTED";
+  const text = note.trim();
+  const conds = conditions.map((x) => x.trim()).filter(Boolean).slice(0, 5);
+  if (kind !== "CONFIRMED" && text.length < 20) return { ok: false, error: kind === "BLOCKED" ? "Say why you are blocking it (20+ characters)." : "You are changing the agent’s answer: say why (20+ characters)." };
+  if (dept === "LEGAL" && text.length < 10) return { ok: false, error: "Add a legal note (10+ characters)." };
+  await sql.transaction([
+    sql`update reviews set superseded = true where decision_id = ${decisionId} and revision = ${c.revision} and department = ${dept} and not superseded`,
+    sql`insert into reviews (decision_id, revision, reviewer_role, reviewer_name, disposition, condition_text, department, ai_recommendation, position, conditions)
+        values (${decisionId}, ${c.revision}, ${p.role}, ${p.name}, ${kind}, ${text || null}, ${dept}, ${ai}, ${pos}, ${conds})`,
+  ]);
+  await appendAudit(p.name, p.role, "DEPARTMENT_SIGNOFF_RECORDED", decisionId, { department: dept, signoff: kind, ai_recommendation: ai, position: pos, note: text, conditions: conds, revision: c.revision });
+  const r = await refreshCase(decisionId);
+  revalidatePath(`/decisions/${decisionId}`);
+  revalidatePath("/home");
+  const left = r ? laneSummary(r.lanes).pending.length : 0;
+  return { ok: true, message: left ? `Signed. ${left} department${left === 1 ? "" : "s"} still to sign.` : "Signed. All departments are done: it is with Maya Chen to decide." };
+}
+
 export async function recordDecision(decisionId: string, decision: "APPROVED" | "REJECTED" | "REVISION_REQUESTED", rationale: string): Promise<ActionResult> {
   const p = await requireRole("DECISION_OWNER");
   const sql = db();
   const c = await getCase(decisionId);
   if (!c) return { ok: false, error: "Case not found" };
-  const [pk] = await sql`select * from lighthouse_decisions where decision_id = ${decisionId}`;
-  if (!pk) return { ok: false, error: "Run the agents before deciding." };
   if (["APPROVED", "REJECTED"].includes(c.status)) return { ok: false, error: "A final decision is already recorded." };
+  const r = await refreshCase(decisionId);
+  const [pk] = await sql`select * from lighthouse_decisions where decision_id = ${decisionId}`;
+  if (!pk || !r) return { ok: false, error: "The agents have not analyzed this case yet." };
   const rec = String(pk.synthesized_recommendation);
-  const reviews = await sql`select * from reviews where decision_id = ${decisionId} and revision = ${c.revision} and reviewer_role = 'LEGAL_REVIEWER' order by created_at desc`;
-  const legal = reviews[0];
-  const check = decisionCheck(
-    { synthesized_recommendation: rec, requires_legal_review: Boolean(pk.requires_legal_review), risk_level: String(pk.risk_level), gates: pk.gates as { key: string; status: string }[] },
-    legal ? String(legal.disposition) : null,
-    decision,
-    rationale,
-  );
+  const check = decisionCheck({ synthesized_recommendation: rec, risk_level: String(pk.risk_level) }, r.lanes, decision, rationale);
   if (!check.ok) return check;
-  const override = check.override;
+  const { override, overruled, bypassed } = check;
   const text = rationale.trim();
   await sql.transaction([
     sql`update lighthouse_decisions set approval_status = ${decision}, final_decision = ${decision}, final_rationale = ${text || null},
@@ -147,42 +189,20 @@ export async function recordDecision(decisionId: string, decision: "APPROVED" | 
   await appendAudit(p.name, p.role, override ? "DECISION_OVERRIDE_RECORDED" : "DECISION_RECORDED", decisionId, {
     decision,
     lighthouse_recommendation: rec,
+    ai_recommendation: pk.ai_recommendation,
     override,
+    overruled_departments: overruled,
+    decided_without: bypassed,
+    signoffs: Object.fromEntries(r.lanes.map((l) => [l.dept, l.state])),
     rationale: text,
     revision: c.revision,
-    legal_disposition: legal?.disposition ?? null,
   });
   revalidatePath(`/decisions/${decisionId}`);
-  revalidatePath("/review");
-  return { ok: true, message: override ? "Override recorded with rationale." : "Decision recorded." };
-}
-
-export async function recordLegalReview(decisionId: string, disposition: "APPROVED" | "APPROVED_WITH_CONDITIONS" | "REJECTED", note: string): Promise<ActionResult> {
-  const p = await requireRole("LEGAL_REVIEWER");
-  const c = await getCase(decisionId);
-  if (!c) return { ok: false, error: "Case not found" };
-  const [pk] = await db()`select requires_legal_review from lighthouse_decisions where decision_id = ${decisionId}`;
-  if (!pk) return { ok: false, error: "Agents have not been run for this case." };
-  if (note.trim().length < 10) return { ok: false, error: "Add a review note (10+ characters)." };
-  await db()`insert into reviews (decision_id, revision, reviewer_role, reviewer_name, disposition, condition_text)
-             values (${decisionId}, ${c.revision}, 'LEGAL_REVIEWER', ${p.name}, ${disposition}, ${note.trim()})`;
-  if (c.status === "AWAITING_LEGAL_REVIEW") await db()`update decision_cases set status = 'READY_FOR_DECISION', updated_at = now() where decision_id = ${decisionId}`;
-  await appendAudit(p.name, p.role, "LEGAL_REVIEW_RECORDED", decisionId, { disposition, note: note.trim(), revision: c.revision });
-  revalidatePath(`/decisions/${decisionId}`);
-  revalidatePath("/review");
-  return { ok: true, message: "Legal disposition recorded. The decision owner can now decide." };
-}
-
-export async function addReviewerNote(decisionId: string, disposition: "CONCUR" | "CONCERN", note: string): Promise<ActionResult> {
-  const p = await requireRole("FINANCE_REVIEWER", "SALES_REVIEWER", "OPERATIONS_REVIEWER");
-  const c = await getCase(decisionId);
-  if (!c) return { ok: false, error: "Case not found" };
-  if (note.trim().length < 5) return { ok: false, error: "Add a short note." };
-  await db()`insert into reviews (decision_id, revision, reviewer_role, reviewer_name, disposition, condition_text)
-             values (${decisionId}, ${c.revision}, ${p.role}, ${p.name}, ${disposition}, ${note.trim()})`;
-  await appendAudit(p.name, p.role, "REVIEWER_NOTE_ADDED", decisionId, { disposition, note: note.trim() });
-  revalidatePath(`/decisions/${decisionId}`);
-  return { ok: true, message: "Note added to the packet." };
+  revalidatePath("/home");
+  return {
+    ok: true,
+    message: overruled.length ? `Recorded. You overruled ${overruled.map((d) => d.toLowerCase()).join(", ")}; your reason is on file.` : override ? "Override recorded with your reason." : "Decision recorded and sealed.",
+  };
 }
 
 // ---------------------------------------------------------------- administration
@@ -226,27 +246,13 @@ export async function verifyAuditChain() {
   return { entries: Number(r.entries), first_broken_seq: r.first_broken_seq ? Number(r.first_broken_seq) : null, last_hash: String(r.last_hash ?? "") };
 }
 
-/** Reset the 12 curated demo cases to DRAFT (keeps saved AI answers for demo-safe replay; audit log is append-only). */
+/** Reset the curated demo cases to the class-demo starting state (see lib/demo.ts). */
 export async function resetDemoCases(): Promise<ActionResult> {
   const p = await requireRole("ADMIN", "DECISION_OWNER");
-  const sql = db();
-  const curated = (await sql`select decision_id from decision_cases where scenario_tag <> '' and scenario_tag <> 'USER_CREATED' and decision_id like 'D-2026-0%'`).map((r) => String(r.decision_id));
-  await sql.transaction([
-    sql`delete from lighthouse_decisions where decision_id = any(${curated})`,
-    sql`delete from reviews where decision_id = any(${curated})`,
-    sql`delete from agent_runs where decision_id = any(${curated})`,
-    sql`delete from agent_outputs where decision_id = any(${curated})`,
-    sql`delete from evidence where decision_id = any(${curated})`,
-    sql`update decision_cases set status = 'DRAFT', revision = 1, updated_at = now(),
-          title = coalesce(original->>'title', title), discount_pct = coalesce((original->>'discount_pct')::numeric, discount_pct),
-          duration_weeks = coalesce((original->>'duration_weeks')::int, duration_weeks), claim_text = coalesce(original->>'claim_text', claim_text),
-          vendor_funding_pct = coalesce((original->>'vendor_funding_pct')::numeric, vendor_funding_pct)
-        where decision_id = any(${curated})`,
-    sql`update decision_cases set facts = compute_case_facts(decision_id) where decision_id = any(${curated})`,
-  ]);
-  await appendAudit(p.name, p.role, "DEMO_CASES_RESET", null, { cases: curated });
+  const { resetDemoState } = await import("@/lib/demo");
+  const r = await resetDemoState(p);
   revalidatePath("/", "layout");
-  return { ok: true, message: `${curated.length} demo cases reset to draft.` };
+  return { ok: true, message: `${r.cases} demo cases reset. D-2026-001 is ready for Hannah to submit live.` };
 }
 
 // ---------------------------------------------------------------- acceptance tests

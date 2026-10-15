@@ -42,7 +42,7 @@ export function templateSynthesis(c: DecisionCase, outputs: AgentOutput[], rec: 
     next_steps: [
       ...(rec.requires_legal_review ? ["Legal & Compliance records a disposition on the gated rules."] : []),
       ...rec.conditions.slice(0, 2),
-      "Decision owner approves, rejects or requests revision with a recorded rationale.",
+      "The executive approves, rejects or sends it back with a recorded reason.",
     ].slice(0, 4),
     provider: "rules-engine",
     model: "lighthouse-rules-v1",

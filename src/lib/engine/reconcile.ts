@@ -28,7 +28,7 @@ export const REC_LABEL: Record<Recommendation, string> = {
  * Lighthouse governance rules (Deliverable 1, section 4.2):
  *  1. Legal prohibited  -> REJECT (no proceed), route to legal.
  *  2. Missing/invalid evidence -> REVIEW_REQUIRED; never impute.
- *  3. Operations hard capacity breach -> HOLD unless mitigation resolves it.
+ *  3. Operations hard capacity breach -> HOLD unless mitigation resolves it. Finance hold or reject -> no proceed.
  *  4. Support vs oppose positions -> explicit conflict state (never averaged away).
  *  5. Confidence is a synthesis score, not an average.
  *  6. All four positions are preserved in the packet.
@@ -103,6 +103,10 @@ export function reconcile(c: DecisionCase, outputs: AgentOutput[], cfg: Threshol
   } else if (fin.recommendation === "REJECT") {
     rec = sales.recommendation === "PROCEED" ? "HOLD" : "REJECT";
     decisive.push(`Finance: ${fin.hard_constraint ?? fin.rationale.split(". ")[0]}`);
+  } else if (fin.recommendation === "HOLD") {
+    // economics unresolved: the case waits until Finance can support it
+    rec = "HOLD";
+    decisive.push(`Finance holds: ${fin.hard_constraint ?? fin.rationale.split(". ")[0]}`);
   } else if (opposers.length >= 2) {
     rec = "HOLD";
     decisive.push(`${opposers.map((o) => NAME[o.agent_type]).join(" and ")} oppose proceeding.`);
@@ -149,7 +153,7 @@ export function reconcile(c: DecisionCase, outputs: AgentOutput[], cfg: Threshol
     label: "Financial impact",
     status: overThreshold ? "WARNING" : "CLEAR",
     detail: overThreshold
-      ? `${usdK(financialImpact)} at stake exceeds the ${usdK(cfg.financial_impact_threshold)} threshold; named decision owner approval required.`
+      ? `${usdK(financialImpact)} at stake exceeds the ${usdK(cfg.financial_impact_threshold)} threshold; named executive approval required.`
       : `${usdK(financialImpact)} at stake; below the ${usdK(cfg.financial_impact_threshold)} threshold.`,
   };
 

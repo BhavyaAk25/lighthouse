@@ -2,9 +2,12 @@ import "server-only";
 import { screenText } from "./ai/screen";
 import { db } from "./db";
 import { applyGuardrails, runRulesEngine } from "./engine";
+import { lanesFrom } from "./caseflow";
 import { decisionCheck } from "./governance";
+import { LEAD_OF } from "./personas";
 import { getCategories, getDcs, getRules, getThresholds, mapCase } from "./repo";
-import type { AgentOutput } from "./types";
+import { isProhibited, laneSummary, reconcileSigned, signedOutputs, type Signoff, type SignoffKind } from "./signoff";
+import type { AgentOutput, AgentType, Recommendation } from "./types";
 
 export interface TestResult {
   id: string;
@@ -40,6 +43,25 @@ export async function runAcceptanceTests(): Promise<TestResult[]> {
     results.push({ id, name, criterion, objective, passed, details, ms: Date.now() - t, caseId });
   };
   const rec = (o: AgentOutput) => `${o.agent_type.toLowerCase()}=${o.recommendation}`;
+  // department lanes for an engine result, optionally with sign-offs and an analysis time in the past
+  const lanesOf = (r: ReturnType<typeof engine>, signoffs: Signoff[] = [], hoursAgo = 1) =>
+    lanesFrom(Object.fromEntries(r.outputs.map((o) => [o.agent_type, o])) as Record<AgentType, AgentOutput>, signoffs, cfg, new Date(Date.now() - hoursAgo * 3_600_000).toISOString());
+  const so = (r: ReturnType<typeof engine>, dept: AgentType, kind: SignoffKind, position: Recommendation, note: string): Signoff => ({
+    review_id: 0,
+    decision_id: "TEST",
+    revision: 1,
+    department: dept,
+    reviewer_name: LEAD_OF[dept].name,
+    reviewer_role: LEAD_OF[dept].role,
+    disposition: kind,
+    ai_recommendation: r.outputs.find((o) => o.agent_type === dept)!.recommendation,
+    position,
+    conditions: [],
+    condition_text: note,
+    superseded: false,
+    created_at: new Date().toISOString(),
+  });
+  const packetOf = (r: ReturnType<typeof engine>, lanes: ReturnType<typeof lanesOf>) => reconcileSigned(null, r.outputs, lanes, cfg, r.reconciliation.financial_impact);
 
   await test("T01", "Complete agreement", "Lighthouse recommendation matches compatible four-agent evidence and keeps every evidence reference.", "OBJ-01", "D-2026-002", (d) => {
     const r = engine("D-2026-002");
@@ -65,20 +87,28 @@ export async function runAcceptanceTests(): Promise<TestResult[]> {
     return o.recommendation === "HOLD" && r.reconciliation.synthesized_recommendation === "HOLD" && gate.status === "BLOCKED";
   });
 
-  await test("T04", "Legal review gate", "Manager cannot finalize proceed before the required legal review is recorded.", "OBJ-02", "D-2026-001", (d) => {
+  await test("T04", "Legal review gate", "The executive cannot approve before the Legal lead signs off on a flagged claim.", "OBJ-02", "D-2026-001", (d) => {
     const r = engine("D-2026-001");
-    const p = { ...r.reconciliation };
-    const before = decisionCheck(p, null, "APPROVED", "Approving per packet with conditions accepted.");
-    const after = decisionCheck(p, "APPROVED_WITH_CONDITIONS", "APPROVED", "Approving per packet with conditions accepted.");
-    d.push(`Legal: ${r.outputs.find((o) => o.agent_type === "LEGAL")!.recommendation}; legal gate ${p.gates[0].status}`, `Approve before legal review → ${before.ok ? "allowed" : `blocked (${(before as { error: string }).error})`}`, `Approve after legal disposition → ${after.ok ? "allowed" : "blocked"}`);
-    return p.requires_legal_review && !before.ok && after.ok;
+    const before = lanesOf(r);
+    const after = lanesOf(r, [so(r, "LEGAL", "CONFIRMED", "PROCEED_WITH_CONDITIONS", "Claim substantiation reviewed; wording revised.")]);
+    const c1 = decisionCheck(packetOf(r, before), before, "APPROVED", "Approving per packet with conditions accepted.");
+    const c2 = decisionCheck(packetOf(r, after), after, "APPROVED", "Approving per packet with conditions accepted.");
+    d.push(
+      `Legal agent: ${r.outputs.find((o) => o.agent_type === "LEGAL")!.recommendation}; Legal lane ${before.find((l) => l.dept === "LEGAL")!.state}`,
+      `Approve before Priya signs → ${c1.ok ? "allowed (FAIL)" : `blocked (${(c1 as { error: string }).error})`}`,
+      `Approve after Priya approves with conditions → ${c2.ok ? "allowed" : `blocked (${(c2 as { error: string }).error})`}`,
+    );
+    return !c1.ok && c2.ok;
   });
 
-  await test("T05", "Legal prohibition", "A prohibited condition yields no-proceed and approval is impossible even with a rationale.", "Rule 4.2", "D-2026-005", (d) => {
+  await test("T05", "Legal prohibition", "A prohibited condition yields reject, nobody can sign it off, and approval is impossible even with a reason.", "Rule 4.2", "D-2026-005", (d) => {
     const r = engine("D-2026-005");
-    const chk = decisionCheck(r.reconciliation, "APPROVED", "APPROVED", "Trying to approve despite the prohibition for testing.");
-    d.push(`Lighthouse: ${r.reconciliation.synthesized_recommendation}, risk ${r.reconciliation.risk_level}`, `Approve attempt → ${chk.ok ? "allowed (FAIL)" : "blocked"}`);
-    return r.reconciliation.synthesized_recommendation === "REJECT" && r.reconciliation.risk_level === "CRITICAL" && !chk.ok;
+    const lanes = lanesOf(r);
+    const legal = r.outputs.find((o) => o.agent_type === "LEGAL")!;
+    const chk = decisionCheck(packetOf(r, lanes), lanes, "APPROVED", "Trying to approve despite the prohibition for testing.");
+    const others = lanes.filter((l) => l.dept !== "LEGAL" && l.required).length;
+    d.push(`Lighthouse: ${r.reconciliation.synthesized_recommendation}, risk ${r.reconciliation.risk_level}; Legal lane ${lanes.find((l) => l.dept === "LEGAL")!.state}`, `Other departments asked to sign: ${others}`, `Approve attempt → ${chk.ok ? "allowed (FAIL)" : "blocked"}`);
+    return r.reconciliation.synthesized_recommendation === "REJECT" && isProhibited(legal) && others === 0 && !chk.ok;
   });
 
   await test("T06", "Missing evidence", "Affected agent output is marked invalid / review-required; no replacement evidence is fabricated.", "Rule 4.2", "D-2026-006", (d) => {
@@ -103,14 +133,22 @@ export async function runAcceptanceTests(): Promise<TestResult[]> {
     return s.confidence < 0.65 && s.conditions.some((c) => /test/i.test(c)) && r.reconciliation.lighthouse_confidence < 0.75;
   });
 
-  await test("T09", "Human override", "Override requires a reason and is stored with user, timestamp, prior recommendation and final decision.", "FR-13", "D-2026-003", async (d) => {
+  await test("T09", "Human override of a department block", "Overruling a Finance block needs a reason and is flagged as an override with the department named.", "FR-13", "D-2026-003", async (d) => {
     const r = engine("D-2026-003");
-    const noReason = decisionCheck(r.reconciliation, null, "APPROVED", "");
-    const withReason = decisionCheck(r.reconciliation, null, "APPROVED", "Strategic traffic driver; supplier added funding after the run.");
+    const waiting = lanesOf(r);
+    const early = decisionCheck(packetOf(r, waiting), waiting, "APPROVED", "Strategic traffic driver; supplier added funding after the run.");
+    const blocked = lanesOf(r, [so(r, "FINANCE", "BLOCKED", "REJECT", "Net benefit is negative even in the upside case.")]);
+    const noReason = decisionCheck(packetOf(r, blocked), blocked, "APPROVED", "");
+    const withReason = decisionCheck(packetOf(r, blocked), blocked, "APPROVED", "Strategic traffic driver; supplier added funding after the run.");
     const [stored] = await sql`select count(*)::int n, count(*) filter (where final_rationale is not null and decided_by is not null and decided_at is not null)::int complete
                                from lighthouse_decisions where override_flag`;
-    d.push(`Approve HOLD without reason → ${noReason.ok ? "allowed (FAIL)" : "blocked"}`, `With reason → ${withReason.ok ? `allowed, override=${withReason.override}` : "blocked"}`, `Stored overrides: ${stored.n}, complete records: ${stored.complete}`);
-    return !noReason.ok && withReason.ok && withReason.override && stored.n === stored.complete;
+    d.push(
+      `Approve while Finance has not signed → ${early.ok ? "allowed (FAIL)" : "blocked"}`,
+      `Finance blocks; approve without a reason → ${noReason.ok ? "allowed (FAIL)" : "blocked"}`,
+      `With a reason → ${withReason.ok ? `allowed, override=${withReason.override}, overruled=${withReason.overruled.join(",")}` : "blocked"}`,
+      `Stored overrides: ${stored.n}, complete records: ${stored.complete}`,
+    );
+    return !early.ok && !noReason.ok && withReason.ok && withReason.override && withReason.overruled.includes("FINANCE") && stored.n === stored.complete;
   });
 
   await test("T10", "Audit replay", "A reviewer can reconstruct inputs, four outputs, rules, recommendation and final approval for a completed case.", "OBJ-04 / FR-17", undefined, async (d) => {
@@ -118,7 +156,7 @@ export async function runAcceptanceTests(): Promise<TestResult[]> {
     const [counts] = await sql`select
         (select count(*) from agent_outputs where run_id = ${c.run_id})::int outputs,
         (select count(*) from evidence where run_id = ${c.run_id})::int evidence,
-        (select count(*) from reviews where decision_id = ${c.decision_id} and reviewer_role = 'LEGAL_REVIEWER')::int legal,
+        (select count(*) from reviews where decision_id = ${c.decision_id} and department = 'LEGAL')::int legal,
         (select count(*) from audit_log where decision_id = ${c.decision_id})::int audit,
         (select count(*) from (select unnest(evidence_ids) id from agent_outputs where run_id = ${c.run_id}) x where id not in (select evidence_id from evidence where run_id = ${c.run_id}))::int dangling`;
     d.push(`Case ${c.decision_id}: ${counts.outputs} outputs, ${counts.evidence} evidence rows, ${counts.legal} legal review(s), ${counts.audit} audit entries`, `Dangling citations: ${counts.dangling}`);
@@ -161,6 +199,43 @@ export async function runAcceptanceTests(): Promise<TestResult[]> {
                                  (select count(*) from evidence where provenance not in ('REAL','DERIVED','GENERATED','PUBLIC','ASSUMPTION'))::int unlabeled`;
     d.push(`${c.cases.toLocaleString()} cases · ${c.outputs.toLocaleString()} agent outputs · ${c.unlabeled} unlabelled evidence rows`);
     return c.cases >= 5000 && c.outputs >= 19950 && c.unlabeled === 0;
+  });
+
+  await test("T16", "Management by exception", "Leads only sign where their agent raises a concern; a clean case needs no sign-off and goes straight to the executive.", "Design", "D-2026-002", (d) => {
+    const ids = Object.keys(byId).sort();
+    let required = 0;
+    for (const id of ids) required += lanesOf(engine(id)).filter((l) => l.required).length;
+    const clean = lanesOf(engine("D-2026-002"));
+    const f = lanesOf(engine("D-2026-003")).filter((l) => l.required).map((l) => l.dept);
+    d.push(`${required} of ${ids.length * 4} department lanes across the ${ids.length} demo cases need a person`, `D-2026-002: ${clean.map((l) => `${l.dept.toLowerCase()} ${l.state}`).join(", ")}`, `D-2026-003 needs: ${f.join(", ")}`);
+    return laneSummary(clean).ready && clean.every((l) => l.state === "AUTO") && f.length === 1 && f[0] === "FINANCE" && required < ids.length * 4;
+  });
+
+  await test("T17", "Escalation, but Legal is never skipped", "An overdue Operations sign-off escalates to the executive (with a reason); an overdue Legal sign-off keeps approval locked.", "Design", "D-2026-006", (d) => {
+    const r6 = engine("D-2026-006");
+    const late6 = lanesOf(r6, [], cfg.signoff_sla_hours + 6);
+    const ops = late6.find((l) => l.dept === "OPERATIONS")!;
+    const noReason = decisionCheck(packetOf(r6, late6), late6, "APPROVED", "");
+    const withReason = decisionCheck(packetOf(r6, late6), late6, "APPROVED", "Manual inventory count confirms cover; decided without Ops sign-off.");
+    const r1 = engine("D-2026-001");
+    const late1 = lanesOf(r1, [], cfg.signoff_sla_hours + 6);
+    const legalLate = decisionCheck(packetOf(r1, late1), late1, "APPROVED", "Trying to approve while Legal is overdue for testing.");
+    d.push(
+      `D-2026-006 Operations lane after ${cfg.signoff_sla_hours + 6}h: ${ops.state}, escalated=${ops.escalated}`,
+      `Decide without a reason → ${noReason.ok ? "allowed (FAIL)" : "blocked"}; with a reason → ${withReason.ok ? `allowed, decided without ${withReason.bypassed.join(",")}` : "blocked"}`,
+      `D-2026-001 Legal overdue → approve ${legalLate.ok ? "allowed (FAIL)" : "still locked"}`,
+    );
+    return ops.escalated && !noReason.ok && withReason.ok && withReason.bypassed.includes("OPERATIONS") && !legalLate.ok;
+  });
+
+  await test("T18", "Human adjustment is visible and costs confidence", "When a lead changes their agent's answer, the packet shows both and Lighthouse's confidence drops.", "Explainability", "D-2026-003", (d) => {
+    const r = engine("D-2026-003");
+    const lanes = lanesOf(r, [so(r, "FINANCE", "ADJUSTED", "PROCEED_WITH_CONDITIONS", "Supplier confirmed extra funding; margin recovers at 28%.")]);
+    const signed = packetOf(r, lanes);
+    const fAi = r.outputs.find((o) => o.agent_type === "FINANCE")!;
+    const fHuman = signedOutputs(r.outputs, lanes).find((o) => o.agent_type === "FINANCE")!;
+    d.push(`Finance: AI ${fAi.recommendation} (${fAi.confidence}) → David ${fHuman.recommendation} (${fHuman.confidence})`, `Lighthouse: AI-only ${r.reconciliation.synthesized_recommendation} → signed ${signed.synthesized_recommendation}`);
+    return lanes.find((l) => l.dept === "FINANCE")!.state === "ADJUSTED" && fHuman.confidence < fAi.confidence && signed.synthesized_recommendation !== r.reconciliation.synthesized_recommendation;
   });
 
   return results;

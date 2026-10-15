@@ -10,7 +10,7 @@ export const metadata = { title: "New decision" };
 
 export default async function NewDecisionPage() {
   const persona = await requireSession();
-  if (persona.role !== "DECISION_OWNER") redirect("/decisions");
+  if (persona.role === "ADMIN") redirect("/home");
   const [cats, regions, clock] = await Promise.all([
     db()`select category_id, name, provenance, gross_margin_pct, regulated from categories order by category_id`,
     db()`select region_id, name, state, store_count from regions order by region_id`,
@@ -19,9 +19,9 @@ export default async function NewDecisionPage() {
   return (
     <div className="mx-auto max-w-[920px]">
       <PageHeader
-        eyebrow="New decision case"
+        eyebrow={persona.role === "DECISION_OWNER" ? "New case" : "Propose a case"}
         title="Describe the decision"
-        subtitle="Choose what, where and how much. The agents do the rest."
+        subtitle="Choose what, where and how much. When you create it, all four agents run straight away."
       />
       <NewCaseForm
         clock={clock}

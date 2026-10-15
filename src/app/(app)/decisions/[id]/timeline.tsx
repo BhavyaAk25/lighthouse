@@ -35,6 +35,15 @@ function describe(a: AuditView) {
       return `Legal disposition: ${String(p.disposition).replace(/_/g, " ").toLowerCase()}${p.note ? ` - “${p.note}”` : ""}`;
     case "REVIEWER_NOTE_ADDED":
       return `Reviewer ${String(p.disposition).toLowerCase()}${p.note ? `: “${p.note}”` : ""}`;
+    case "AGENT_RERUN_COMPLETED":
+      return `${String(p.agent ?? "")[0]}${String(p.agent ?? "").slice(1).toLowerCase()} agent re-run by its lead`;
+    case "DEPARTMENT_SIGNOFF_RECORDED": {
+      const d = String(p.department ?? "");
+      const dn = `${d[0]}${d.slice(1).toLowerCase()}`;
+      const pos = String(p.position ?? "").replace(/_/g, " ").toLowerCase();
+      const what = p.signoff === "CONFIRMED" ? `confirmed (${pos})` : p.signoff === "BLOCKED" ? "blocked" : `changed AI ${String(p.ai_recommendation ?? "").replace(/_/g, " ").toLowerCase()} to ${pos}`;
+      return `${dn} sign-off: ${what}${p.note ? ` - “${p.note}”` : ""}`;
+    }
     case "DECISION_RECORDED":
     case "DECISION_OVERRIDE_RECORDED":
       return `${String(p.decision).replace(/_/g, " ").toLowerCase()}${p.override ? " (override)" : ""}${p.rationale ? ` - “${p.rationale}”` : ""}`;

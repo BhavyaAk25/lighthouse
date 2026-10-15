@@ -2,6 +2,7 @@ import { runAiAgent } from "./ai/agents";
 import type { ProviderName } from "./ai/providers";
 import { synthesize, templateSynthesis, type SynthesisResult } from "./ai/synthesis";
 import { appendAudit } from "./audit";
+import { refreshCase, rowToOutput } from "./caseflow";
 import { db } from "./db";
 import { analyzeAll, buildContext, finalizeOutput, financialImpactOf, reconcile } from "./engine";
 import { computeFacts, getCase, getCategories, getDcs, getRules, getThresholds } from "./repo";
@@ -11,7 +12,7 @@ import { AGENTS } from "./types";
 export type RunMode = "LIVE_AI" | "DEMO_SAFE";
 
 export type RunEvent =
-  | { type: "run_started"; run_id: string; mode: RunMode; revision: number }
+  | { type: "run_started"; run_id: string; mode: RunMode; revision: number; only: AgentType | null }
   | { type: "tool"; agent: AgentType | "LIGHTHOUSE"; name: string; detail: string; ms: number }
   | { type: "agent_started"; agent: AgentType; provider_hint: string }
   | { type: "agent_output"; agent: AgentType; output: AgentOutput; evidence: AgentAnalysis["evidence"]; note?: string }
@@ -23,8 +24,18 @@ export type RunEvent =
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const newRunId = () => `RUN-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
-export async function* executeRun(decisionId: string, actor: { name: string; role: string }, mode: RunMode): AsyncGenerator<RunEvent> {
+export interface RunOptions {
+  /** re-run a single department's agent; the other three keep their current answers */
+  only?: AgentType;
+  /** pace tool events so people can follow along (off for bulk/demo reset) */
+  pace?: boolean;
+}
+
+export async function* executeRun(decisionId: string, actor: { name: string; role: string }, mode: RunMode, opts: RunOptions = {}): AsyncGenerator<RunEvent> {
   const t0 = Date.now();
+  const only = opts.only ?? null;
+  const pace = opts.pace ?? true;
+  const nap = (ms: number) => (pace ? sleep(ms) : Promise.resolve());
   const sql = db();
   const c0 = await getCase(decisionId);
   if (!c0) {
@@ -32,12 +43,24 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
     return;
   }
   if (["APPROVED", "REJECTED"].includes(c0.status)) {
-    yield { type: "error", message: "This decision is final. Revise the case to run the agents again." };
+    yield { type: "error", message: "This decision is final. Revise the case to analyze it again." };
     return;
+  }
+  // a single-agent re-run keeps the other departments' current answers
+  let previous: Partial<Record<AgentType, AgentOutput>> = {};
+  let previousRunId = "";
+  if (only) {
+    const [pk] = await sql`select l.run_id from lighthouse_decisions l join agent_runs r using (run_id) where l.decision_id = ${decisionId} and r.revision = ${c0.revision}`;
+    if (!pk) {
+      yield { type: "error", message: "Submit the case first: all four agents have to run once before one can be re-run." };
+      return;
+    }
+    previousRunId = String(pk.run_id);
+    previous = Object.fromEntries((await sql`select * from agent_outputs where run_id = ${previousRunId}`).map((o) => [o.agent_type, rowToOutput(o)]));
   }
   const runId = newRunId();
   await sql`insert into agent_runs (run_id, decision_id, mode, started_by, revision) values (${runId}, ${decisionId}, ${mode}, ${actor.name}, ${c0.revision})`;
-  yield { type: "run_started", run_id: runId, mode, revision: c0.revision };
+  yield { type: "run_started", run_id: runId, mode, revision: c0.revision, only };
 
   try {
     // ---- 1. evidence gathering (the agents' tools)
@@ -72,18 +95,27 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
         ["match_rule_catalog", `${rules.length} enabled rules`],
       ],
     };
-    for (const ag of AGENTS) yield { type: "agent_started", agent: ag, provider_hint: mode === "DEMO_SAFE" ? "replay" : "gemini" };
+    const running: AgentType[] = only ? [only] : [...AGENTS];
+    for (const ag of running) yield { type: "agent_started", agent: ag, provider_hint: mode === "DEMO_SAFE" ? "replay" : "gemini" };
     // tools already ran (deterministic, ~ms); pace the events so people can follow the evidence gathering
     for (let step = 0; step < 3; step++) {
-      for (const ag of AGENTS) {
+      for (const ag of running) {
         const t = toolNames[ag][step];
         if (t) yield { type: "tool", agent: ag, name: t[0], detail: t[1], ms: Math.max(1, Math.round(toolMs / 11)) };
       }
-      await sleep(260);
+      await nap(260);
     }
 
     // ---- 2. agents
     const outputs: Partial<Record<AgentType, AgentOutput>> = {};
+    if (only) {
+      // carry the other three forward; their evidence is re-gathered deterministically under the new run id
+      const oldBase = previousRunId.replace(/^RUN-/, "EV-");
+      const newBase = runId.replace(/^RUN-/, "EV-");
+      for (const ag of AGENTS)
+        if (ag !== only && previous[ag])
+          outputs[ag] = { ...previous[ag]!, evidence_ids: previous[ag]!.evidence_ids.map((e) => e.replace(oldBase, newBase)), key_metrics: analyses[ag].metrics };
+    }
     const cached =
       mode === "DEMO_SAFE"
         ? Object.fromEntries(
@@ -96,8 +128,8 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
     const prefer: ProviderName[] = ["gemini", "groq"];
 
     if (mode === "DEMO_SAFE") {
-      for (const ag of AGENTS) {
-        await sleep(450 + Math.random() * 650);
+      for (const ag of running) {
+        await nap(450 + Math.random() * 650);
         const cachedOut = cached[ag] as AgentOutput | undefined;
         const out = cachedOut
           ? finalizeOutput(analyses[ag], { ...cachedOut, provider: "replay", latency_ms: 0 })
@@ -108,7 +140,7 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
     } else {
       // run in parallel; results streamed as they finish
       const pending = new Map<AgentType, Promise<{ ag: AgentType; r: Awaited<ReturnType<typeof runAiAgent>> }>>();
-      AGENTS.forEach((ag, i) =>
+      running.forEach((ag, i) =>
         pending.set(
           ag,
           (async () => {
@@ -142,7 +174,7 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
     if (mode === "DEMO_SAFE") {
       const cs = cached.SYNTHESIS as SynthesisResult | undefined;
       synthesis = cs ? { ...cs, provider: "replay" } : templateSynthesis(c, outs, rec);
-      await sleep(400);
+      await nap(400);
     } else {
       synthesis = await synthesize(c, outs, rec, prefer);
     }
@@ -182,8 +214,8 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
       validation_issues: o.validation_issues,
       guardrail_adjustments: o.guardrail_adjustments,
       data_quality: o.data_quality,
+      hard_constraint: o.hard_constraint ?? null,
     }));
-    const status = rec.requires_legal_review ? "AWAITING_LEGAL_REVIEW" : "READY_FOR_DECISION";
     const providers = [...new Set(outs.map((o) => o.provider).concat(synthesis.provider))].join(", ");
     const duration = Date.now() - t0;
     await sql.transaction([
@@ -192,21 +224,25 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
           from json_populate_recordset(null::evidence, ${JSON.stringify(evidence)}::json)`,
       sql`insert into agent_outputs (run_id, decision_id, agent_type, recommendation, confidence, risk_level, evidence_ids, key_metrics,
                                      conditions, dissent_reason, rationale, provider, model, latency_ms, valid, validation_issues,
-                                     guardrail_adjustments, data_quality)
+                                     guardrail_adjustments, data_quality, hard_constraint)
           select run_id, decision_id, agent_type, recommendation, confidence, risk_level, evidence_ids, key_metrics, conditions,
-                 dissent_reason, rationale, provider, model, latency_ms, valid, validation_issues, guardrail_adjustments, data_quality
+                 dissent_reason, rationale, provider, model, latency_ms, valid, validation_issues, guardrail_adjustments, data_quality, hard_constraint
           from json_populate_recordset(null::agent_outputs, ${JSON.stringify(outRows)}::json)`,
       sql`delete from lighthouse_decisions where decision_id = ${decisionId}`,
       sql`insert into lighthouse_decisions (decision_id, run_id, conflict_flag, conflict_severity, conflicts, synthesized_recommendation,
                                             lighthouse_confidence, confidence_breakdown, risk_level, conditions, gates, summary,
                                             summary_provider, headline, narrative, financial_impact, requires_legal_review,
-                                            expedited_eligible, owner)
+                                            expedited_eligible, owner, ai_recommendation, ai_confidence, analyzed_at)
           values (${decisionId}, ${runId}, ${rec.conflict_flag}, ${rec.conflict_severity}, ${JSON.stringify(rec.conflicts)}::jsonb,
                   ${rec.synthesized_recommendation}, ${rec.lighthouse_confidence}, ${JSON.stringify(rec.confidence_breakdown)}::jsonb,
                   ${rec.risk_level}, ${rec.conditions}, ${JSON.stringify(rec.gates)}::jsonb, ${synthesis.summary}, ${synthesis.provider},
                   ${synthesis.headline}, ${JSON.stringify(synthesis)}::jsonb, ${rec.financial_impact}, ${rec.requires_legal_review},
-                  ${rec.expedited_eligible}, ${c.created_by})`,
-      sql`update decision_cases set status = ${status}, updated_at = now() where decision_id = ${decisionId}`,
+                  ${rec.expedited_eligible}, ${c.created_by}, ${rec.synthesized_recommendation}, ${rec.lighthouse_confidence}, now())`,
+      // a fresh answer from an agent needs a fresh sign-off from its department
+      only
+        ? sql`update reviews set superseded = true where decision_id = ${decisionId} and revision = ${c.revision} and department = ${only}`
+        : sql`update reviews set superseded = true where decision_id = ${decisionId} and revision = ${c.revision} and department is not null`,
+      sql`update decision_cases set status = 'IN_REVIEW', updated_at = now() where decision_id = ${decisionId}`,
       sql`update agent_runs set status = 'COMPLETED', finished_at = now(), duration_ms = ${duration}, provider_summary = ${providers}
           where run_id = ${runId}`,
     ]);
@@ -222,14 +258,15 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
                   on conflict (decision_id, revision, agent_type) do update set output = excluded.output, provider = excluded.provider,
                   model = excluded.model, created_at = now()`;
     }
-    await appendAudit(actor.name, actor.role, "AGENTS_RUN_COMPLETED", decisionId, {
+    await appendAudit(actor.name, actor.role, only ? "AGENT_RERUN_COMPLETED" : "AGENTS_RUN_COMPLETED", decisionId, {
       run_id: runId,
       mode,
+      ...(only ? { agent: only, previous_run: previousRunId } : {}),
       revision: c.revision,
       providers,
       outputs: Object.fromEntries(outs.map((o) => [o.agent_type, `${o.recommendation} (${o.confidence})`])),
     });
-    const guardrails = outs.flatMap((o) => o.guardrail_adjustments.map((g) => `${o.agent_type}: ${g}`));
+    const guardrails = outs.filter((o) => !only || o.agent_type === only).flatMap((o) => o.guardrail_adjustments.map((g) => `${o.agent_type}: ${g}`));
     if (guardrails.length) await appendAudit("Lighthouse", "SYSTEM", "GUARDRAIL_APPLIED", decisionId, { run_id: runId, adjustments: guardrails });
     await appendAudit("Lighthouse", "SYSTEM", "RECOMMENDATION_GENERATED", decisionId, {
       run_id: runId,
@@ -239,7 +276,8 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
       legal_review_required: rec.requires_legal_review,
       summary_provider: synthesis.provider,
     });
-    yield { type: "done", run_id: runId, status, duration_ms: duration };
+    const refreshed = await refreshCase(decisionId);
+    yield { type: "done", run_id: runId, status: refreshed?.status ?? "IN_REVIEW", duration_ms: duration };
   } catch (e) {
     await sql`update agent_runs set status = 'FAILED', finished_at = now() where run_id = ${runId}`;
     yield { type: "error", message: String((e as Error).message ?? e).slice(0, 300) };

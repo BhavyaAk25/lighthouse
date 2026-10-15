@@ -43,8 +43,8 @@ export default async function DecisionsPage({ searchParams }: PageProps<"/decisi
     } else where.push(cond);
   };
   if (tab === "demo") add("(c.decision_id like 'D-2026-0%' or c.scenario_tag = 'USER_CREATED')");
-  if (tab === "open") add("c.status in ('DRAFT','AWAITING_LEGAL_REVIEW','READY_FOR_DECISION')");
-  if (tab === "legal") add("c.status = 'AWAITING_LEGAL_REVIEW'");
+  if (tab === "open") add("c.status in ('DRAFT','IN_REVIEW','READY_FOR_DECISION')");
+  if (tab === "legal") add("c.status = 'IN_REVIEW'");
   if (tab === "decided") add("c.status in ('APPROVED','REJECTED','REVISION_REQUESTED')");
   if (q) add("(c.decision_id ilike $? or c.title ilike $? or c.claim_text ilike $?)", `%${q}%`);
   if (cat) add("c.category_id = $?", cat);

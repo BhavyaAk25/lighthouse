@@ -2,22 +2,22 @@ import { ArrowRight, Hourglass } from "lucide-react";
 import Link from "next/link";
 import type { FlowStage } from "@/lib/flow";
 import { cn } from "@/lib/format";
-import type { Recommendation } from "@/lib/types";
-import { RecBadge } from "./domain";
+import type { AgentType, Recommendation } from "@/lib/types";
+import { AGENT_META, LaneDots, RecBadge } from "./domain";
 
 function Owner({ s }: { s: FlowStage }) {
   return (
     <span className="text-[12.5px] text-muted">
-      {s.isYours ? <span className="text-brass-dark">You</span> : s.ownerRole}
+      {s.isYours && s.key !== "signoff" ? <span className="text-brass-dark">You</span> : s.ownerRole}
       {s.ownerName && !s.isYours && <span className="text-faint"> · {s.ownerName}</span>}
     </span>
   );
 }
 
-/** Four connected stage tiles; each links to its column. */
+/** Four connected stage tiles; the sign-off tile shows the four department lanes running in parallel. */
 export function StageMap({ stages, linkBase = "/flow" }: { stages: FlowStage[]; linkBase?: string }) {
   return (
-    <div className="relative grid gap-3 md:grid-cols-4">
+    <div className="relative grid gap-3 md:grid-cols-[1fr_1.5fr_1fr_1fr]">
       <span className="absolute top-1/2 right-[8%] left-[8%] hidden h-px -translate-y-1/2 bg-line md:block" aria-hidden />
       {stages.map((s, i) => {
         const hot = s.mineCount > 0;
@@ -36,6 +36,19 @@ export function StageMap({ stages, linkBase = "/flow" }: { stages: FlowStage[]; 
             </div>
             <div className="mt-2 text-[16px] text-ink">{s.label}</div>
             <Owner s={s} />
+            {s.depts ? (
+              <div className="mt-3 grid grid-cols-2 gap-1.5">
+                {s.depts.map((d) => (
+                  <div
+                    key={d.dept}
+                    className={cn("flex items-center justify-between rounded-[8px] border px-2.5 py-1.5", d.isYours ? "border-brass bg-brass-soft" : "border-line-2 bg-canvas/50")}
+                  >
+                    <span className={cn("text-[12.5px]", d.isYours ? "text-brass-dark" : "text-ink-2")}>{d.isYours ? "You" : AGENT_META[d.dept].name}</span>
+                    <span className={cn("tnum text-[13px]", d.pending ? "text-ink" : "text-faint")}>{d.pending}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <div className="mt-4 flex items-end justify-between">
               <span className="font-display tnum text-[36px] leading-none text-ink">{s.count}</span>
               <span className={cn("text-[12.5px]", hot ? "text-brass-dark" : "text-muted")}>
@@ -50,9 +63,9 @@ export function StageMap({ stages, linkBase = "/flow" }: { stages: FlowStage[]; 
 }
 
 /** Columns of clickable case cards. Your cards have an action button; the rest show whose turn it is. */
-export function FlowBoard({ stages }: { stages: FlowStage[] }) {
+export function FlowBoard({ stages, highlight }: { stages: FlowStage[]; highlight?: AgentType }) {
   return (
-    <div className="grid gap-5 lg:grid-cols-4">
+    <div className="grid gap-5 lg:grid-cols-[1fr_1.5fr_1fr_1fr]">
       {stages.map((s) => (
         <section key={s.key} id={s.key} className="scroll-mt-24">
           <div className={cn("mb-3 flex items-end justify-between border-b pb-2.5", s.mineCount ? "border-brass" : "border-line")}>
@@ -72,10 +85,11 @@ export function FlowBoard({ stages }: { stages: FlowStage[] }) {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono text-[11px] text-faint">{c.decision_id}</span>
-                  {c.rec && s.key !== "analyze" && <RecBadge rec={c.rec as Recommendation} short />}
+                  {c.rec && s.key !== "proposed" && <RecBadge rec={c.rec as Recommendation} short />}
                 </div>
                 <div className="mt-1.5 line-clamp-2 text-[14px] leading-snug text-ink">{c.title}</div>
                 {c.note && <div className="mt-1 line-clamp-2 text-[12.5px] text-muted">{c.note}</div>}
+                {s.key === "signoff" && <LaneDots lanes={c.lanes} highlight={highlight} className="mt-2.5 -ml-1.5" />}
                 <div className="mt-3">
                   {c.mine ? (
                     <span className="inline-flex items-center gap-1.5 rounded-[8px] bg-brand-600 px-2.5 py-1.5 text-[12.5px] text-[#F4F1EA] group-hover:bg-brand-700">
@@ -83,7 +97,7 @@ export function FlowBoard({ stages }: { stages: FlowStage[] }) {
                     </span>
                   ) : c.waitingOn ? (
                     <span className="inline-flex items-center gap-1.5 text-[12.5px] text-muted">
-                      <Hourglass className="size-3.5 text-brass" strokeWidth={1.6} /> {c.waitingOn}’s turn
+                      <Hourglass className="size-3.5 text-brass" strokeWidth={1.6} /> Waiting on {c.waitingOn}
                     </span>
                   ) : (
                     <span className={cn("text-[12.5px]", c.final === "REJECTED" ? "text-bad" : "text-ok")}>{c.final === "REJECTED" ? "Rejected" : "Approved"}</span>

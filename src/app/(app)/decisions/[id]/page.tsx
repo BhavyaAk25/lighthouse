@@ -4,13 +4,13 @@ import { notFound } from "next/navigation";
 import { StatusBadge, SyntheticNotice } from "@/components/domain";
 import { isDemoSafe, requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { REVIEWER_AGENT } from "@/lib/desk";
 import { PROMO_LABEL } from "@/lib/engine/common";
 import { dateLabel, titleCase } from "@/lib/format";
 import { getCase } from "@/lib/repo";
 import { loadDecisionBundle } from "@/lib/views";
 import { JourneyBar } from "@/components/journey";
 import { buildJourney } from "@/lib/journey";
+import { DEPT_OF } from "@/lib/personas";
 import { loadPipeline, workFor } from "@/lib/work";
 import { FocusView } from "./focus-view";
 import { Timeline } from "./timeline";
@@ -23,8 +23,9 @@ export async function generateMetadata({ params }: PageProps<"/decisions/[id]">)
   return { title: id };
 }
 
-export default async function DecisionPage({ params }: PageProps<"/decisions/[id]">) {
+export default async function DecisionPage({ params, searchParams }: PageProps<"/decisions/[id]">) {
   const { id } = await params;
+  const autoSubmit = (await searchParams).submit === "1";
   const persona = await requireSession();
   const c = await getCase(id);
   if (!c) notFound();
@@ -33,7 +34,10 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
     isDemoSafe(),
     db()`select name from categories where category_id = ${c.category_id}`,
   ]);
-  const focusAgent = persona.role === "LEGAL_REVIEWER" ? "LEGAL" : REVIEWER_AGENT[persona.role];
+  const dept = DEPT_OF[persona.role];
+  const draft = c.status === "DRAFT" || c.status === "REVISION_REQUESTED";
+  // leads see their own lane; the proposer (or executive) sees the full workspace while the case is a draft
+  const focusAgent = dept && !(draft && c.created_by === persona.name) ? dept : null;
   const facts = [
     cat?.name,
     `${PROMO_LABEL[c.promo_type]}${c.discount_pct ? ` ${c.discount_pct}%` : ""}`,
@@ -42,21 +46,18 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
     titleCase(c.channel),
     c.vendor_funding_pct ? `${c.vendor_funding_pct}% supplier-funded` : null,
   ].filter(Boolean);
-  const legalReview = [...bundle.reviews].reverse().find((r) => r.reviewer_role === "LEGAL_REVIEWER" && r.revision === c.revision) ?? null;
   const steps = buildJourney({
     status: c.status,
     revision: c.revision,
     created_at: c.created_at,
     created_by: c.created_by,
     hasPacket: !!bundle.packet,
-    analyzedAt: bundle.packet?.created_at ?? null,
-    requiresLegal: bundle.packet?.requires_legal_review ?? null,
-    legalBlocked: bundle.packet?.gates.some((g) => g.key === "LEGAL_REVIEW" && g.status === "BLOCKED") ?? false,
-    legal: legalReview,
+    analyzedAt: bundle.packet?.analyzed_at ?? null,
+    lanes: bundle.lanes,
     final: bundle.packet?.final_decision ? { decision: bundle.packet.final_decision, by: bundle.packet.decided_by, at: bundle.packet.decided_at } : null,
   });
   const myTask = persona.role === "ADMIN" ? null : (workFor(persona, await loadPipeline()).now.find((w) => w.c.decision_id === id)?.action ?? null);
-  const back = persona.role === "DECISION_OWNER" || persona.role === "ADMIN" ? { href: "/decisions", label: "Decisions" } : { href: "/home", label: "My desk" };
+  const back = persona.role === "ADMIN" ? { href: "/decisions", label: "Decisions" } : { href: "/home", label: "My desk" };
 
   return (
     <div>
@@ -72,7 +73,8 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
         </div>
         <h1 className="font-display mt-3 max-w-4xl text-[28px] leading-[1.08] text-ink">{c.title.replace(/ - /g, " · ")}</h1>
         <p className="mt-3 text-[14px] text-muted">{facts.join("  ·  ")}</p>
-        {!focusAgent && c.claim_text && <p className="mt-1.5 text-[14px] text-ink-2">“{c.claim_text}”</p>}
+        {focusAgent !== "LEGAL" && c.claim_text && <p className="mt-1.5 text-[14px] text-ink-2">“{c.claim_text}”</p>}
+        <p className="mt-1.5 text-[12.5px] text-faint">Proposed by {c.created_by === persona.name ? "you" : c.created_by}</p>
       </div>
       <JourneyBar steps={steps} viewer={persona} task={myTask} className="no-print mb-8" />
       {focusAgent ? (
@@ -81,12 +83,13 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
           agent={focusAgent}
           decisionId={id}
           status={c.status}
-          revision={c.revision}
-          output={bundle.outputs[focusAgent]}
+          output={bundle.packet ? bundle.outputs[focusAgent] : undefined}
           evidence={bundle.evidence}
-          packet={bundle.packet}
-          reviews={bundle.reviews}
+          lane={bundle.lanes.find((l) => l.dept === focusAgent)!}
+          lanes={bundle.lanes}
           claim={c.claim_text}
+          decidedBy={bundle.packet?.decided_by ?? null}
+          final={bundle.packet?.final_decision ?? null}
         />
       ) : (
         <Workspace
@@ -98,8 +101,10 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
           outputs={bundle.outputs}
           evidence={bundle.evidence}
           packet={bundle.packet}
-          reviews={bundle.reviews}
+          lanes={bundle.lanes}
           runs={bundle.runs}
+          proposer={c.created_by}
+          autoSubmit={autoSubmit}
           caseParams={{ discount_pct: c.discount_pct, duration_weeks: c.duration_weeks, claim_text: c.claim_text, vendor_funding_pct: c.vendor_funding_pct, promo_type: c.promo_type }}
           timeline={<Timeline entries={bundle.audit} />}
         />

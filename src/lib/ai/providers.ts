@@ -34,7 +34,7 @@ const GROQ_MODELS = (process.env.GROQ_MODELS ?? "openai/gpt-oss-120b,qwen/qwen3.
 
 let gemini: GoogleGenAI | null = null;
 let groq: Groq | null = null;
-const geminiClient = () => (gemini ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY!, httpOptions: { timeout: 45_000 } }));
+const geminiClient = () => (gemini ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY!, httpOptions: { timeout: 15_000 } }));
 const groqClient = () => (groq ??= new Groq({ apiKey: process.env.GROQ_API_KEY!, timeout: 45_000, maxRetries: 0 }));
 
 export const providerConfigured = (p: ProviderName) =>
@@ -131,7 +131,7 @@ function retryAfterMs(e: unknown): number | null {
 
 /**
  * Call the provider chain: Gemini (primary, free tier) then Groq models (free tier).
- * A provider that fails is skipped for 60 seconds so a demo never waits on a dead endpoint.
+ * A provider that fails is skipped for 10 minutes so a demo never waits on a dead endpoint twice.
  */
 export async function callLlm(req: LlmRequest, prefer: ProviderName[] = ["gemini", "groq"]): Promise<LlmResult> {
   const attempts: string[] = [];
@@ -150,7 +150,7 @@ export async function callLlm(req: LlmRequest, prefer: ProviderName[] = ["gemini
       } catch (e) {
         const msg = String((e as Error).message ?? e).slice(0, 160);
         attempts.push(`gemini: ${msg}`);
-        geminiDown = { until: Date.now() + 60_000, reason: msg.slice(0, 60) };
+        geminiDown = { until: Date.now() + 10 * 60_000, reason: msg.slice(0, 60) };
       }
     } else {
       for (const m of GROQ_MODELS) {

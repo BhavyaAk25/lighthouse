@@ -32,32 +32,45 @@ export function PersonaPicker({ personas, currentId }: { personas: Persona[]; cu
     });
   };
 
+  const row = (p: Persona) => (
+    <button
+      key={p.id}
+      disabled={pending}
+      onClick={() => (p.role === "ADMIN" ? setPinFor(p) : go(p))}
+      className="group flex w-full items-center gap-4 py-3 text-left transition-colors"
+    >
+      <span className="grid size-10 shrink-0 place-items-center rounded-full text-[13px] text-[#F4F1EA]" style={{ background: p.color }}>
+        {p.initials}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5 text-[15px] text-ink group-hover:text-brand-700">
+          {p.name}
+          {p.role === "ADMIN" && <Lock className="size-3 text-faint" />}
+        </span>
+        <span className="block text-[12.5px] text-muted">{p.role === "DECISION_OWNER" ? p.title : ROLE_LABEL[p.role]}</span>
+      </span>
+      <span className={cn("shrink-0 transition", currentId === p.id ? "text-brass" : "text-faint group-hover:translate-x-0.5 group-hover:text-ink")}>
+        {busy === p.id ? <Loader2 className="size-4 animate-spin" /> : currentId === p.id ? <Check className="size-4" /> : <ArrowRight className="size-4" />}
+      </span>
+    </button>
+  );
+  const exec = personas.filter((p) => p.role === "DECISION_OWNER");
+  const leads = personas.filter((p) => p.role !== "DECISION_OWNER" && p.role !== "ADMIN");
+  const admin = personas.filter((p) => p.role === "ADMIN");
+  const group = (label: string, people: Persona[]) => (
+    <div className="mt-6">
+      <div className="text-[11px] tracking-[0.14em] text-faint uppercase">{label}</div>
+      <div className="mt-1 divide-y divide-line-2 border-b border-line-2">
+        {people.map((p) => row(p))}
+      </div>
+    </div>
+  );
+
   return (
     <>
-      <div className="mt-8 divide-y divide-line-2 border-y border-line-2">
-        {personas.map((p) => (
-          <button
-            key={p.id}
-            disabled={pending}
-            onClick={() => (p.role === "ADMIN" ? setPinFor(p) : go(p))}
-            className="group flex w-full items-center gap-4 py-3.5 text-left transition-colors"
-          >
-            <span className="grid size-10 shrink-0 place-items-center rounded-full text-[13px] text-[#F4F1EA]" style={{ background: p.color }}>
-              {p.initials}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1.5 text-[15px] text-ink group-hover:text-brand-700">
-                {p.name}
-                {p.role === "ADMIN" && <Lock className="size-3 text-faint" />}
-              </span>
-              <span className="block text-[12.5px] text-muted">{ROLE_LABEL[p.role]}</span>
-            </span>
-            <span className={cn("shrink-0 transition", currentId === p.id ? "text-brass" : "text-faint group-hover:translate-x-0.5 group-hover:text-ink")}>
-              {busy === p.id ? <Loader2 className="size-4 animate-spin" /> : currentId === p.id ? <Check className="size-4" /> : <ArrowRight className="size-4" />}
-            </span>
-          </button>
-        ))}
-      </div>
+      {group("Decides", exec)}
+      {group("Department leads · each owns one agent", leads)}
+      {group("Keeps the system", admin)}
 
       <Dialog.Root open={!!pinFor} onOpenChange={(o) => !o && (setPinFor(null), setPin(""))}>
         <Dialog.Portal>

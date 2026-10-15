@@ -16,12 +16,13 @@ type NavItem = { href: string; label: string; icon: typeof Inbox; badge?: boolea
 const HOME: NavItem = { href: "/home", label: "My desk", icon: Inbox, badge: true };
 const FLOW: NavItem = { href: "/flow", label: "Flow", icon: Workflow };
 const INSIGHTS: NavItem = { href: "/overview", label: "Dashboard", icon: LayoutDashboard, match: ["/overview", "/data", "/roi"] };
+const SIGNOFFS: NavItem = { href: "/history", label: "My sign-offs", icon: History };
 const NAV_BY_ROLE: Record<Persona["role"], NavItem[]> = {
   DECISION_OWNER: [HOME, FLOW, INSIGHTS, { href: "/decisions", label: "All decisions", icon: Layers }, { href: "/audit", label: "Audit", icon: ShieldCheck }],
-  LEGAL_REVIEWER: [HOME, FLOW, INSIGHTS, { href: "/history", label: "My reviews", icon: History }],
-  FINANCE_REVIEWER: [HOME, FLOW, INSIGHTS, { href: "/history", label: "My notes", icon: History }],
-  SALES_REVIEWER: [HOME, FLOW, INSIGHTS, { href: "/history", label: "My notes", icon: History }],
-  OPERATIONS_REVIEWER: [HOME, FLOW, INSIGHTS, { href: "/history", label: "My notes", icon: History }],
+  LEGAL_REVIEWER: [HOME, FLOW, INSIGHTS, SIGNOFFS],
+  FINANCE_REVIEWER: [HOME, FLOW, INSIGHTS, SIGNOFFS],
+  SALES_REVIEWER: [HOME, FLOW, INSIGHTS, SIGNOFFS],
+  OPERATIONS_REVIEWER: [HOME, FLOW, INSIGHTS, SIGNOFFS],
   ADMIN: [
     { href: "/home", label: "System", icon: Gauge },
     FLOW,
@@ -116,7 +117,7 @@ function PersonaCard({ persona }: { persona: Persona }) {
   );
 }
 
-export function Topbar({ demoSafe, pilotClock, onMenu }: { demoSafe: boolean; pilotClock: string; onMenu: () => void }) {
+export function Topbar({ demoSafe, pilotClock, onMenu, canToggle }: { demoSafe: boolean; pilotClock: string; onMenu: () => void; canToggle: boolean }) {
   const [pending, start] = useTransition();
   const [on, setOn] = useState(demoSafe);
   return (
@@ -127,6 +128,19 @@ export function Topbar({ demoSafe, pilotClock, onMenu }: { demoSafe: boolean; pi
       <div className="flex-1" />
       <Tooltip.Provider delayDuration={150}>
         <span className="hidden text-[12px] text-faint sm:inline">Pilot clock · {pilotClock}</span>
+        {!canToggle ? (
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <span className="flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-[12px] text-ink-2">
+                <span className={cn("size-1.5 rounded-full", on ? "bg-brass" : "bg-ok animate-pulse-soft")} />
+                {on ? "Replay" : "Live AI"}
+              </span>
+            </Tooltip.Trigger>
+            <Tooltip.Content sideOffset={6} className="z-50 max-w-[260px] rounded-lg bg-ink px-3 py-2 text-[12px] text-white shadow-pop">
+              {on ? "Agents replay saved AI answers (set by the administrator)." : "Agents call free AI models live, with the rules engine as a fallback."}
+            </Tooltip.Content>
+          </Tooltip.Root>
+        ) : (
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
             <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line bg-white py-1 pr-1 pl-3 text-[12px] text-ink-2">
@@ -152,6 +166,7 @@ export function Topbar({ demoSafe, pilotClock, onMenu }: { demoSafe: boolean; pi
             Live AI calls Gemini (free tier) with automatic Groq fallback. Demo-safe replays the last saved AI answers, so the demo never depends on Wi-Fi.
           </Tooltip.Content>
         </Tooltip.Root>
+        )}
       </Tooltip.Provider>
     </header>
   );
@@ -163,7 +178,7 @@ export function AppFrame({ persona, queueCount, demoSafe, pilotClock, children }
     <div className="min-h-screen">
       <Sidebar persona={persona} queueCount={queueCount} open={open} onClose={() => setOpen(false)} />
       <div className="lg:pl-[232px]">
-        <Topbar demoSafe={demoSafe} pilotClock={pilotClock} onMenu={() => setOpen(true)} />
+        <Topbar demoSafe={demoSafe} pilotClock={pilotClock} onMenu={() => setOpen(true)} canToggle={persona.role === "ADMIN"} />
         <main className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-8 lg:py-12">{children}</main>
       </div>
     </div>

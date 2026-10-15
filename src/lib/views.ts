@@ -1,5 +1,8 @@
 import "server-only";
+import { lanesFrom, rowToOutput, rowToSignoff } from "./caseflow";
 import { db } from "./db";
+import { getThresholds } from "./repo";
+import { laneSummary, type Lane, type Signoff } from "./signoff";
 import type { AgentOutput, AgentType, Conflict, EvidenceItem, Gate, Recommendation, RiskLevel } from "./types";
 
 export interface PacketView {
@@ -28,6 +31,9 @@ export interface PacketView {
   decided_at: string | null;
   override_flag: boolean;
   created_at: string;
+  ai_recommendation: Recommendation | null;
+  ai_confidence: number | null;
+  analyzed_at: string | null;
 }
 
 export interface ReviewView {
@@ -69,35 +75,18 @@ export async function loadDecisionBundle(id: string) {
   const [packetRow] = await sql`select * from lighthouse_decisions where decision_id = ${id}`;
   const runRows = await sql`select * from agent_runs where decision_id = ${id} and status = 'COMPLETED' order by started_at desc limit 10`;
   const runId = packetRow ? String(packetRow.run_id) : runRows[0] ? String(runRows[0].run_id) : null;
-  const [outs, ev, reviews, audit] = await Promise.all([
+  const [outs, ev, reviews, audit, cfg, [caseRow]] = await Promise.all([
     runId ? sql`select * from agent_outputs where run_id = ${runId}` : Promise.resolve([]),
     runId ? sql`select * from evidence where run_id = ${runId} order by evidence_id` : Promise.resolve([]),
     sql`select * from reviews where decision_id = ${id} order by created_at`,
-    sql`select seq, ts, actor, role, action, decision_id, payload, hash, prev_hash from audit_log where decision_id = ${id} order by seq`,
+    // demo cases show their trail since the last demo reset (the full history stays in the audit log)
+    sql`select seq, ts, actor, role, action, decision_id, payload, hash, prev_hash from audit_log where decision_id = ${id}
+          and (${!id.startsWith("D-2026-0")} or seq > coalesce((select max(seq) from audit_log where action = 'DEMO_CASES_RESET'), 0))
+        order by seq`,
+    getThresholds(),
+    sql`select revision from decision_cases where decision_id = ${id}`,
   ]);
-  const outputs = Object.fromEntries(
-    outs.map((o) => [
-      o.agent_type,
-      {
-        agent_type: o.agent_type,
-        recommendation: o.recommendation,
-        confidence: Number(o.confidence),
-        risk_level: o.risk_level,
-        evidence_ids: o.evidence_ids,
-        key_metrics: o.key_metrics,
-        conditions: o.conditions,
-        dissent_reason: o.dissent_reason,
-        rationale: o.rationale,
-        provider: o.provider,
-        model: o.model,
-        latency_ms: o.latency_ms,
-        valid: o.valid,
-        validation_issues: o.validation_issues,
-        guardrail_adjustments: o.guardrail_adjustments,
-        data_quality: o.data_quality,
-      } as AgentOutput,
-    ]),
-  ) as Partial<Record<AgentType, AgentOutput>>;
+  const outputs = Object.fromEntries(outs.map((o) => [o.agent_type, rowToOutput(o)])) as Partial<Record<AgentType, AgentOutput>>;
   const evidence: EvidenceItem[] = ev.map((e) => ({
     evidence_id: String(e.evidence_id),
     agent_type: e.agent_type as AgentType,
@@ -115,10 +104,20 @@ export async function loadDecisionBundle(id: string) {
         financial_impact: Number(packetRow.financial_impact),
         decided_at: packetRow.decided_at ? iso(packetRow.decided_at) : null,
         created_at: iso(packetRow.created_at),
+        ai_confidence: packetRow.ai_confidence === null ? null : Number(packetRow.ai_confidence),
+        analyzed_at: packetRow.analyzed_at ? iso(packetRow.analyzed_at) : iso(packetRow.created_at),
       } as unknown as PacketView)
     : null;
+  const revision = Number(caseRow?.revision ?? 1);
+  const signoffs: Signoff[] = reviews.filter((r) => r.department && Number(r.revision) === revision).map(rowToSignoff);
+  const lanes: Lane[] = lanesFrom(packet ? outputs : {}, signoffs, cfg, packet?.analyzed_at ?? null);
   return {
     packet,
+    lanes,
+    laneSummary: laneSummary(lanes),
+    signoffs,
+    signoffHistory: reviews.filter((r) => r.department).map(rowToSignoff),
+    thresholds: cfg,
     outputs,
     evidence,
     runs: runRows.map((r) => ({

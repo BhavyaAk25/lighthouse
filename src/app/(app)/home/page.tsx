@@ -1,11 +1,13 @@
 import { ArrowRight, Check, Hourglass, Plus } from "lucide-react";
 import Link from "next/link";
-import { RecBadge } from "@/components/domain";
+import { LaneDots, RecBadge } from "@/components/domain";
 import { Card, LinkButton } from "@/components/ui";
+import type { AgentType } from "@/lib/types";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { cn, money } from "@/lib/format";
-import { ROLE_LABEL } from "@/lib/personas";
+import { DEPT_OF, ROLE_LABEL } from "@/lib/personas";
+import { DEPT_NAME } from "@/lib/signoff";
 import type { Recommendation } from "@/lib/types";
 import { loadPipeline, myProcess, workFor, type WorkItem } from "@/lib/work";
 
@@ -61,16 +63,17 @@ function NowRow({ w }: { w: WorkItem }) {
   );
 }
 
-function WaitRow({ w }: { w: WorkItem }) {
+function WaitRow({ w, highlight }: { w: WorkItem; highlight?: AgentType }) {
   return (
     <Link href={`/decisions/${w.c.decision_id}`} className="flex items-start gap-3 px-5 py-3.5 hover:bg-canvas/70">
       <Hourglass className="mt-0.5 size-4 shrink-0 text-brass" strokeWidth={1.6} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[14px] text-ink">{w.c.title}</div>
         <div className="text-[12.5px] text-muted">
-          With <span className="text-ink-2">{w.waitingOn}</span> · {w.why}
+          Waiting on <span className="text-ink-2">{w.waitingOn}</span> · {w.why}
         </div>
       </div>
+      {w.c.lanes.some((l) => l.state !== "NOT_STARTED") && <LaneDots lanes={w.c.lanes.map((l) => ({ dept: l.dept, state: l.state, lead: l.lead.name }))} highlight={highlight} className="hidden sm:inline-flex" />}
       <span className="font-mono text-[11.5px] text-faint">{w.c.decision_id}</span>
     </Link>
   );
@@ -108,7 +111,7 @@ export default async function Home() {
           <h1 className="font-display mt-2 text-[36px] leading-[1.05]">
             {greeting()}, {first}.
           </h1>
-          <p className="mt-3 text-[15px] text-muted">You don’t make decisions. You keep the rules, thresholds and audit trail trustworthy.</p>
+          <p className="mt-3 text-[15px] text-muted">You don’t decide cases. You keep the rules, thresholds, AI settings and audit trail trustworthy.</p>
         </div>
         <YourPart steps={myProcess(persona.role)} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -131,19 +134,14 @@ export default async function Home() {
   }
 
   const work = workFor(persona, await loadPipeline());
+  const dept = DEPT_OF[persona.role];
+  const exec = persona.role === "DECISION_OWNER";
   const n = work.now.length;
-  const line =
-    persona.role === "DECISION_OWNER"
-      ? n
-        ? `${n} ${n === 1 ? "thing needs" : "things need"} you.${work.waiting.length ? ` ${work.waiting.length} ${work.waiting.length === 1 ? "is" : "are"} with Legal.` : ""}`
-        : "Nothing needs you right now."
-      : n
-        ? `${n} ${n === 1 ? "case needs" : "cases need"} you.`
-        : work.waiting.length
-          ? "Nothing needs you yet."
-          : "Nothing needs you right now.";
-  const waitingTitle = persona.role === "DECISION_OWNER" ? "Waiting on Legal" : "Not ready for you yet";
-  const shownWaiting = work.waiting.slice(0, 5);
+  const line = n
+    ? `${n} ${n === 1 ? "thing needs" : "things need"} you.${exec && work.waiting.length ? ` ${work.waiting.length} more ${work.waiting.length === 1 ? "is" : "are"} in department sign-off.` : ""}`
+    : exec && work.waiting.length
+      ? `Nothing needs you yet. ${work.waiting.length} ${work.waiting.length === 1 ? "case is" : "cases are"} in department sign-off.`
+      : "Nothing needs you right now.";
 
   return (
     <div className="mx-auto max-w-[960px]">
@@ -155,11 +153,9 @@ export default async function Home() {
           </h1>
           <p className="mt-3 text-[15px] text-muted">{line}</p>
         </div>
-        {persona.role === "DECISION_OWNER" && (
-          <LinkButton href="/decisions/new" variant="secondary" className="mt-6 shrink-0">
-            <Plus className="size-4" /> New decision
-          </LinkButton>
-        )}
+        <LinkButton href="/decisions/new" variant="secondary" className="mt-6 shrink-0">
+          <Plus className="size-4" /> {exec ? "New case" : "Propose a case"}
+        </LinkButton>
       </div>
 
       <YourPart steps={myProcess(persona.role)} />
@@ -170,30 +166,32 @@ export default async function Home() {
         ))}
       </Section>
 
-      {persona.role === "DECISION_OWNER" ? (
-        <Section title={waitingTitle} count={work.waiting.length} empty="Nothing is waiting on Legal.">
-          {shownWaiting.map((w) => (
-            <WaitRow key={w.c.decision_id} w={w} />
+      {work.waiting.length > 0 && (
+        <Section title={exec ? "In department sign-off" : "Your proposals"} count={work.waiting.length} empty="">
+          {work.waiting.slice(0, 6).map((w) => (
+            <WaitRow key={w.c.decision_id} w={w} highlight={dept} />
           ))}
-        </Section>
-      ) : (
-        work.waiting.length > 0 && (
-          <section className="mb-10">
-            <div className="mb-3 text-[11.5px] tracking-[0.14em] text-muted uppercase">{waitingTitle}</div>
-            <Link href="/flow" className="card flex items-center gap-4 px-5 py-4 hover:border-[#D8D3C7]">
-              <Hourglass className="size-4 shrink-0 text-brass" strokeWidth={1.6} />
-              <span className="min-w-0 flex-1 text-[14px] text-ink-2">
-                {work.waiting.length} {work.waiting.length === 1 ? "case is" : "cases are"} with the decision owner and haven’t been analyzed yet. If any need you, they’ll move up to “Needs you now”.
-              </span>
-              <span className="shrink-0 text-[13px] text-muted">See them in Flow →</span>
+          {work.waiting.length > 6 && (
+            <Link href="/flow" className="block px-5 py-3 text-[13px] text-muted hover:bg-canvas/70 hover:text-ink">
+              {work.waiting.length - 6} more in Flow →
             </Link>
-          </section>
-        )
+          )}
+        </Section>
+      )}
+
+      {dept && work.autoCleared > 0 && (
+        <Link href="/flow#signoff" className="card mb-10 flex items-center gap-4 px-5 py-4 hover:border-[#D8D3C7]">
+          <Check className="size-4 shrink-0 text-ok" />
+          <span className="min-w-0 flex-1 text-[14px] text-ink-2">
+            {work.autoCleared} {work.autoCleared === 1 ? "case" : "cases"} cleared without you: your {DEPT_NAME[dept]} agent found no concern, so no sign-off was needed.
+          </span>
+          <span className="shrink-0 text-[13px] text-muted">See Flow →</span>
+        </Link>
       )}
 
       {work.done.length > 0 && (
         <Section title="Done" count={work.done.length} empty="">
-          {work.done.slice(0, 5).map((w) => (
+          {work.done.slice(0, 6).map((w) => (
             <Link key={w.c.decision_id} href={`/decisions/${w.c.decision_id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-canvas/70">
               <Check className="size-4 shrink-0 text-ok" />
               <span className="min-w-0 flex-1 truncate text-[14px] text-ink-2">{w.c.title}</span>

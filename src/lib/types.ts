@@ -13,7 +13,7 @@ export type Provenance = "REAL" | "DERIVED" | "GENERATED" | "PUBLIC" | "ASSUMPTI
 
 export type CaseStatus =
   | "DRAFT"
-  | "AWAITING_LEGAL_REVIEW"
+  | "IN_REVIEW"
   | "READY_FOR_DECISION"
   | "APPROVED"
   | "REJECTED"
@@ -190,6 +190,8 @@ export interface Thresholds {
   ops_coverage_min: number;
   sales_coverage_min: number;
   low_confidence: number;
+  signoff_confidence: number;
+  signoff_sla_hours: number;
 }
 
 export const DEFAULT_THRESHOLDS: Thresholds = {
@@ -208,6 +210,8 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
   ops_coverage_min: 0.8,
   sales_coverage_min: 0.6,
   low_confidence: 0.6,
+  signoff_confidence: 0.65,
+  signoff_sla_hours: 48,
 };
 
 export interface EvidenceItem {
@@ -278,7 +282,7 @@ export interface Conflict {
 }
 
 export interface Gate {
-  key: "LEGAL_REVIEW" | "OPERATIONS_CAPACITY" | "EVIDENCE_QUALITY" | "FINANCIAL_THRESHOLD";
+  key: "LEGAL_REVIEW" | "OPERATIONS_CAPACITY" | "EVIDENCE_QUALITY" | "FINANCIAL_THRESHOLD" | "SIGN_OFFS";
   label: string;
   status: "CLEAR" | "PENDING" | "BLOCKED" | "WARNING";
   detail: string;

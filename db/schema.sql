@@ -159,7 +159,7 @@ create table decision_cases (
   created_by text not null,
   scenario_tag text not null default '',
   status text not null default 'DRAFT',
-  -- DRAFT | AWAITING_LEGAL_REVIEW | READY_FOR_DECISION | APPROVED | REJECTED | REVISION_REQUESTED
+  -- DRAFT (proposed) | IN_REVIEW (department sign-off) | READY_FOR_DECISION | APPROVED | REJECTED | REVISION_REQUESTED
   facts jsonb,
   original jsonb,
   revision int not null default 1,
@@ -203,7 +203,8 @@ create table agent_outputs (
   valid boolean not null default true,
   validation_issues jsonb not null default '[]',
   guardrail_adjustments jsonb not null default '[]',
-  data_quality jsonb not null default '{}'
+  data_quality jsonb not null default '{}',
+  hard_constraint text
 );
 create index agent_outputs_decision on agent_outputs (decision_id);
 create index agent_outputs_run on agent_outputs (run_id);
@@ -250,7 +251,10 @@ create table lighthouse_decisions (
   decided_by text,
   decided_at timestamptz,
   override_flag boolean not null default false,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  ai_recommendation text,               -- Lighthouse's recommendation from the agents alone (before sign-off)
+  ai_confidence numeric(4,3),
+  analyzed_at timestamptz
 );
 
 create table reviews (
@@ -259,11 +263,17 @@ create table reviews (
   revision int not null default 1,
   reviewer_role text not null,
   reviewer_name text not null,
-  disposition text not null,            -- APPROVED | APPROVED_WITH_CONDITIONS | REJECTED | CONCUR | CONCERN
-  condition_text text,
-  created_at timestamptz not null default now()
+  disposition text not null,            -- department sign-off: CONFIRMED | ADJUSTED | BLOCKED
+  condition_text text,                  -- the lead's note
+  created_at timestamptz not null default now(),
+  department text,                      -- SALES | FINANCE | OPERATIONS | LEGAL (the agent this lead owns)
+  ai_recommendation text,               -- what the agent said
+  position text,                        -- what the lead signed (REJECT when blocked)
+  conditions text[] not null default '{}',
+  superseded boolean not null default false  -- true once the agent re-runs or the lead re-signs
 );
 create index reviews_decision on reviews (decision_id);
+create index reviews_decision_rev on reviews (decision_id, revision);
 
 create table config (
   key text primary key,

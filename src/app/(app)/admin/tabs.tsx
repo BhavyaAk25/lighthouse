@@ -15,6 +15,8 @@ import type { AgentType, LegalRule, Thresholds } from "@/lib/types";
 type Registry = Record<string, { name: string; version: string; prompt_version: string; enabled: boolean; owner: string }>;
 
 const TH_META: { k: keyof Thresholds; label: string; unit: string; help: string }[] = [
+  { k: "signoff_confidence", label: "Sign-off confidence floor", unit: "share", help: "An agent below this confidence needs its department lead to sign off" },
+  { k: "signoff_sla_hours", label: "Sign-off deadline", unit: "hours", help: "After this, a missing Sales/Finance/Ops sign-off escalates to the executive (never Legal)" },
   { k: "financial_impact_threshold", label: "Financial impact threshold", unit: "$", help: "Above this, the packet flags mandatory owner approval" },
   { k: "finance_reject_net", label: "Finance rejection line", unit: "$", help: "Net benefit below this (or -2% of baseline) → REJECT" },
   { k: "min_uplift_pct", label: "Minimum unit uplift", unit: "%", help: "Below this the Sales agent recommends HOLD" },
@@ -405,8 +407,9 @@ function DemoPanel({ canReset }: { canReset: boolean }) {
         <div>
           <h3 className="text-[15px] font-semibold">Reset the 12 demo cases</h3>
           <p className="mt-1 text-[13px] text-muted">
-            Returns D-2026-001 to D-2026-012 to draft so the demo can start clean. Saved AI answers are kept for demo-safe replay. The audit log is append-only, so the
-            reset itself is recorded as a new entry rather than erasing history.
+            Sets up the class demo: D-2026-001 waits for Hannah to submit it live, the rest are analyzed and waiting on department sign-offs, D-2026-006 is overdue on
+            Operations, and D-2026-012 is approved. Do this within a day of the demo (the sign-off deadline is real time). The audit log is append-only, so the reset is
+            recorded rather than erasing history.
           </p>
           <Button
             className="mt-3"

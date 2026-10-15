@@ -48,9 +48,9 @@ export function RiskBadge({ risk }: { risk: RiskLevel }) {
 }
 
 const STATUS_META: Record<CaseStatus, { label: string; tone: "neutral" | "brand" | "ok" | "warn" | "bad" | "violet" }> = {
-  DRAFT: { label: "Draft", tone: "neutral" },
-  AWAITING_LEGAL_REVIEW: { label: "Awaiting legal", tone: "violet" },
-  READY_FOR_DECISION: { label: "Ready for decision", tone: "brand" },
+  DRAFT: { label: "Proposed", tone: "neutral" },
+  IN_REVIEW: { label: "In sign-off", tone: "violet" },
+  READY_FOR_DECISION: { label: "With executive", tone: "brand" },
   APPROVED: { label: "Approved", tone: "ok" },
   REJECTED: { label: "Rejected", tone: "bad" },
   REVISION_REQUESTED: { label: "Revision requested", tone: "warn" },
@@ -95,4 +95,43 @@ export function GateIcon({ status }: { status: "CLEAR" | "PENDING" | "BLOCKED" |
   if (status === "BLOCKED") return <ShieldAlert className="size-4 text-bad" />;
   if (status === "PENDING") return <Gavel className="size-4 text-violet" />;
   return <ShieldAlert className="size-4 text-warn" />;
+}
+
+// ---------------------------------------------------------------- department lanes
+export const LANE_META: Record<string, { label: string; dot: string; text: string }> = {
+  NOT_STARTED: { label: "Not run", dot: "border border-[#CFC8BA] bg-white", text: "text-faint" },
+  AUTO: { label: "Cleared automatically", dot: "bg-brand-300", text: "text-muted" },
+  PENDING: { label: "Waiting", dot: "bg-brass ring-3 ring-brass/20", text: "text-brass-dark" },
+  OVERDUE: { label: "Overdue", dot: "bg-warn ring-3 ring-warn/20", text: "text-warn" },
+  CONFIRMED: { label: "Confirmed", dot: "bg-brand-600", text: "text-ink-2" },
+  ADJUSTED: { label: "Adjusted", dot: "bg-brand-600 ring-2 ring-brass", text: "text-brass-dark" },
+  BLOCKED: { label: "Blocked", dot: "bg-bad", text: "text-bad" },
+  PROHIBITED: { label: "Prohibited", dot: "bg-bad", text: "text-bad" },
+};
+
+/** Plain-language state of a department lane (Legal uses legal words). */
+export function laneLabel(l: { dept: AgentType; state: string; signoff?: { position: string } | null }) {
+  if (l.dept === "LEGAL" && l.signoff) {
+    if (l.state === "BLOCKED") return "Rejected";
+    return l.signoff.position === "PROCEED" ? "Approved" : "Approved with conditions";
+  }
+  return LANE_META[l.state]?.label ?? l.state;
+}
+
+/** Four small dots, one per department (Sales, Finance, Operations, Legal). */
+export function LaneDots({ lanes, highlight, className }: { lanes: { dept: AgentType; state: string; lead?: string }[]; highlight?: AgentType; className?: string }) {
+  return (
+    <span className={cn("inline-flex items-center gap-1.5", className)} aria-label="Department sign-off">
+      {lanes.map((l) => (
+        <span
+          key={l.dept}
+          title={`${AGENT_META[l.dept].name}${l.lead ? ` · ${l.lead}` : ""} · ${LANE_META[l.state]?.label ?? l.state}`}
+          className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10.5px] tracking-wide", highlight === l.dept ? "bg-brass-soft text-brass-dark" : "text-faint")}
+        >
+          <span className={cn("block size-2 rounded-full", LANE_META[l.state]?.dot)} />
+          {AGENT_META[l.dept].name[0]}
+        </span>
+      ))}
+    </span>
+  );
 }

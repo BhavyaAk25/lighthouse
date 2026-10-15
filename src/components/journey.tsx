@@ -2,8 +2,10 @@ import { Bot, Check, Minus, ShieldCheck, X } from "lucide-react";
 import { cn, dateLabel } from "@/lib/format";
 import type { JourneyStep } from "@/lib/journey";
 import { PERSONAS, type Persona } from "@/lib/personas";
+import type { Lane } from "@/lib/signoff";
+import { AGENT_META, LANE_META } from "./domain";
 
-const ROLE_WORD: Record<string, string> = { DECISION_OWNER: "Decision owner", LEGAL_REVIEWER: "Legal", AI: "AI agents", SYSTEM: "Lighthouse" };
+const ROLE_WORD: Record<string, string> = { DECISION_OWNER: "Executive", PROPOSER: "Proposer", LEADS: "Department leads", AI: "AI agents", SYSTEM: "Lighthouse" };
 
 function Who({ step, isYou }: { step: JourneyStep; isYou: boolean }) {
   const p = PERSONAS.find((x) => x.name === step.who);
@@ -12,6 +14,28 @@ function Who({ step, isYou }: { step: JourneyStep; isYou: boolean }) {
       {step.role === "AI" ? <Bot className="size-3.5 text-muted" strokeWidth={1.6} /> : step.role === "SYSTEM" ? <ShieldCheck className="size-3.5 text-muted" strokeWidth={1.6} /> : null}
       <span className={cn("truncate text-[12.5px]", isYou ? "text-brass-dark" : "text-ink-2")}>{isYou ? "You" : ROLE_WORD[step.role] ?? step.who}</span>
       {!isYou && p && <span className="truncate text-[11.5px] text-faint">· {p.name}</span>}
+    </div>
+  );
+}
+
+/** The four parallel department lanes inside the sign-off step. */
+function Lanes({ lanes, viewer }: { lanes: Lane[]; viewer?: Persona }) {
+  return (
+    <div className="mt-2 grid grid-cols-2 gap-1 md:mx-auto md:max-w-[190px]">
+      {lanes.map((l) => {
+        const you = viewer?.name === l.lead.name;
+        const m = LANE_META[l.state];
+        return (
+          <span
+            key={l.dept}
+            title={`${AGENT_META[l.dept].name} · ${l.lead.name} · ${m.label}`}
+            className={cn("flex items-center gap-1.5 rounded-md border px-1.5 py-1 text-[11px]", you ? "border-brass bg-brass-soft" : "border-line-2 bg-white")}
+          >
+            <span className={cn("block size-1.5 shrink-0 rounded-full", m.dot)} />
+            <span className={cn("truncate", you ? "text-brass-dark" : "text-ink-2")}>{you ? "You" : AGENT_META[l.dept].name}</span>
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -46,30 +70,37 @@ function Node({ state }: { state: JourneyStep["state"] }) {
 }
 
 const isMine = (s: JourneyStep, viewer?: Persona) =>
-  !!viewer && (s.who === viewer.name || (s.key === "analyze" && viewer.role === "DECISION_OWNER" && s.state === "current"));
+  !!viewer &&
+  (s.who === viewer.name || (s.key === "signoff" && !!s.lanes?.some((l) => l.lead.name === viewer.name && (l.state === "PENDING" || l.state === "OVERDUE"))));
 
 export function JourneyBar({ steps, viewer, className, task }: { steps: JourneyStep[]; viewer?: Persona; className?: string; task?: string | null }) {
   const cur = steps.find((s) => s.state === "current");
   const blocked = steps.find((s) => s.state === "blocked");
   const done = steps.every((s) => s.state === "done" || s.state === "skipped");
-  const mine = !!task || (cur && isMine(cur, viewer));
-  const doing: Record<string, string> = { analyze: "run the agents", legal: "review the claim", decide: "make the decision" };
-  const headline = blocked
-    ? `Stopped: ${blocked.label.toLowerCase()} · ${blocked.detail.toLowerCase()}`
-    : done
-      ? "Decided and sealed in the audit trail"
-      : cur
-        ? mine
-          ? task && !isMine(cur, viewer)
-            ? `Your turn: ${task.toLowerCase()} before the decision owner decides`
-            : `Your turn: ${doing[cur.key] ?? cur.label.toLowerCase()}`
-          : `Waiting on ${cur.key === "legal" ? "Legal" : "the decision owner"} to ${doing[cur.key] ?? "act"}`
-        : "";
+  const mine = !!task;
+  const sign = steps.find((s) => s.key === "signoff");
+  const pendingDepts = (sign?.lanes ?? []).filter((l) => l.state === "PENDING" || l.state === "OVERDUE").map((l) => l.lead.name.split(" ")[0]);
+  const waitingFor: Record<string, string> = {
+    created: `Waiting on ${steps[0].who.split(" ")[0]} to submit it`,
+    signoff: `Waiting on ${pendingDepts.join(", ") || "the departments"} to sign off`,
+    decide: "Waiting on Maya to decide",
+  };
+  const headline = done
+    ? "Decided and sealed in the audit trail"
+    : mine
+      ? `Your turn: ${task!.toLowerCase()}`
+      : blocked && !cur
+        ? `Stopped: ${blocked.detail.toLowerCase()}`
+        : cur
+          ? waitingFor[cur.key] ?? cur.label
+          : blocked
+            ? `Stopped: ${blocked.detail.toLowerCase()}`
+            : "";
   return (
     <div className={cn("card px-6 py-5", className)}>
       <div className="mb-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <span className={cn("size-2 rounded-full", blocked ? "bg-bad" : done ? "bg-ok" : mine ? "bg-brass animate-pulse-soft" : "bg-brand-300")} />
+          <span className={cn("size-2 rounded-full", mine ? "bg-brass animate-pulse-soft" : blocked ? "bg-bad" : done ? "bg-ok" : "bg-brand-300")} />
           <span className={cn("text-[14.5px]", mine ? "text-brass-dark" : "text-ink")}>{headline}</span>
         </div>
         {mine ? (
@@ -103,6 +134,7 @@ export function JourneyBar({ steps, viewer, className, task }: { steps: JourneyS
                   <Who step={s} isYou={isMine(s, viewer)} />
                 </div>
                 <div className={cn("mt-1 text-[12px]", s.state === "blocked" ? "text-bad" : s.state === "current" ? "text-brass-dark" : "text-muted")}>{s.detail}</div>
+                {s.lanes && s.lanes.some((l) => l.state !== "NOT_STARTED") && <Lanes lanes={s.lanes} viewer={viewer} />}
                 {s.at && <div className="text-[11px] text-faint">{dateLabel(s.at, true)}</div>}
               </div>
             </li>
@@ -110,28 +142,5 @@ export function JourneyBar({ steps, viewer, className, task }: { steps: JourneyS
         })}
       </ol>
     </div>
-  );
-}
-
-export function JourneyDots({ steps }: { steps: JourneyStep[] }) {
-  return (
-    <span className="inline-flex items-center" aria-label="Journey">
-      {steps.map((s, i) => (
-        <span key={s.key} className="inline-flex items-center">
-          {i > 0 && <span className={cn("h-px w-3", ["done", "skipped"].includes(steps[i - 1].state) ? "bg-brand-600" : "bg-line")} />}
-          <span
-            title={`${s.label} · ${s.who} · ${s.detail}`}
-            className={cn(
-              "block size-2 rounded-full",
-              s.state === "done" && "bg-brand-600",
-              s.state === "current" && "size-2.5 bg-brass ring-3 ring-brass/20",
-              s.state === "upcoming" && "border border-[#CFC8BA] bg-white",
-              s.state === "skipped" && "border border-dashed border-[#CFC8BA]",
-              s.state === "blocked" && "bg-bad",
-            )}
-          />
-        </span>
-      ))}
-    </span>
   );
 }

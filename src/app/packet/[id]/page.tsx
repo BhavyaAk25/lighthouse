@@ -147,20 +147,24 @@ export default async function PacketPage({ params }: PageProps<"/packet/[id]">) 
 
           <section className="mt-7 break-inside-avoid">
             <h2 className="text-[15px] font-semibold">Human decision</h2>
-            {b.reviews.length > 0 && (
-              <ul className="mt-2 ml-5 list-disc">
-                {b.reviews.map((r) => (
-                  <li key={r.review_id}>
-                    {r.reviewer_name} ({r.reviewer_role.replace(/_/g, " ").toLowerCase()}, rev {r.revision}): {r.disposition.replace(/_/g, " ").toLowerCase()}
-                    {r.condition_text ? ` - “${r.condition_text}”` : ""} · {dateLabel(r.created_at, true)}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ul className="mt-2 ml-5 list-disc">
+              {b.lanes.map((l) => (
+                <li key={l.dept}>
+                  {l.dept[0] + l.dept.slice(1).toLowerCase()} ({l.lead.name}):{" "}
+                  {l.signoff
+                    ? `${l.signoff.disposition.toLowerCase()}, AI ${l.signoff.ai_recommendation.replace(/_/g, " ").toLowerCase()} → ${l.signoff.position.replace(/_/g, " ").toLowerCase()}${l.signoff.condition_text ? ` - “${l.signoff.condition_text}”` : ""} · ${dateLabel(l.signoff.created_at, true)}`
+                    : l.state === "AUTO"
+                      ? "cleared automatically (no concern raised)"
+                      : l.state === "PROHIBITED"
+                        ? "prohibited by a legal rule"
+                        : "sign-off pending"}
+                </li>
+              ))}
+            </ul>
             <p className="mt-2">
               {p.final_decision
                 ? `${p.final_decision.replace(/_/g, " ").toLowerCase()} by ${p.decided_by} on ${dateLabel(p.decided_at, true)}${p.override_flag ? " (human override of Lighthouse)" : ""}${p.final_rationale ? ` - “${p.final_rationale}”` : ""}`
-                : "Pending decision owner."}
+                : "Pending executive decision."}
             </p>
           </section>
 

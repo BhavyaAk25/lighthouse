@@ -161,6 +161,7 @@ create table decision_cases (
   status text not null default 'DRAFT',
   -- DRAFT | AWAITING_LEGAL_REVIEW | READY_FOR_DECISION | APPROVED | REJECTED | REVISION_REQUESTED
   facts jsonb,
+  original jsonb,
   revision int not null default 1,
   updated_at timestamptz not null default now()
 );
@@ -237,6 +238,8 @@ create table lighthouse_decisions (
   gates jsonb not null,
   summary text not null,
   summary_provider text not null,
+  headline text not null default '',
+  narrative jsonb not null default '{}',
   financial_impact numeric,
   requires_legal_review boolean not null,
   expedited_eligible boolean not null,

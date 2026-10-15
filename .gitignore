@@ -11,3 +11,4 @@ data/raw/
 # next
 next-env.d.ts
 *.tsbuildinfo
+.claude/

@@ -80,7 +80,7 @@ function breakEvenDiscount(ctx: EngineContext): number | null {
   for (let p = 1; p <= 60; p++) {
     if (economics(ctx, p).net_benefit >= 0) best = p;
   }
-  return best;
+  return best === 60 ? null : best; // null = not binding (profitable at every tested depth) or never profitable
 }
 
 export function analyzeFinance(ctx: EngineContext): AgentAnalysis {
@@ -122,7 +122,13 @@ export function analyzeFinance(ctx: EngineContext): AgentAnalysis {
     "finance model",
     "DERIVED",
   );
-  const e8 = ev.add("Break-even discount", be, "finance model (solver)", "DERIVED", "%");
+  const e8 = ev.add(
+    "Break-even discount",
+    be ?? (eco.net_benefit >= 0 ? "Not binding: profitable at every tested discount up to 60%" : "None: not profitable at any discount"),
+    "finance model (solver)",
+    "DERIVED",
+    be === null ? undefined : "%",
+  );
 
   const net = eco.net_benefit;
   // materiality: small losses relative to the revenue at stake are a HOLD, not a REJECT

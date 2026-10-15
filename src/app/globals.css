@@ -1,26 +1,159 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Warm blue brand */
+  --color-brand-25: #f7f9ff;
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d4fe;
+  --color-brand-300: #a3b6fb;
+  --color-brand-400: #7b91f4;
+  --color-brand-500: #5873ea;
+  --color-brand-600: #3d63dd;
+  --color-brand-700: #3150c0;
+  --color-brand-800: #2a419a;
+  --color-brand-900: #26397a;
+
+  --color-ink: #0f172a;
+  --color-ink-2: #344054;
+  --color-muted: #667085;
+  --color-faint: #98a2b3;
+  --color-line: #e6e9f2;
+  --color-line-2: #eef1f7;
+  --color-canvas: #f6f8fc;
+  --color-surface: #ffffff;
+
+  --color-ok: #12a26b;
+  --color-ok-soft: #e7f7ef;
+  --color-warn: #c77700;
+  --color-warn-soft: #fff5e1;
+  --color-bad: #d92d20;
+  --color-bad-soft: #fdecec;
+  --color-info: #0e93b8;
+  --color-info-soft: #e6f6fb;
+  --color-violet: #7a5af8;
+  --color-violet-soft: #f1edfe;
+
+  --color-sales: #e5793b;
+  --color-finance: #12a26b;
+  --color-ops: #0e9aa7;
+  --color-legal: #8e4ec6;
+
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-pop: 0 12px 32px -8px rgba(16, 24, 40, 0.18), 0 4px 10px -4px rgba(16, 24, 40, 0.08);
+  --shadow-glow: 0 0 0 4px rgba(61, 99, 221, 0.12);
+
+  --radius-card: 14px;
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-pulse-soft: pulse-soft 1.8s ease-in-out infinite;
+  --animate-beam: beam 6s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@keyframes beam {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-brand-100);
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #eef1f7 0px, #f7f9fc 80px, #eef1f7 160px);
+  background-size: 800px 100%;
+  animation: var(--animate-shimmer);
+  border-radius: 8px;
+}
+
+/* subtle Stripe-like gradient mesh */
+.mesh {
+  background:
+    radial-gradient(1200px 400px at 0% 0%, rgba(61, 99, 221, 0.16), transparent 60%),
+    radial-gradient(900px 380px at 100% 0%, rgba(122, 90, 248, 0.14), transparent 60%),
+    radial-gradient(800px 300px at 50% 100%, rgba(14, 147, 184, 0.1), transparent 60%),
+    #ffffff;
+}
+
+.gradient-border {
+  position: relative;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: linear-gradient(120deg, #3d63dd, #7a5af8 45%, #0e93b8);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d0d5dd;
+  border-radius: 8px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .card {
+    box-shadow: none;
+  }
 }

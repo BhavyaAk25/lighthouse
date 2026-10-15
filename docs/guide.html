@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Lighthouse · Demo & User Guide</title>
+<style>
+  @page { size: Letter; margin: 0.6in 0.65in 0.7in; }
+  :root { --brand:#3d63dd; --ink:#0f172a; --ink2:#344054; --muted:#667085; --line:#e6e9f2; --soft:#f6f8fc; --ok:#12a26b; --warn:#c77700; --bad:#d92d20; --violet:#7a5af8; }
+  * { box-sizing: border-box; }
+  body { font-family: "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); font-size: 10.4pt; line-height: 1.52; margin: 0; }
+  h1 { font-size: 26pt; letter-spacing: -0.03em; margin: 0 0 6pt; line-height: 1.1; }
+  h2 { font-size: 15pt; letter-spacing: -0.02em; margin: 22pt 0 6pt; padding-top: 6pt; border-top: 1px solid var(--line); }
+  h3 { font-size: 11.5pt; margin: 14pt 0 4pt; }
+  p { margin: 4pt 0 6pt; }
+  .muted { color: var(--muted); }
+  .eyebrow { color: var(--brand); font-weight: 600; font-size: 9.5pt; letter-spacing: .06em; text-transform: uppercase; }
+  .cover { height: 9.1in; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always;
+           background: radial-gradient(700px 300px at 0% 0%, rgba(61,99,221,.16), transparent 60%), radial-gradient(600px 300px at 100% 10%, rgba(122,90,248,.14), transparent 60%); border-radius: 18px; padding: 34pt; }
+  .logo { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg,#3d63dd,#6a5af8 55%,#0e93b8); display:inline-grid; place-items:center; color:#fff; font-weight:700; font-size: 20px; }
+  .grad { background: linear-gradient(90deg,#3d63dd,#7a5af8,#0e93b8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .box { border: 1px solid var(--line); border-radius: 12px; padding: 10pt 12pt; margin: 8pt 0; background: #fff; }
+  .soft { background: var(--soft); }
+  .call { border-left: 4px solid var(--brand); background: #eef2ff; border-radius: 0 10px 10px 0; padding: 8pt 12pt; margin: 8pt 0; }
+  .warn { border-left-color: var(--warn); background: #fff5e1; }
+  .ok { border-left-color: var(--ok); background: #e7f7ef; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9.4pt; }
+  th { text-align: left; background: var(--soft); color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 8pt; letter-spacing: .05em; }
+  th, td { padding: 5pt 7pt; border-bottom: 1px solid var(--line); vertical-align: top; }
+  code, .mono { font-family: "SF Mono", Menlo, monospace; font-size: 9pt; background: var(--soft); padding: 1pt 4pt; border-radius: 4px; }
+  img.shot { width: 100%; border: 1px solid var(--line); border-radius: 10px; margin: 6pt 0 2pt; box-shadow: 0 6px 18px -8px rgba(16,24,40,.25); }
+  .cap { font-size: 8.6pt; color: var(--muted); margin-bottom: 8pt; }
+  .step { display: grid; grid-template-columns: 26px 1fr; gap: 8pt; margin: 9pt 0; page-break-inside: avoid; }
+  .num { width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; font-size: 9pt; display: grid; place-items: center; }
+  .say { color: var(--ink2); font-style: italic; border-left: 2px solid #c7d4fe; padding-left: 8pt; margin-top: 3pt; }
+  .pill { display:inline-block; padding: 1pt 7pt; border-radius: 999px; font-size: 8.4pt; font-weight: 600; }
+  .p-ok{background:#e7f7ef;color:#087443}.p-info{background:#e6f6fb;color:#0b7290}.p-warn{background:#fff5e1;color:#9a5b00}.p-bad{background:#fdecec;color:#b42318}.p-vio{background:#f1edfe;color:#5b3fd1}
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
+  .avoid { page-break-inside: avoid; }
+  .pb { page-break-before: always; }
+  ul { margin: 4pt 0 8pt; padding-left: 16pt; } li { margin: 2pt 0; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="logo">L</span>
+    <div><div style="font-weight:700;font-size:15pt">Lighthouse</div><div class="muted" style="font-size:9.5pt">AI Agent Orchestration &amp; Decision Intelligence</div></div>
+  </div>
+  <div>
+    <div class="eyebrow">Demo &amp; user guide</div>
+    <h1 style="font-size:36pt">Four AI agents.<br/>One auditable decision.<br/><span class="grad">A human always decides.</span></h1>
+    <p style="font-size:12pt;max-width:5.6in" class="muted">How to open, use and present the Lighthouse prototype: a governance layer that reconciles Sales, Finance, Operations and Legal AI agents for a 50-store Walmart U.S. pilot.</p>
+    <div class="box soft" style="max-width:5.8in;margin-top:16pt">
+      <b>Live app:</b> <span class="mono">{{LIVE_URL}}</span><br/>
+      <b>Code:</b> <span class="mono">github.com/BhavyaAk25/lighthouse</span><br/>
+      <b>Administrator PIN:</b> <span class="mono">4210</span> (only needed for Jordan Ellis)
+    </div>
+  </div>
+  <div class="muted" style="font-size:9pt">ISTM 6210 / 4210 Capstone · Fall 2026 · The George Washington University<br/>Ajay · Bhavya · Ehson · Jaehoon · Kunal · Wilfred · Faculty Advisor: Dr. Soheil Sibdari<br/>Academic prototype, not affiliated with Walmart Inc. Pilot data = public Kaggle Walmart sales + clearly labelled generated records.</div>
+</section>
+
+<h2 style="border-top:none;margin-top:0">1. Lighthouse in one minute</h2>
+<p>Large companies are starting to run several specialised AI agents. Each one can be locally rational and still disagree with the others: Sales sees strong demand, Finance sees a margin loss, Operations sees a full distribution center, Legal sees a risky claim. <b>Lighthouse is the layer above the agents.</b> It makes every agent answer in the same format with cited evidence, checks that evidence, detects disagreements, applies governance gates, writes one recommendation, and hands the final call to a named human. Every step is recorded in a tamper-evident log.</p>
+<table>
+  <tr><th style="width:24%">Step</th><th>What happens</th></tr>
+  <tr><td><b>1. Open a case</b></td><td>A Decision Owner describes a promotion or inventory move (category, stores, discount, weeks, marketing claim).</td></tr>
+  <tr><td><b>2. Agents gather evidence</b></td><td>Each agent runs deterministic tools over the pilot database (sales baseline, promo analogs, margins, inventory, DC capacity, 180 active legal rules).</td></tr>
+  <tr><td><b>3. Agents reason</b></td><td>An LLM (Gemini, or Groq as automatic fallback) reads the evidence and returns a recommendation, confidence, risk, conditions and cited evidence IDs.</td></tr>
+  <tr><td><b>4. Guardrails</b></td><td>Hard limits the AI cannot override: legal prohibitions, mandatory legal review, capacity hard stops, missing data. Fake citations are removed.</td></tr>
+  <tr><td><b>5. Lighthouse reconciles</b></td><td>Detects conflicts (never averaged), applies gates, computes a synthesis confidence score, writes an executive summary.</td></tr>
+  <tr><td><b>6. Humans decide</b></td><td>Legal records a disposition when required; the Decision Owner approves, rejects or asks for a revision. Overrides need a written reason.</td></tr>
+  <tr><td><b>7. Audit</b></td><td>Every action is chained with SHA-256 to the previous entry. The database refuses edits and deletes.</td></tr>
+</table>
+
+<h2>2. Signing in &amp; roles</h2>
+<p>Open the live app and choose a person. There are no passwords for the demo personas; the Administrator needs PIN <code>4210</code>. Use <b>Switch role</b> at the bottom left to change persona at any time.</p>
+<img class="shot" src="img/login.jpg" /><div class="cap">Sign-in screen: each card is a role with its own permissions.</div>
+<table>
+  <tr><th>Persona</th><th>Role</th><th>Can do</th></tr>
+  <tr><td>Maya Chen</td><td>Decision Owner</td><td>Create cases, run agents, revise, approve / reject / request revision</td></tr>
+  <tr><td>Priya Raman</td><td>Legal &amp; Compliance</td><td>Record legal dispositions on gated cases (unlocks or blocks approval)</td></tr>
+  <tr><td>David Okafor · Hannah Brooks · Luis Moreno</td><td>Finance · Commercial · Operations reviewers</td><td>Add concur / concern notes to a packet</td></tr>
+  <tr><td>Jordan Ellis (PIN 4210)</td><td>System Administrator</td><td>Edit rules and thresholds (with a reason), test AI providers, reset demo cases. <b>Cannot approve decisions</b> (separation of duties)</td></tr>
+</table>
+
+<h2 class="pb" style="border-top:none">3. The demo script (about 8 minutes)</h2>
+<div class="call ok"><b>Before class (5 minutes):</b> sign in as Jordan → <i>Rules &amp; agents → Demo controls → Reset demo cases</i>. Then <i>Agents &amp; AI → Test providers</i> to confirm Gemini / Groq answer. Keep <b>Live AI</b> on. If the Wi-Fi is bad, switch the top-right toggle to <b>Demo-safe replay</b> (see section 5).</div>
+
+<div class="step"><span class="num">1</span><div><b>Overview (Maya).</b> Sign in as Maya Chen. Point at the KPI row and the yellow label.
+<div class="say">“Lighthouse supervises four agents across a 50-store Walmart U.S. pilot. 5,000 decision cases, 20,000 agent outputs, and every number is labelled real, derived, generated or assumption.”</div></div></div>
+<img class="shot" src="img/overview.jpg" /><div class="cap">Overview dashboard: open items, conflict rate, confidence, overrides, weekly outcomes.</div>
+
+<div class="step"><span class="num">2</span><div><b>Open the anchor case.</b> Click <i>Open anchor case</i> (D-2026-001: 15% rollback on Health &amp; Wellness, all 50 stores, 6 weeks, claim “Clinically proven cold &amp; flu relief”). Click <b>Run agents</b>.
+<div class="say">“Each agent first calls tools against the database: you can see the tool names stream in. Then the model reasons over that evidence. Four agents run in parallel.”</div></div></div>
+<img class="shot" src="img/running.jpg" /><div class="cap">Agents mid-run: deterministic tool calls (green wrench) followed by AI reasoning.</div>
+
+<div class="step"><span class="num">3</span><div><b>Read the four positions.</b> Sales: proceed (uplift ~+23%, real promo analog +13%). Finance: proceed (supplier funds 80%). Operations: proceed with conditions (DC load ~96%). Legal: <b>review required</b> (13 rules, clinical claim). Point at the model label on each card (e.g. “Groq · gpt-oss-120b”) and click <b>evidence</b> on Sales to show the real daily sales chart.
+<div class="say">“Every number on these cards traces to an evidence ID. If the AI cited evidence that doesn’t exist, it would be removed and flagged.”</div></div></div>
+<img class="shot" src="img/agents.jpg" /><div class="cap">Completed agent cards: recommendation, confidence ring, risk, key metrics, model used, evidence link.</div>
+
+<div class="step"><span class="num">4</span><div><b>The Lighthouse packet.</b> Scroll down. Show the headline, the confidence breakdown (“a synthesis score, not an average”), the surfaced disagreement, the governance gates (Legal = <span class="pill p-vio">PENDING</span>) and the conditions. Show that <b>Approve is locked</b>.
+<div class="say">“Three functions support proceeding, but Legal imposes a mandatory gate. Lighthouse doesn’t average that away; it locks approval until a human lawyer reviews.”</div></div></div>
+<img class="shot" src="img/packet-legal.jpg" /><div class="cap">Lighthouse packet with the legal gate pending and approval locked.</div>
+
+<div class="step"><span class="num">5</span><div><b>Legal review (Priya).</b> Switch role → Priya Raman. Her review queue shows D-2026-001. Open it, choose <i>Approve with conditions</i>, type a note such as “Replace ‘clinically proven’ with drug-facts wording; substantiation attached”, click <b>Record legal disposition</b>.</div></div>
+
+<div class="step"><span class="num">6</span><div><b>Decide (Maya).</b> Switch back to Maya. The Legal gate is now cleared. Click <b>Approve</b> with an empty rationale: it is refused (high-risk case). Type a rationale and approve.
+<div class="say">“The human is accountable: the system requires a reason, and the decision lands in the audit trail with the evidence that informed it.”</div></div></div>
+<img class="shot" src="img/approved.jpg" /><div class="cap">Recorded decision and the case’s hash-chained decision trace.</div>
+
+<div class="step"><span class="num">7</span><div><b>Conflict cases (pick one or two).</b> D-2026-003 Finance vs Sales: strong demand but a $1.3M loss, Lighthouse says <span class="pill p-warn">Hold</span> and Finance reports a break-even discount. D-2026-005: alcohol BOGO in Texas, Legal prohibition → <span class="pill p-bad">Reject</span>, approval impossible. D-2026-006: inventory feed outage → Operations output marked invalid, no imputation → <span class="pill p-vio">Review required</span>.</div></div>
+<img class="shot" src="img/packet-conflict.jpg" /><div class="cap">D-2026-003: material conflict surfaced explicitly; Lighthouse holds.</div>
+
+<div class="step"><span class="num">8</span><div><b>Audit log.</b> Open <i>Audit log</i> → <b>Verify chain</b>. About 22,000 entries are re-hashed in under a second.
+<div class="say">“If anyone edited a past decision, verification would point to the exact entry that was altered.”</div></div></div>
+<img class="shot" src="img/audit.jpg" /><div class="cap">Tamper-evidence check over the full audit chain.</div>
+
+<div class="step"><span class="num">9</span><div><b>Test lab.</b> Open <i>Test lab</i> → <b>Run all tests</b>: 15/15 acceptance tests from Deliverable 1 pass live (agreement, conflict, hard stop, legal gate, missing &amp; stale evidence, overrides, audit replay, guardrails, prompt-injection screening, 60-second target, scale).</div></div>
+<img class="shot" src="img/testlab.jpg" /><div class="cap">Acceptance suite run against the real engine and database.</div>
+
+<div class="step"><span class="num">10</span><div><b>Close with data &amp; ROI.</b> <i>Data &amp; evidence</i> shows exactly what is real vs generated. <i>ROI model</i> reproduces Deliverable 1 ($1.43M benefit, 24% ROI, 9.7-month payback) with live sliders and a tornado chart. Optional: sign in as Jordan (PIN 4210), change a threshold with a reason, and show the new audit entry.</div></div>
+<div class="two"><div><img class="shot" src="img/data.jpg" /><div class="cap">Real M5 Walmart demand by category.</div></div><div><img class="shot" src="img/roi.jpg" /><div class="cap">ROI model with sensitivity tornado.</div></div></div>
+
+<h2 class="pb" style="border-top:none">4. The twelve demo scenarios</h2>
+<p>All twelve start as <b>Draft</b> after a reset. Each one exercises a specific acceptance criterion.</p>
+<table>
+  <tr><th>Case</th><th>Scenario</th><th>Expected Lighthouse result</th></tr>
+  <tr><td>D-2026-001</td><td>Anchor: 15% OTC rollback, “clinically proven” claim</td><td><span class="pill p-info">Proceed with conditions</span> after legal approval</td></tr>
+  <tr><td>D-2026-002</td><td>8% pantry rollback, West, supplier funded</td><td>All four agents support · no conflict</td></tr>
+  <tr><td>D-2026-003</td><td>28% Home &amp; Kitchen rollback</td><td><span class="pill p-warn">Hold</span>: demand strong, economics fail (material conflict)</td></tr>
+  <tr><td>D-2026-004</td><td>BOGO household, launches in 3 days</td><td><span class="pill p-warn">Hold</span>: lead time longer than launch window (hard stop)</td></tr>
+  <tr><td>D-2026-005</td><td>Hard seltzer BOGO in Texas</td><td><span class="pill p-bad">Reject</span>: legal prohibition, approval impossible</td></tr>
+  <tr><td>D-2026-006</td><td>Electronics, Mid-Atlantic feed outage</td><td><span class="pill p-vio">Review required</span>: Operations evidence invalid, not imputed</td></tr>
+  <tr><td>D-2026-007</td><td>Fresh deli endcap, evidence 18 days old</td><td>Proceed with conditions, stale flag, confidence downgraded</td></tr>
+  <tr><td>D-2026-008</td><td>3-store baby digital coupon</td><td>Low confidence, test-first condition, legal review (children’s data)</td></tr>
+  <tr><td>D-2026-009</td><td>50% apparel clearance, West</td><td><span class="pill p-warn">Hold</span>: deep markdown economics; good case to demo a rejection</td></tr>
+  <tr><td>D-2026-010</td><td>Beauty digital coupon, skin-repair claim, CA</td><td>Privacy + cosmetic-drug claim review; economics hold</td></tr>
+  <tr><td>D-2026-011</td><td>8-week supplier endcap, all stores</td><td>Proceed with conditions after legal review (exclusivity)</td></tr>
+  <tr><td>D-2026-012</td><td>Move 6,000 TVs before the holidays</td><td>Proceed with conditions · no conflict</td></tr>
+</table>
+<p class="muted">AI wording varies slightly run to run; the governed recommendation is fixed by policy, so the outcome column stays the same.</p>
+
+<h2>5. Live AI, demo-safe mode and the backup plan</h2>
+<table>
+  <tr><th>Layer</th><th>What it is</th><th>When it is used</th></tr>
+  <tr><td>Gemini (free tier)</td><td>Newest Gemini Flash model the key can access</td><td>Primary on the deployed site</td></tr>
+  <tr><td>Groq (free tier)</td><td>gpt-oss-120b → Qwen → gpt-oss-20b</td><td>Automatically, if Gemini errors or hits a limit</td></tr>
+  <tr><td>Rules engine</td><td>Deterministic version of each agent</td><td>If no AI answers; outputs are labelled “Rules engine”</td></tr>
+  <tr><td>Demo-safe replay</td><td>Replays the last saved AI answers for that case</td><td>Turn on with the top-right toggle when Wi-Fi is unreliable</td></tr>
+</table>
+<div class="call warn"><b>Note on the GWU network:</b> campus Wi-Fi blocks Google’s Gemini API address. This does not affect the deployed site (Vercel’s servers call Gemini, not your laptop). If you run the app locally on campus, it automatically uses Groq.</div>
+
+<h2>6. How it works (for questions)</h2>
+<h3>Agents and tools</h3>
+<ul>
+  <li><b>Sales:</b> 56-day baseline, seasonal index for the exact window, category elasticity, real promo-day analogs from M5, channel mix.</li>
+  <li><b>Finance:</b> incremental gross profit at the discounted price, basket halo, supplier funding, execution/labor/inventory costs, downside case (uplift −40%), break-even discount solver.</li>
+  <li><b>Operations:</b> inventory position, launch requirement vs lead time, DC utilization in the same calendar window, labor and online fulfillment capacity, projected fill rate.</li>
+  <li><b>Legal:</b> matches 180 active rules (250 incl. superseded versions) by category, mechanic, channel, states, discount, duration, flags and claim text.</li>
+</ul>
+<h3>Governance rules (Deliverable 1 §4.2)</h3>
+<ul>
+  <li>Legal prohibition → Reject; legal review required → approval locked until a human disposition.</li>
+  <li>Missing evidence → output invalid, Review required, never imputed.</li>
+  <li>Operations hard stop → Hold unless mitigation resolves it.</li>
+  <li>Support vs oppose → explicit conflict; confidence = weighted agent confidence × completeness × freshness × (1 − conflict penalty).</li>
+  <li>The AI writes the narrative; it cannot change the governed recommendation.</li>
+</ul>
+
+<h2>7. Likely questions</h2>
+<table>
+  <tr><th style="width:34%">Question</th><th>Answer</th></tr>
+  <tr><td>Is this real Walmart data?</td><td>Demand patterns are real public Walmart data from Kaggle (M5 daily sales; 45-store weekly sales), calibrated to the FY2026 10-K. Store IDs, inventory, legal rules and costs are generated and labelled. Nothing is Walmart internal data.</td></tr>
+  <tr><td>Why benchmark elasticities?</td><td>Price response measured directly in M5 is weak and noisy (weekly-averaged prices blur short promos). We show the measured values and use category-level benchmarks from the marketing literature, labelled as assumptions.</td></tr>
+  <tr><td>What if the AI hallucinates?</td><td>Numbers come from deterministic tools; the AI must cite evidence IDs; unknown IDs are removed; hard constraints are enforced after the AI answers; unsupported answers fall back to the rules engine. Test T12 demonstrates this.</td></tr>
+  <tr><td>What about prompt injection?</td><td>User text is passed as quoted data, screened for injection patterns, and never treated as instructions (test T13).</td></tr>
+  <tr><td>Why not let the AI decide?</td><td>Accountability, error containment and compliance. Lighthouse never executes decisions; a named human approves, with a recorded reason.</td></tr>
+  <tr><td>Does it meet the 60-second target?</td><td>Live runs complete in about 6–10 seconds; the reconciliation itself takes milliseconds (test T14).</td></tr>
+  <tr><td>What does it cost to run?</td><td>$0: Vercel Hobby, Neon free tier, Gemini and Groq free tiers.</td></tr>
+</table>
+
+<h2>8. Troubleshooting</h2>
+<ul>
+  <li><b>An agent card says “Rules engine”:</b> no AI provider answered (rate limit or network). The result is still valid. Re-run in a minute, or use demo-safe mode.</li>
+  <li><b>Approve button is locked:</b> by design. Check the Legal gate; switch to Priya to record a disposition.</li>
+  <li><b>A demo case is already approved:</b> Jordan → Rules &amp; agents → Demo controls → Reset demo cases.</li>
+  <li><b>Need a clean printout:</b> on any case, click <i>Export packet</i> → Print / Save as PDF.</li>
+</ul>
+</body>
+</html>

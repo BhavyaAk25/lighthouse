@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { money } from "@/lib/format";
 
 const AX = { fontSize: 11, fill: "#667085" };
@@ -127,7 +127,8 @@ export function DcLines({ data }: { data: Record<string, number | string>[] }) {
 }
 
 export function Tornado({ data }: { data: { driver: string; low: number; high: number }[] }) {
-  const rows = data.map((d) => ({ driver: d.driver, low: d.low, high: d.high }));
+  // pessimistic side drawn left of zero, optimistic side right of zero
+  const rows = data.map((d) => ({ driver: d.driver, low: Math.min(0, d.low), high: Math.max(0, d.high) }));
   return (
     <ResponsiveContainer width="100%" height={Math.max(200, rows.length * 44)}>
       <BarChart data={rows} layout="vertical" margin={{ left: 12, right: 28, top: 4 }} stackOffset="sign">
@@ -135,8 +136,9 @@ export function Tornado({ data }: { data: { driver: string; low: number; high: n
         <XAxis type="number" tick={AX} axisLine={false} tickLine={false} tickFormatter={(v) => `${v > 0 ? "+" : ""}${v.toFixed(0)} pts`} />
         <YAxis type="category" dataKey="driver" tick={{ ...AX, fill: "#344054" }} axisLine={false} tickLine={false} width={150} />
         <Tooltip {...TT} formatter={(v) => `${Number(v) > 0 ? "+" : ""}${Number(v).toFixed(1)} ROI pts`} cursor={{ fill: "#f6f8fc" }} />
-        <Bar dataKey="low" name="Pessimistic" fill="#f0766c" radius={[6, 0, 0, 6]} barSize={18} />
-        <Bar dataKey="high" name="Optimistic" fill="#12a26b" radius={[0, 6, 6, 0]} barSize={18} />
+        <ReferenceLine x={0} stroke="#98a2b3" />
+        <Bar dataKey="low" name="Pessimistic" stackId="t" fill="#f0766c" barSize={18} />
+        <Bar dataKey="high" name="Optimistic" stackId="t" fill="#12a26b" barSize={18} />
       </BarChart>
     </ResponsiveContainer>
   );

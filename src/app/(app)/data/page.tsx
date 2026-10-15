@@ -53,7 +53,7 @@ export default async function DataPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Insights" subtitle="Where every number comes from." />
+      <PageHeader title="Dashboard" subtitle="Where every number comes from." />
       <InsightTabs active="data" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Daily sales rows" value={int(counts.sales)} sub="50 stores × 12 categories × 365 days" icon={<Database className="size-4" />} tone="brand" />

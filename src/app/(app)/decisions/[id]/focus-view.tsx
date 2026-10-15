@@ -4,34 +4,38 @@ import { Check } from "lucide-react";
 import { WaitingNote } from "@/components/desk";
 import { AGENT_META, AgentAvatar, ProvTag, RecBadge, RiskBadge } from "@/components/domain";
 import { Card, ConfidenceRing } from "@/components/ui";
-import { titleCase } from "@/lib/format";
+import { money, titleCase } from "@/lib/format";
 import type { Persona } from "@/lib/personas";
 import type { AgentOutput, AgentType, CaseStatus, EvidenceItem } from "@/lib/types";
 import type { PacketView, ReviewView } from "@/lib/views";
 import { DecisionPanel } from "./decision-panel";
 
 const METRIC_LABEL: Record<string, string> = {
-  unit_uplift_pct: "Unit uplift %",
-  revenue_uplift_pct: "Revenue uplift %",
+  unit_uplift_pct: "Unit uplift",
+  revenue_uplift_pct: "Revenue uplift",
   projected_revenue: "Projected revenue",
-  analog_uplift_pct: "Real promo analog %",
+  analog_uplift_pct: "Real promo analog",
   net_benefit: "Net benefit",
-  roi_pct: "ROI %",
+  roi_pct: "ROI",
   downside_net_benefit: "Downside case",
-  break_even_discount_pct: "Break-even discount %",
-  dc_util_projected_peak_pct: "DC peak load %",
-  projected_fill_rate_pct: "Projected fill rate %",
-  fulfillment_projected_pct: "Online fulfillment %",
+  break_even_discount_pct: "Break-even discount",
+  dc_util_projected_peak_pct: "DC peak load",
+  projected_fill_rate_pct: "Projected fill rate",
+  fulfillment_projected_pct: "Online fulfillment",
   coverage_days: "Inventory cover (days)",
-  labor_projected_pct: "Store labor %",
+  labor_projected_pct: "Store labor",
   launch_gap_units: "Launch gap (units)",
   promo_cost: "Promotion cost",
   vendor_funding: "Supplier funding",
 };
 
-function fmt(v: unknown) {
-  if (v === null || v === undefined) return "-";
-  if (typeof v === "number") return Math.abs(v) >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 0 }) : String(v);
+const MONEY_KEYS = new Set(["projected_revenue", "net_benefit", "downside_net_benefit", "promo_cost", "vendor_funding"]);
+function fmt(k: string, v: unknown) {
+  if (v === null || v === undefined) return k === "break_even_discount_pct" ? "Not binding" : "-";
+  if (typeof v !== "number") return String(v);
+  if (MONEY_KEYS.has(k)) return money(v);
+  if (k.endsWith("_pct")) return `${v.toFixed(1)}%`;
+  if (k === "launch_gap_units") return Math.round(v).toLocaleString("en-US");
   return String(v);
 }
 
@@ -60,7 +64,7 @@ export function FocusView({
 }) {
   const isLegal = agent === "LEGAL";
   const mine = reviews.find((r) => r.reviewer_name === persona.name && r.revision === revision);
-  if (!packet || !output) return <WaitingNote>Waiting on Maya Chen to run the agents on this case.</WaitingNote>;
+  if (!packet || !output) return <WaitingNote>Not ready for you yet: waiting on the decision owner (Maya Chen) to run the agents.</WaitingNote>;
 
   const rules = isLegal ? evidence.filter((e) => e.agent_type === "LEGAL" && e.label.startsWith("Rule")) : [];
   const metrics = Object.entries(output.key_metrics).filter(([k]) => METRIC_LABEL[k]);
@@ -105,7 +109,7 @@ export function FocusView({
               {metrics.slice(0, 9).map(([k, v]) => (
                 <div key={k}>
                   <div className="text-[12px] text-muted">{METRIC_LABEL[k]}</div>
-                  <div className="tnum text-[15px] text-ink">{fmt(v)}</div>
+                  <div className="tnum text-[15px] text-ink">{fmt(k, v)}</div>
                 </div>
               ))}
             </div>
@@ -164,9 +168,9 @@ export function FocusView({
             Decided by {packet.decided_by}: {final.replace(/_/g, " ").toLowerCase()}.
           </WaitingNote>
         ) : legalNotNeeded ? (
-          <WaitingNote>Nothing on this case needs legal review.</WaitingNote>
+          <WaitingNote>Nothing for you here: the Legal agent found no rule that needs a lawyer.</WaitingNote>
         ) : mine ? (
-          <WaitingNote>Your {isLegal ? "disposition" : "note"} was sent. Waiting on Maya Chen to decide.</WaitingNote>
+          <WaitingNote>Done. Your {isLegal ? "disposition" : "note"} went to the decision owner (Maya Chen), who makes the final call.</WaitingNote>
         ) : (
           <DecisionPanel persona={persona} decisionId={decisionId} status={status} revision={revision} packet={packet} reviews={reviews} hasRun />
         )}

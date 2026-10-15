@@ -11,7 +11,7 @@ import { getPilotClock } from "@/lib/repo";
 import type { AgentType, CaseStatus, Recommendation } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Insights" };
+export const metadata = { title: "Dashboard" };
 
 const SCENARIO_COPY: Record<string, string> = {
   ANCHOR_LEGAL_GATE: "Three agents support; Legal gates a clinical claim",
@@ -61,7 +61,7 @@ export default async function Overview() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Insights" subtitle="How the pilot is performing across 5,000 decisions." />
+      <PageHeader title="Dashboard" subtitle="How the pilot is performing across all 5,000 decisions." />
       <InsightTabs active="overview" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-6">
         <Stat label="Needs a decision" value={k.open} sub="Ready or awaiting legal" />

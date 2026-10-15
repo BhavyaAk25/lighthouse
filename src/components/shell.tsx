@@ -15,13 +15,13 @@ import { Wordmark } from "./logo";
 type NavItem = { href: string; label: string; icon: typeof Inbox; badge?: boolean; match?: string[] };
 const HOME: NavItem = { href: "/home", label: "My desk", icon: Inbox, badge: true };
 const FLOW: NavItem = { href: "/flow", label: "Flow", icon: Workflow };
-const INSIGHTS: NavItem = { href: "/overview", label: "Insights", icon: LayoutDashboard, match: ["/overview", "/data", "/roi"] };
+const INSIGHTS: NavItem = { href: "/overview", label: "Dashboard", icon: LayoutDashboard, match: ["/overview", "/data", "/roi"] };
 const NAV_BY_ROLE: Record<Persona["role"], NavItem[]> = {
-  DECISION_OWNER: [HOME, FLOW, { href: "/decisions", label: "Decisions", icon: Layers }, INSIGHTS, { href: "/audit", label: "Audit", icon: ShieldCheck }],
-  LEGAL_REVIEWER: [HOME, FLOW, { href: "/history", label: "My reviews", icon: History }],
-  FINANCE_REVIEWER: [HOME, FLOW, { href: "/history", label: "My notes", icon: History }],
-  SALES_REVIEWER: [HOME, FLOW, { href: "/history", label: "My notes", icon: History }],
-  OPERATIONS_REVIEWER: [HOME, FLOW, { href: "/history", label: "My notes", icon: History }],
+  DECISION_OWNER: [HOME, FLOW, INSIGHTS, { href: "/decisions", label: "All decisions", icon: Layers }, { href: "/audit", label: "Audit", icon: ShieldCheck }],
+  LEGAL_REVIEWER: [HOME, FLOW, INSIGHTS, { href: "/history", label: "My reviews", icon: History }],
+  FINANCE_REVIEWER: [HOME, FLOW, INSIGHTS, { href: "/history", label: "My notes", icon: History }],
+  SALES_REVIEWER: [HOME, FLOW, INSIGHTS, { href: "/history", label: "My notes", icon: History }],
+  OPERATIONS_REVIEWER: [HOME, FLOW, INSIGHTS, { href: "/history", label: "My notes", icon: History }],
   ADMIN: [
     { href: "/home", label: "System", icon: Gauge },
     FLOW,

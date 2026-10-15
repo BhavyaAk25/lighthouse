@@ -14,11 +14,11 @@ export default async function FlowPage() {
     <div>
       <PageHeader
         title="Flow"
-        subtitle={mine ? `Where every decision is right now. ${mine} ${mine === 1 ? "card is" : "cards are"} waiting on you, outlined in brass.` : "Where every decision is right now, and who has it."}
+        subtitle={mine ? `Every live case and whose turn it is. Your ${mine} ${mine === 1 ? "card is" : "cards are"} outlined in brass.` : "Every live case and whose turn it is. Nothing is your turn right now."}
       />
-      <StageMap stages={stages} viewer={persona} linkBase="" />
+      <StageMap stages={stages} linkBase="" />
       <div className="mt-10">
-        <FlowBoard stages={stages} viewer={persona} />
+        <FlowBoard stages={stages} />
       </div>
     </div>
   );

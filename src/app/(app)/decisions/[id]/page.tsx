@@ -11,6 +11,7 @@ import { getCase } from "@/lib/repo";
 import { loadDecisionBundle } from "@/lib/views";
 import { JourneyBar } from "@/components/journey";
 import { buildJourney } from "@/lib/journey";
+import { loadPipeline, workFor } from "@/lib/work";
 import { FocusView } from "./focus-view";
 import { Timeline } from "./timeline";
 import { Workspace } from "./workspace";
@@ -54,6 +55,7 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
     legal: legalReview,
     final: bundle.packet?.final_decision ? { decision: bundle.packet.final_decision, by: bundle.packet.decided_by, at: bundle.packet.decided_at } : null,
   });
+  const myTask = persona.role === "ADMIN" ? null : (workFor(persona, await loadPipeline()).now.find((w) => w.c.decision_id === id)?.action ?? null);
   const back = persona.role === "DECISION_OWNER" || persona.role === "ADMIN" ? { href: "/decisions", label: "Decisions" } : { href: "/home", label: "My desk" };
 
   return (
@@ -72,7 +74,7 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
         <p className="mt-3 text-[14px] text-muted">{facts.join("  ·  ")}</p>
         {!focusAgent && c.claim_text && <p className="mt-1.5 text-[14px] text-ink-2">“{c.claim_text}”</p>}
       </div>
-      <JourneyBar steps={steps} viewer={persona} className="no-print mb-8" />
+      <JourneyBar steps={steps} viewer={persona} task={myTask} className="no-print mb-8" />
       {focusAgent ? (
         <FocusView
           persona={persona}

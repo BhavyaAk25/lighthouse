@@ -17,7 +17,7 @@ export default async function RoiPage() {
     from decision_cases c join lighthouse_decisions l using (decision_id)`;
   return (
     <div>
-      <PageHeader title="Insights" subtitle="Illustrative pilot economics. Every input is an assumption you can move." />
+      <PageHeader title="Dashboard" subtitle="Illustrative pilot economics. Every input is an assumption you can move." />
       <InsightTabs active="roi" />
       <RoiCalculator observed={{ perMonth: Number(o.per_month), conflictPct: Number(o.conflict_pct), legalPct: Number(o.legal_pct), overridePct: Number(o.override_pct) }} />
     </div>

@@ -29,7 +29,7 @@ const REC_COLORS: Record<string, string> = {
   PROCEED_WITH_CONDITIONS: "#4F6D8A",
   HOLD: "#C9A15B",
   REJECT: "#C98576",
-  REVIEW_REQUIRED: "#B08A4A",
+  REVIEW_REQUIRED: "#8E9DB3",
 };
 const REC_NAMES: Record<string, string> = {
   PROCEED: "Proceed",

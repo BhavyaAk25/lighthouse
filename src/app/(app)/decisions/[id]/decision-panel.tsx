@@ -271,8 +271,9 @@ function ReviewerPanel({ decisionId, persona }: { decisionId: string; persona: P
   return (
     <Card className="p-5">
       <h3 className="flex items-center gap-2 text-[15px] font-semibold">
-        Your note
+        Your view
       </h3>
+      <p className="mt-1 text-[13px] text-muted">Do the agent’s numbers look right to you? Concur, or raise a concern. Maya sees your note before deciding.</p>
       
       <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={cn(textareaCls, "mt-3")} placeholder="e.g. Margin assumption matches the category plan." />
       <div className="mt-3 grid grid-cols-2 gap-2">

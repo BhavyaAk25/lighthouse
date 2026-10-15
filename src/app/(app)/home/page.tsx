@@ -1,104 +1,116 @@
-import { Plus } from "lucide-react";
+import { ArrowRight, Check, Hourglass, Plus } from "lucide-react";
 import Link from "next/link";
-import { DeskRow, DeskSection, Greeting, WaitingNote, WaitingRow } from "@/components/desk";
-import { AGENT_META } from "@/components/domain";
+import { RecBadge } from "@/components/domain";
 import { Card, LinkButton } from "@/components/ui";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { legalDesk, ownerDesk, reviewerDesk } from "@/lib/desk";
-import { loadFlow } from "@/lib/flow";
-import { StageMap } from "@/components/flow";
+import { cn, money } from "@/lib/format";
 import { ROLE_LABEL } from "@/lib/personas";
+import type { Recommendation } from "@/lib/types";
+import { loadPipeline, myProcess, workFor, type WorkItem } from "@/lib/work";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My desk" };
 
-export default async function Home() {
-  const persona = await requireSession();
-  const flow = await loadFlow(persona);
-  const map = (
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+}
+
+function YourPart({ steps }: { steps: { label: string; you: boolean }[] }) {
+  return (
     <div className="mb-12">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-[11.5px] tracking-[0.14em] text-muted uppercase">Where everything is</h2>
-        <Link href="/flow" className="text-[12.5px] text-ink-2 hover:text-ink">
-          Open Flow →
-        </Link>
-      </div>
-      <StageMap stages={flow} viewer={persona} />
+      <div className="mb-3 text-[11.5px] tracking-[0.14em] text-muted uppercase">Your part in the process</div>
+      <ol className="grid gap-2 sm:auto-cols-fr sm:grid-flow-col">
+        {steps.map((s, i) => (
+          <li
+            key={i}
+            className={cn(
+              "flex items-start gap-3 rounded-[12px] border px-4 py-3.5 text-[13.5px] leading-snug",
+              s.you ? "border-brass bg-brass-soft text-ink" : "border-line bg-white text-muted",
+            )}
+          >
+            <span className={cn("tnum mt-px grid size-5 shrink-0 place-items-center rounded-full text-[11px]", s.you ? "bg-brass text-white" : "bg-canvas text-faint")}>{i + 1}</span>
+            <span>
+              {s.label}
+              {s.you && <span className="mt-1 block text-[11px] tracking-[0.12em] text-brass-dark uppercase">You</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
+}
 
-  if (persona.role === "DECISION_OWNER") {
-    const d = await ownerDesk(persona.name);
-    const need = d.ready.length + d.toRun.length;
-    return (
-      <div className="mx-auto max-w-[1040px]">
-        <div className="flex items-start justify-between gap-4">
-          <Greeting
-            name={persona.name}
-            eyebrow={ROLE_LABEL[persona.role]}
-            line={need ? `${d.readyCount} ${d.readyCount === 1 ? "decision is" : "decisions are"} ready for you, and ${d.toRun.length} ${d.toRun.length === 1 ? "case needs" : "cases need"} the agents.` : "You’re all caught up."}
-          />
-          <LinkButton href="/decisions/new" variant="secondary" className="mt-6 shrink-0">
-            <Plus className="size-4" /> New decision
-          </LinkButton>
+function NowRow({ w }: { w: WorkItem }) {
+  return (
+    <Link href={`/decisions/${w.c.decision_id}#act`} className="group flex flex-col gap-3 px-5 py-4 hover:bg-canvas/70 sm:flex-row sm:items-center">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-[11.5px] text-faint">{w.c.decision_id}</span>
+          {w.c.rec && <RecBadge rec={w.c.rec as Recommendation} short />}
+          {w.c.impact !== null && <span className="tnum text-[12px] text-faint">{money(w.c.impact)} at stake</span>}
         </div>
-        {map}
-        <DeskSection title="Run the agents" count={d.toRun.length} empty={d.toRun.length ? undefined : "No drafts."}>
-          {d.toRun.map((i) => (
-            <DeskRow key={i.decision_id} item={i} action="Analyze" sub={i.note} />
-          ))}
-        </DeskSection>
-        <DeskSection title="Ready for your decision" count={d.readyCount} empty={d.ready.length ? undefined : "Nothing waiting for a decision."}>
-          {d.ready.map((i) => (
-            <DeskRow key={i.decision_id} item={i} action="Decide" sub={i.note && i.note.includes(":") ? i.note : undefined} />
-          ))}
-        </DeskSection>
-        <DeskSection title="Waiting on others" count={d.waitingCount} empty={d.waiting.length ? undefined : "Nobody is holding up your decisions."}>
-          {d.waiting.map((i) => (
-            <WaitingRow key={i.decision_id} item={i} who="Priya Raman · Legal review" />
-          ))}
-        </DeskSection>
+        <div className="mt-1 text-[15px] text-ink">{w.c.title}</div>
+        <div className="mt-1 text-[13px] text-muted">{w.why}</div>
       </div>
-    );
-  }
+      <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-[8px] bg-brand-600 px-3 py-2 text-[13px] text-[#F4F1EA] transition group-hover:bg-brand-700 sm:self-center">
+        {w.action} <ArrowRight className="size-3.5" />
+      </span>
+    </Link>
+  );
+}
 
-  if (persona.role === "LEGAL_REVIEWER") {
-    const d = await legalDesk();
-    return (
-      <div className="mx-auto max-w-[1040px]">
-        <Greeting
-          name={persona.name}
-          eyebrow={ROLE_LABEL[persona.role]}
-          line={d.total ? `${d.total} ${d.total === 1 ? "case needs" : "cases need"} your legal review before anyone can approve.` : "No cases need legal review."}
-        />
-        {map}
-        <DeskSection title="Needs your review" count={d.total} empty={d.todo.length ? undefined : "Nothing to review right now."}>
-          {d.todo.map((i) => (
-            <DeskRow key={i.decision_id} item={i} action="Review" sub={i.note ? `Flagged: ${i.note}` : undefined} showRec={false} />
-          ))}
-        </DeskSection>
-        {d.upstream > 0 && <WaitingNote>{d.upstream} new cases are waiting on Maya Chen to run the agents. Any that need legal review will appear here.</WaitingNote>}
+function WaitRow({ w }: { w: WorkItem }) {
+  return (
+    <Link href={`/decisions/${w.c.decision_id}`} className="flex items-start gap-3 px-5 py-3.5 hover:bg-canvas/70">
+      <Hourglass className="mt-0.5 size-4 shrink-0 text-brass" strokeWidth={1.6} />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[14px] text-ink">{w.c.title}</div>
+        <div className="text-[12.5px] text-muted">
+          With <span className="text-ink-2">{w.waitingOn}</span> · {w.why}
+        </div>
       </div>
-    );
-  }
+      <span className="font-mono text-[11.5px] text-faint">{w.c.decision_id}</span>
+    </Link>
+  );
+}
+
+function Section({ title, count, children, empty }: { title: string; count: number; children: React.ReactNode; empty: string }) {
+  return (
+    <section className="mb-10">
+      <div className="mb-3 flex items-baseline gap-2">
+        <h2 className="text-[11.5px] tracking-[0.14em] text-muted uppercase">{title}</h2>
+        <span className="tnum text-[12px] text-faint">{count}</span>
+      </div>
+      {count === 0 ? <p className="rounded-[12px] border border-dashed border-line px-5 py-5 text-[13.5px] text-muted">{empty}</p> : <div className="card divide-y divide-line-2 overflow-hidden">{children}</div>}
+    </section>
+  );
+}
+
+export default async function Home() {
+  const persona = await requireSession();
+  const first = persona.name.split(" ")[0];
 
   if (persona.role === "ADMIN") {
-    const [[s]] = await Promise.all([
-      db()`select (select count(*) from legal_rules where enabled)::int rules, (select count(*) from agent_runs where mode = 'LIVE_AI')::int live_runs,
-                  (select count(*) from agent_outputs where jsonb_array_length(guardrail_adjustments) > 0)::int guarded,
-                  (select count(*) from audit_log)::int audit`,
-    ]);
+    const [s] = await db()`select (select count(*) from legal_rules where enabled)::int rules, (select count(*) from agent_runs where mode = 'LIVE_AI')::int live_runs,
+                  (select count(*) from agent_outputs where jsonb_array_length(guardrail_adjustments) > 0)::int guarded, (select count(*) from audit_log)::int audit`;
     const tiles = [
-      ["Active rules", s.rules, "/admin"],
-      ["Live AI runs", s.live_runs, "/admin"],
+      ["Active legal rules", s.rules, "/admin"],
+      ["Live AI runs", s.live_runs, "/audit?action=AGENTS_RUN_COMPLETED"],
       ["Guardrail corrections", s.guarded, "/audit?action=GUARDRAIL_APPLIED"],
       ["Audit entries", Number(s.audit).toLocaleString(), "/audit"],
     ] as const;
     return (
-      <div className="mx-auto max-w-[1040px]">
-        <Greeting name={persona.name} eyebrow={ROLE_LABEL[persona.role]} line="Rules, thresholds and the audit trail. You can observe every decision but not make one." />
-        {map}
+      <div className="mx-auto max-w-[960px]">
+        <div className="mb-10">
+          <div className="text-[11.5px] tracking-[0.14em] text-brass-dark uppercase">{ROLE_LABEL[persona.role]}</div>
+          <h1 className="font-display mt-2 text-[36px] leading-[1.05]">
+            {greeting()}, {first}.
+          </h1>
+          <p className="mt-3 text-[15px] text-muted">You don’t make decisions. You keep the rules, thresholds and audit trail trustworthy.</p>
+        </div>
+        <YourPart steps={myProcess(persona.role)} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {tiles.map(([l, v, href]) => (
             <Link key={l} href={href}>
@@ -109,32 +121,87 @@ export default async function Home() {
             </Link>
           ))}
         </div>
-        <div className="mt-10 grid gap-3 sm:grid-cols-3">
+        <div className="mt-8 grid gap-3 sm:grid-cols-3">
           <LinkButton href="/admin" variant="secondary">Edit rules & thresholds</LinkButton>
-          <LinkButton href="/audit" variant="secondary">Verify audit chain</LinkButton>
+          <LinkButton href="/audit" variant="secondary">Verify the audit trail</LinkButton>
           <LinkButton href="/test-lab" variant="secondary">Run acceptance tests</LinkButton>
         </div>
       </div>
     );
   }
 
-  // functional reviewers
-  const d = await reviewerDesk(persona);
-  const agentName = AGENT_META[d.agent].name;
+  const work = workFor(persona, await loadPipeline());
+  const n = work.now.length;
+  const line =
+    persona.role === "DECISION_OWNER"
+      ? n
+        ? `${n} ${n === 1 ? "thing needs" : "things need"} you.${work.waiting.length ? ` ${work.waiting.length} ${work.waiting.length === 1 ? "is" : "are"} with Legal.` : ""}`
+        : "Nothing needs you right now."
+      : n
+        ? `${n} ${n === 1 ? "case needs" : "cases need"} you.`
+        : work.waiting.length
+          ? "Nothing needs you yet."
+          : "Nothing needs you right now.";
+  const waitingTitle = persona.role === "DECISION_OWNER" ? "Waiting on Legal" : "Not ready for you yet";
+  const shownWaiting = work.waiting.slice(0, 5);
+
   return (
-    <div className="mx-auto max-w-[1040px]">
-      <Greeting
-        name={persona.name}
-        eyebrow={ROLE_LABEL[persona.role]}
-        line={d.todo.length ? `The ${agentName} agent raised conditions or concerns on ${d.todo.length} open ${d.todo.length === 1 ? "case" : "cases"}.` : `Nothing from the ${agentName} agent needs your eyes.`}
-      />
-      {map}
-      <DeskSection title={`${agentName} concerns to validate`} count={d.todo.length} empty={d.todo.length ? undefined : "All clear."}>
-        {d.todo.map((i) => (
-          <DeskRow key={i.decision_id} item={i} action="Validate" sub={i.note} />
+    <div className="mx-auto max-w-[960px]">
+      <div className="mb-10 flex items-start justify-between gap-4">
+        <div>
+          <div className="text-[11.5px] tracking-[0.14em] text-brass-dark uppercase">{ROLE_LABEL[persona.role]}</div>
+          <h1 className="font-display mt-2 text-[36px] leading-[1.05]">
+            {greeting()}, {first}.
+          </h1>
+          <p className="mt-3 text-[15px] text-muted">{line}</p>
+        </div>
+        {persona.role === "DECISION_OWNER" && (
+          <LinkButton href="/decisions/new" variant="secondary" className="mt-6 shrink-0">
+            <Plus className="size-4" /> New decision
+          </LinkButton>
+        )}
+      </div>
+
+      <YourPart steps={myProcess(persona.role)} />
+
+      <Section title="Needs you now" count={n} empty="You’re clear. New work will appear here.">
+        {work.now.map((w) => (
+          <NowRow key={w.c.decision_id} w={w} />
         ))}
-      </DeskSection>
-      {d.upstream > 0 && <WaitingNote>{d.upstream} new cases are waiting on Maya Chen to run the agents.</WaitingNote>}
+      </Section>
+
+      {persona.role === "DECISION_OWNER" ? (
+        <Section title={waitingTitle} count={work.waiting.length} empty="Nothing is waiting on Legal.">
+          {shownWaiting.map((w) => (
+            <WaitRow key={w.c.decision_id} w={w} />
+          ))}
+        </Section>
+      ) : (
+        work.waiting.length > 0 && (
+          <section className="mb-10">
+            <div className="mb-3 text-[11.5px] tracking-[0.14em] text-muted uppercase">{waitingTitle}</div>
+            <Link href="/flow" className="card flex items-center gap-4 px-5 py-4 hover:border-[#D8D3C7]">
+              <Hourglass className="size-4 shrink-0 text-brass" strokeWidth={1.6} />
+              <span className="min-w-0 flex-1 text-[14px] text-ink-2">
+                {work.waiting.length} {work.waiting.length === 1 ? "case is" : "cases are"} with the decision owner and haven’t been analyzed yet. If any need you, they’ll move up to “Needs you now”.
+              </span>
+              <span className="shrink-0 text-[13px] text-muted">See them in Flow →</span>
+            </Link>
+          </section>
+        )
+      )}
+
+      {work.done.length > 0 && (
+        <Section title="Done" count={work.done.length} empty="">
+          {work.done.slice(0, 5).map((w) => (
+            <Link key={w.c.decision_id} href={`/decisions/${w.c.decision_id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-canvas/70">
+              <Check className="size-4 shrink-0 text-ok" />
+              <span className="min-w-0 flex-1 truncate text-[14px] text-ink-2">{w.c.title}</span>
+              <span className="text-[12.5px] text-muted">{w.why}</span>
+            </Link>
+          ))}
+        </Section>
+      )}
     </div>
   );
 }

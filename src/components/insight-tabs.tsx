@@ -3,8 +3,8 @@ import { cn } from "@/lib/format";
 
 const TABS = [
   { k: "overview", l: "Overview", href: "/overview" },
-  { k: "data", l: "Data", href: "/data" },
-  { k: "roi", l: "ROI", href: "/roi" },
+  { k: "data", l: "Data & evidence", href: "/data" },
+  { k: "roi", l: "ROI model", href: "/roi" },
 ];
 
 export function InsightTabs({ active }: { active: string }) {

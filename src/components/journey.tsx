@@ -3,21 +3,15 @@ import { cn, dateLabel } from "@/lib/format";
 import type { JourneyStep } from "@/lib/journey";
 import { PERSONAS, type Persona } from "@/lib/personas";
 
+const ROLE_WORD: Record<string, string> = { DECISION_OWNER: "Decision owner", LEGAL_REVIEWER: "Legal", AI: "AI agents", SYSTEM: "Lighthouse" };
+
 function Who({ step, isYou }: { step: JourneyStep; isYou: boolean }) {
   const p = PERSONAS.find((x) => x.name === step.who);
   return (
-    <div className="mt-2 flex items-center justify-center gap-1.5 md:justify-start">
-      {p ? (
-        <span className="grid size-5 place-items-center rounded-full text-[9px] text-[#F4F1EA]" style={{ background: p.color }}>
-          {p.initials}
-        </span>
-      ) : step.role === "AI" ? (
-        <Bot className="size-4 text-muted" strokeWidth={1.6} />
-      ) : (
-        <ShieldCheck className="size-4 text-muted" strokeWidth={1.6} />
-      )}
-      <span className="truncate text-[12.5px] text-ink-2">{step.who}</span>
-      {isYou && <span className="rounded-full bg-brass-soft px-1.5 text-[10.5px] text-brass-dark">You</span>}
+    <div className="mt-1.5 flex items-center justify-center gap-1.5 md:justify-start">
+      {step.role === "AI" ? <Bot className="size-3.5 text-muted" strokeWidth={1.6} /> : step.role === "SYSTEM" ? <ShieldCheck className="size-3.5 text-muted" strokeWidth={1.6} /> : null}
+      <span className={cn("truncate text-[12.5px]", isYou ? "text-brass-dark" : "text-ink-2")}>{isYou ? "You" : ROLE_WORD[step.role] ?? step.who}</span>
+      {!isYou && p && <span className="truncate text-[11.5px] text-faint">· {p.name}</span>}
     </div>
   );
 }
@@ -54,19 +48,22 @@ function Node({ state }: { state: JourneyStep["state"] }) {
 const isMine = (s: JourneyStep, viewer?: Persona) =>
   !!viewer && (s.who === viewer.name || (s.key === "analyze" && viewer.role === "DECISION_OWNER" && s.state === "current"));
 
-export function JourneyBar({ steps, viewer, className }: { steps: JourneyStep[]; viewer?: Persona; className?: string }) {
+export function JourneyBar({ steps, viewer, className, task }: { steps: JourneyStep[]; viewer?: Persona; className?: string; task?: string | null }) {
   const cur = steps.find((s) => s.state === "current");
   const blocked = steps.find((s) => s.state === "blocked");
   const done = steps.every((s) => s.state === "done" || s.state === "skipped");
-  const mine = cur && isMine(cur, viewer);
+  const mine = !!task || (cur && isMine(cur, viewer));
+  const doing: Record<string, string> = { analyze: "run the agents", legal: "review the claim", decide: "make the decision" };
   const headline = blocked
-    ? `Stopped at ${blocked.label.toLowerCase()} · ${blocked.detail}`
+    ? `Stopped: ${blocked.label.toLowerCase()} · ${blocked.detail.toLowerCase()}`
     : done
-      ? "Decision sealed in the audit trail"
+      ? "Decided and sealed in the audit trail"
       : cur
         ? mine
-          ? `Your turn · ${cur.key === "analyze" ? "Run the agents" : cur.key === "decide" ? "Make the decision" : cur.label}`
-          : `Waiting on ${cur.key === "analyze" ? steps[0].who : cur.who} · ${cur.label}`
+          ? task && !isMine(cur, viewer)
+            ? `Your turn: ${task.toLowerCase()} before the decision owner decides`
+            : `Your turn: ${doing[cur.key] ?? cur.label.toLowerCase()}`
+          : `Waiting on ${cur.key === "legal" ? "Legal" : "the decision owner"} to ${doing[cur.key] ?? "act"}`
         : "";
   return (
     <div className={cn("card px-6 py-5", className)}>

@@ -102,7 +102,7 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
         <div className="border-b border-line p-5 lg:border-r lg:border-b-0">
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink">
-              <Bot className="size-4 text-brass" /> Summary
+              <Bot className="size-4 text-brass" /> {changed ? "AI summary · before sign-off" : "Summary"}
             </h3>
             <span className="text-[11.5px] text-muted">{synthesizing ? "Writing…" : modelLabel(p.provider, p.model)}</span>
           </div>

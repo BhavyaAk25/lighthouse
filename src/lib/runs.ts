@@ -132,7 +132,13 @@ export async function* executeRun(decisionId: string, actor: { name: string; rol
         await nap(450 + Math.random() * 650);
         const cachedOut = cached[ag] as AgentOutput | undefined;
         const out = cachedOut
-          ? finalizeOutput(analyses[ag], { ...cachedOut, provider: "replay", latency_ms: 0 })
+          ? finalizeOutput(analyses[ag], {
+              ...cachedOut,
+              provider: "replay",
+              latency_ms: 0,
+              // saved answers cite the evidence IDs of the run that produced them; point them at this run's identical evidence
+              evidence_ids: cachedOut.evidence_ids.map((e) => e.replace(/^EV-[A-Z0-9]+-(?=[SFOL]\d+$)/, `${runId.replace(/^RUN-/, "EV-")}-`)),
+            })
           : finalizeOutput(analyses[ag], analyses[ag].baseline);
         outputs[ag] = out;
         yield { type: "agent_output", agent: ag, output: out, evidence: analyses[ag].evidence, note: cachedOut ? "Replayed saved AI answer" : "Rules engine (no saved AI answer for this revision)" };

@@ -11,7 +11,7 @@ export default async function TestLab() {
     <div>
       <PageHeader
         title="Test lab"
-        subtitle="Fifteen acceptance tests from Deliverable 1, run live."
+        subtitle="Eighteen acceptance tests: Deliverable 1’s criteria plus the department sign-off rules, run live against the real engine and database."
       />
       <TestRunner />
     </div>

@@ -2,192 +2,393 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Lighthouse · Demo & User Guide</title>
+<title>Lighthouse · Demo &amp; User Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600&family=Inter:wght@400;500;600&family=Geist+Mono&display=swap" rel="stylesheet" />
 <style>
-  @page { size: Letter; margin: 0.6in 0.65in 0.7in; }
-  :root { --brand:#142B45; --ink:#0f172a; --ink2:#344054; --muted:#667085; --line:#e6e9f2; --soft:#f6f8fc; --ok:#12a26b; --warn:#c77700; --bad:#d92d20; --violet:#B08A4A; }
+  @page { size: Letter; margin: 0.55in 0.6in 0.6in; }
+  :root { --navy:#142B45; --night:#0E2238; --brass:#B08A4A; --brass2:#D9B97A; --brasssoft:#F5EEDF; --ink:#16202C; --ink2:#3A4655; --muted:#6B7480; --faint:#9AA1AA; --line:#E7E3DA; --canvas:#F7F5F0; --ok:#2F7A53; --warn:#A8741E; --bad:#A63A2A; }
   * { box-sizing: border-box; }
-  body { font-family: "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); font-size: 10.4pt; line-height: 1.52; margin: 0; }
-  h1 { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 600; letter-spacing: -0.035em; font-size: 26pt; letter-spacing: -0.03em; margin: 0 0 6pt; line-height: 1.1; }
-  h2 { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 600; letter-spacing: -0.02em; font-size: 17pt; letter-spacing: -0.02em; margin: 22pt 0 6pt; padding-top: 6pt; border-top: 1px solid var(--line); }
-  h3 { font-size: 11.5pt; margin: 14pt 0 4pt; }
-  p { margin: 4pt 0 6pt; }
+  body { font-family: Inter, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); font-size: 10pt; line-height: 1.5; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1, h2, h3, .display { font-family: Geist, "Helvetica Neue", Arial, sans-serif; font-weight: 600; letter-spacing: -0.03em; }
+  h1 { font-size: 30pt; line-height: 1.04; margin: 0; }
+  h2 { font-size: 18pt; line-height: 1.1; margin: 0 0 4pt; }
+  h3 { font-size: 11.5pt; letter-spacing: -0.01em; margin: 12pt 0 3pt; }
+  p { margin: 3pt 0 6pt; }
+  .eyebrow { color: var(--brass); font-weight: 600; font-size: 8pt; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 5pt; }
+  .lede { color: var(--ink2); font-size: 10.6pt; max-width: 6.4in; }
   .muted { color: var(--muted); }
-  .eyebrow { color: #B08A4A; font-weight: 600; font-size: 9.5pt; letter-spacing: .06em; text-transform: uppercase; }
-  .cover { height: 9.1in; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always;
-           background: #0E2238; color: #F4F1EA; border-radius: 6px; padding: 40pt; }
-  .logo { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #B08A4A; display:inline-grid; place-items:center; color:#D9B97A; font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 18px; }
-  .grad { color: #D9B97A; }
-  .box { border: 1px solid var(--line); border-radius: 12px; padding: 10pt 12pt; margin: 8pt 0; background: #fff; }
-  .soft { background: var(--soft); }
-  .call { border-left: 3px solid #B08A4A; background: #F5EEDF; border-radius: 0 10px 10px 0; padding: 8pt 12pt; margin: 8pt 0; }
-  .warn { border-left-color: var(--warn); background: #fff5e1; }
-  .ok { border-left-color: var(--ok); background: #e7f7ef; }
-  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9.4pt; }
-  th { text-align: left; background: var(--soft); color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 8pt; letter-spacing: .05em; }
-  th, td { padding: 5pt 7pt; border-bottom: 1px solid var(--line); vertical-align: top; }
-  code, .mono { font-family: "SF Mono", Menlo, monospace; font-size: 9pt; background: var(--soft); padding: 1pt 4pt; border-radius: 4px; }
-  img.shot { width: 100%; border: 1px solid var(--line); border-radius: 10px; margin: 6pt 0 2pt; box-shadow: 0 6px 18px -8px rgba(16,24,40,.25); }
-  .cap { font-size: 8.6pt; color: var(--muted); margin-bottom: 8pt; }
-  .step { display: grid; grid-template-columns: 26px 1fr; gap: 8pt; margin: 9pt 0; page-break-inside: avoid; }
-  .num { width: 22px; height: 22px; border-radius: 50%; background: #142B45; color: #fff; font-weight: 700; font-size: 9pt; display: grid; place-items: center; }
-  .say { color: var(--ink2); font-style: italic; border-left: 2px solid #E9DCC0; padding-left: 8pt; margin-top: 3pt; }
-  .pill { display:inline-block; padding: 1pt 7pt; border-radius: 999px; font-size: 8.4pt; font-weight: 600; }
-  .p-ok{background:#e7f7ef;color:#087443}.p-info{background:#e6f6fb;color:#0b7290}.p-warn{background:#fff5e1;color:#9a5b00}.p-bad{background:#fdecec;color:#b42318}.p-vio{background:#f1edfe;color:#5b3fd1}
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
-  .avoid { page-break-inside: avoid; }
-  .pb { page-break-before: always; }
-  ul { margin: 4pt 0 8pt; padding-left: 16pt; } li { margin: 2pt 0; }
+  .page { page-break-before: always; }
+  section { margin-top: 18pt; }
+  .rule { height: 1px; background: var(--line); margin: 16pt 0 12pt; }
+
+  /* cover */
+  .cover { height: 9.75in; display: flex; flex-direction: column; justify-content: space-between; background: var(--night); color: #F4F1EA; border-radius: 8px; padding: 42pt 44pt; position: relative; overflow: hidden; }
+  .cover .beam { position: absolute; top: 120pt; left: 70pt; width: 520pt; height: 380pt; background: conic-gradient(from 75deg at 0 50%, rgba(217,185,122,.16), rgba(217,185,122,0) 22deg, rgba(217,185,122,0) 338deg, rgba(217,185,122,.16)); }
+  .cover h1 { font-size: 46pt; color: #F4F1EA; }
+  .cover .gold { color: var(--brass2); }
+  .facts { display: grid; grid-template-columns: auto 1fr; gap: 4pt 14pt; font-size: 9.6pt; margin-top: 18pt; max-width: 5.6in; background: rgba(255,255,255,.04); border: 1px solid #2A3F57; border-radius: 10px; padding: 12pt 14pt; }
+  .facts b { color: #C9CFD8; font-weight: 500; }
+  .mono { font-family: "Geist Mono", "SF Mono", Menlo, monospace; font-size: 9pt; }
+
+  /* blocks */
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 10pt 12pt; background: #fff; page-break-inside: avoid; }
+  .soft { background: var(--canvas); }
+  .call { border-left: 3px solid var(--brass); background: var(--brasssoft); border-radius: 0 10px 10px 0; padding: 8pt 12pt; margin: 8pt 0; page-break-inside: avoid; }
+  .call.ok { border-left-color: var(--ok); background: #EAF3EE; }
+  .call.warn { border-left-color: var(--warn); background: #F8F0E0; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 8pt; font-size: 9.2pt; page-break-inside: auto; }
+  tr { page-break-inside: avoid; }
+  th { text-align: left; color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 7.4pt; letter-spacing: .1em; border-bottom: 1px solid var(--ink); padding: 4pt 6pt; }
+  td { padding: 5pt 6pt; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8pt; }
+  img.shot { width: 100%; border: 1px solid var(--line); border-radius: 8px; display: block; }
+  figure { margin: 8pt 0 10pt; page-break-inside: avoid; }
+  figure.w92 { width: 92%; margin-left: auto; margin-right: auto; }
+  figure.w64 { width: 54%; margin-left: auto; margin-right: auto; }
+  table.tight td { padding: 3.5pt 6pt; font-size: 8.8pt; line-height: 1.4; }
+  figure.w76 { width: 76%; margin-left: auto; margin-right: auto; }
+  figcaption { font-size: 8.4pt; color: var(--muted); margin-top: 4pt; }
+  .pill { display: inline-block; padding: 0 6pt; border-radius: 999px; font-size: 8pt; font-weight: 600; line-height: 1.6; white-space: nowrap; }
+  .p-ok { background: #EAF3EE; color: #2F6347; } .p-info { background: #E9EEF5; color: #3E5873; } .p-warn { background: #F8F0E0; color: #8A5A12; } .p-bad { background: #F6E5E1; color: #9C3A2A; } .p-brass { background: var(--brasssoft); color: #7A5C2A; }
+  .say { color: var(--ink2); font-style: italic; border-left: 2px solid #E2D3B4; padding: 1pt 0 1pt 8pt; margin: 4pt 0 2pt; }
+  .step { display: grid; grid-template-columns: 24pt 1fr; gap: 8pt; margin: 10pt 0 4pt; page-break-inside: avoid; }
+  .num { width: 20pt; height: 20pt; border-radius: 50%; background: var(--navy); color: #F4F1EA; font-weight: 600; font-size: 8.6pt; display: grid; place-items: center; font-family: Geist, Arial, sans-serif; }
+  .who { display: inline-block; font-size: 7.6pt; letter-spacing: .1em; text-transform: uppercase; color: #7A5C2A; background: var(--brasssoft); border-radius: 4px; padding: 0 5pt; margin-left: 4pt; vertical-align: 1pt; }
+  ul { margin: 3pt 0 7pt; padding-left: 14pt; } li { margin: 2pt 0; }
+  .check li { list-style: none; position: relative; padding-left: 4pt; }
+  .check li::before { content: ""; position: absolute; left: -12pt; top: 3pt; width: 8pt; height: 8pt; border: 1.2px solid var(--navy); border-radius: 2px; }
+
+  /* flow diagram */
+  .flow { display: grid; grid-template-columns: 1fr 14pt 1fr 14pt 1.9fr 14pt 1fr 14pt 0.9fr; align-items: stretch; margin: 10pt 0 6pt; }
+  .node { border: 1px solid var(--line); border-radius: 10px; padding: 8pt 9pt; background: #fff; }
+  .node .t { font-family: Geist, Arial, sans-serif; font-weight: 600; font-size: 10pt; letter-spacing: -0.01em; }
+  .node .s { color: var(--muted); font-size: 8.2pt; line-height: 1.35; margin-top: 2pt; }
+  .node.hot { border-color: var(--brass); background: var(--brasssoft); }
+  .node.dark { background: var(--navy); border-color: var(--navy); color: #F4F1EA; } .node.dark .s { color: #C3CAD3; }
+  .arrow { display: grid; place-items: center; color: var(--faint); font-size: 11pt; }
+  .lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 4pt; margin-top: 5pt; }
+  .lane { border: 1px solid #E2D3B4; background: #fff; border-radius: 6px; padding: 3pt 5pt; font-size: 8pt; line-height: 1.25; }
+  .lane b { font-weight: 600; }
+  .persona { display: grid; grid-template-columns: 26pt 1fr; gap: 8pt; align-items: start; }
+  .av { width: 24pt; height: 24pt; border-radius: 50%; color: #F4F1EA; font-size: 8.4pt; font-weight: 600; display: grid; place-items: center; font-family: Geist, Arial, sans-serif; }
+  .timeline td:first-child { white-space: nowrap; font-family: "Geist Mono", Menlo, monospace; font-size: 8.6pt; color: var(--muted); width: 62pt; }
 </style>
 </head>
 <body>
 
-<section class="cover">
-  <div style="display:flex;align-items:center;gap:12px">
-    <span class="logo">L</span>
-    <div><div style="font-weight:700;font-size:15pt">Lighthouse</div><div style="font-size:9.5pt;color:#9FA9B7">AI Agent Orchestration &amp; Decision Intelligence</div></div>
+<!-- ============================================================ cover -->
+<section class="cover" style="margin-top:0">
+  <div class="beam"></div>
+  <div style="display:flex;align-items:center;gap:10pt;position:relative">
+    <svg viewBox="0 0 32 32" width="34" height="34" fill="none"><path d="M16 3.5l2.4 3H13.6z" fill="#F4F1EA"/><rect x="12.6" y="6.6" width="6.8" height="4.4" rx="1" stroke="#F4F1EA" stroke-width="1.4"/><circle cx="16" cy="8.8" r="1.25" fill="#B08A4A"/><path d="M13.3 11.4h5.4l1.5 15.1h-8.4z" stroke="#F4F1EA" stroke-width="1.4" stroke-linejoin="round"/><path d="M12.9 16.4h6.2M12.4 21.4h7.2" stroke="#F4F1EA" stroke-width="1.2" opacity=".55"/><path d="M7.5 26.8h17" stroke="#F4F1EA" stroke-width="1.4" stroke-linecap="round"/><path d="M20.4 8.8L29 6.2M20.4 8.8L29 11.2" stroke="#B08A4A" stroke-width="1.1" stroke-linecap="round"/></svg>
+    <div><div class="display" style="font-size:16pt">Lighthouse</div><div style="font-size:8.6pt;color:#9FA9B7">AI agent orchestration &amp; decision intelligence</div></div>
   </div>
-  <div>
-    <div class="eyebrow">Demo &amp; user guide</div>
-    <h1 style="font-size:36pt">Four AI agents.<br/>One auditable decision.<br/><span class="grad">A human always decides.</span></h1>
-    <p style="font-size:12pt;max-width:5.6in;color:#C9CFD8">How to open, use and present the Lighthouse prototype: a governance layer that reconciles Sales, Finance, Operations and Legal AI agents for a 50-store Walmart U.S. pilot.</p>
-    <div class="box" style="max-width:5.8in;margin-top:16pt;background:#13293F;border-color:#2A3F57;color:#F4F1EA">
-      <b>Live app:</b> <span class="mono">{{LIVE_URL}}</span><br/>
-      <b>Code:</b> <span class="mono">github.com/BhavyaAk25/lighthouse</span><br/>
-      <b>Administrator PIN:</b> <span class="mono">4210</span> (only needed for Jordan Ellis)
+  <div style="position:relative">
+    <div class="eyebrow" style="color:var(--brass2)">Demo &amp; user guide</div>
+    <h1>Four agents.<br/>Four owners.<br/><span class="gold">One decision.</span></h1>
+    <p class="lede" style="color:#C9CFD8;margin-top:12pt">How to open, use and present Lighthouse: the governance layer that reconciles a Sales, Finance, Operations and Legal AI agent for a 50-store Walmart U.S. pilot. Each agent is owned by a department lead, and a named executive makes the final call.</p>
+    <div class="facts">
+      <b>Live app</b><span class="mono">{{LIVE_URL}}</span>
+      <b>Code</b><span class="mono">github.com/BhavyaAk25/lighthouse</span>
+      <b>Sign in</b><span>Pick a person. No passwords. The administrator uses PIN <span class="mono">4210</span>.</span>
+      <b>Cost</b><span>$0: Vercel Hobby, Neon free tier, Gemini and Groq free tiers.</span>
     </div>
   </div>
-  <div style="font-size:9pt;color:#9FA9B7">ISTM 6210 / 4210 Capstone · Fall 2026 · The George Washington University<br/>Ajay · Bhavya · Ehson · Jaehoon · Kunal · Wilfred · Faculty Advisor: Dr. Soheil Sibdari<br/>Academic prototype, not affiliated with Walmart Inc. Pilot data = public Kaggle Walmart sales + clearly labelled generated records.</div>
+  <div style="font-size:8.4pt;color:#9FA9B7;position:relative">ISTM 6210 / 4210 Capstone · Fall 2026 · The George Washington University<br/>Ajay · Bhavya · Ehson · Jaehoon · Kunal · Wilfred · Faculty advisor: Dr. Soheil Sibdari<br/>Academic prototype, not affiliated with Walmart Inc. Demand data is public Kaggle Walmart data; everything generated is labelled.</div>
 </section>
 
-<h2 style="border-top:none;margin-top:0">1. Lighthouse in one minute</h2>
-<p>Large companies are starting to run several specialised AI agents. Each one can be locally rational and still disagree with the others: Sales sees strong demand, Finance sees a margin loss, Operations sees a full distribution center, Legal sees a risky claim. <b>Lighthouse is the layer above the agents.</b> It makes every agent answer in the same format with cited evidence, checks that evidence, detects disagreements, applies governance gates, writes one recommendation, and hands the final call to a named human. Every step is recorded in a tamper-evident log.</p>
-<table>
-  <tr><th style="width:24%">Step</th><th>What happens</th></tr>
-  <tr><td><b>1. Open a case</b></td><td>A Decision Owner describes a promotion or inventory move (category, stores, discount, weeks, marketing claim).</td></tr>
-  <tr><td><b>2. Agents gather evidence</b></td><td>Each agent runs deterministic tools over the pilot database (sales baseline, promo analogs, margins, inventory, DC capacity, 180 active legal rules).</td></tr>
-  <tr><td><b>3. Agents reason</b></td><td>An LLM (Gemini, or Groq as automatic fallback) reads the evidence and returns a recommendation, confidence, risk, conditions and cited evidence IDs.</td></tr>
-  <tr><td><b>4. Guardrails</b></td><td>Hard limits the AI cannot override: legal prohibitions, mandatory legal review, capacity hard stops, missing data. Fake citations are removed.</td></tr>
-  <tr><td><b>5. Lighthouse reconciles</b></td><td>Detects conflicts (never averaged), applies gates, computes a synthesis confidence score, writes an executive summary.</td></tr>
-  <tr><td><b>6. Humans decide</b></td><td>Legal records a disposition when required; the Decision Owner approves, rejects or asks for a revision. Overrides need a written reason.</td></tr>
-  <tr><td><b>7. Audit</b></td><td>Every action is chained with SHA-256 to the previous entry. The database refuses edits and deletes.</td></tr>
-</table>
+<!-- ============================================================ 1. one minute -->
+<section class="page" style="margin-top:0">
+  <div class="eyebrow">1 · The idea</div>
+  <h2>Lighthouse in one minute</h2>
+  <p class="lede">Companies now run several specialised AI agents. Each can be right on its own and still disagree with the others: Sales sees demand, Finance sees a loss, Operations sees a full distribution center, Legal sees a risky claim. <b>Lighthouse is the layer above the agents.</b> Every agent answers in the same format with cited evidence. The department that owns the agent signs off on it, Lighthouse reconciles the four positions, and the executive decides. Every step lands in a tamper-evident log.</p>
 
-<h2>2. Signing in &amp; roles</h2>
-<p>Open the live app and choose a person. Each person lands on <b>My desk</b>: their part in the process, what needs them now (with the reason), and what is not ready for them yet. The Administrator needs PIN <code>4210</code>. Use <b>Switch</b> at the bottom left to change person.</p>
-<img class="shot" src="img/login.jpg" /><div class="cap">Sign-in screen: each card is a role with its own permissions.</div>
-<table>
-  <tr><th>Persona</th><th>Role</th><th>Can do</th></tr>
-  <tr><td>Maya Chen</td><td>Decision Owner</td><td>Create cases, run agents, revise, approve / reject / request revision</td></tr>
-  <tr><td>Priya Raman</td><td>Legal &amp; Compliance</td><td>Record legal dispositions on gated cases (unlocks or blocks approval)</td></tr>
-  <tr><td>David Okafor · Hannah Brooks · Luis Moreno</td><td>Finance · Commercial · Operations reviewers</td><td>Add concur / concern notes to a packet</td></tr>
-  <tr><td>Jordan Ellis (PIN 4210)</td><td>System Administrator</td><td>Edit rules and thresholds (with a reason), test AI providers, reset demo cases. <b>Cannot approve decisions</b> (separation of duties)</td></tr>
-</table>
+  <div class="flow" style="margin-top:8pt">
+    <div class="node"><div class="t">1 · Proposed</div><div class="s">A lead (usually Sales) describes a promotion or inventory move.</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="t">2 · Agents analyze</div><div class="s">All four run automatically on submit: tools first, then AI reasoning, then guardrails.</div></div>
+    <div class="arrow">→</div>
+    <div class="node hot"><div class="t">3 · Department sign-off</div><div class="s">In parallel, and only where an agent raises a concern.</div>
+      <div class="lanes">
+        <div class="lane"><b>Sales</b> · Hannah</div><div class="lane"><b>Finance</b> · David</div>
+        <div class="lane"><b>Operations</b> · Luis</div><div class="lane"><b>Legal</b> · Priya</div>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="node dark"><div class="t">4 · Executive decides</div><div class="s">Maya approves, rejects or sends it back, with a reason when required.</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="t">5 · Sealed</div><div class="s">SHA-256 hash-chained audit entry.</div></div>
+  </div>
 
-<h2 class="pb" style="border-top:none">3. The demo script (about 8 minutes)</h2>
-<div class="call ok"><b>Before class (5 minutes):</b> sign in as Jordan → <i>Rules &amp; agents → Demo controls → Reset demo cases</i>. Then <i>Agents &amp; AI → Test providers</i>. Keep the top-right switch on <b>Live AI</b>; if the Wi-Fi is bad, switch it to <b>Replay</b> (section 5).</div>
+  <section>
+    <div class="eyebrow">2 · The people</div>
+    <h2>Who does what</h2>
+    <table class="tight">
+      <tr><th style="width:24%">Person</th><th style="width:20%">Role</th><th>Does</th><th style="width:22%">Cannot</th></tr>
+      <tr><td><div class="persona"><span class="av" style="background:#142B45">MC</span><div><b>Maya Chen</b></div></div></td><td>Executive · decision owner</td><td>Sees the full packet and all four sign-offs. Approves, rejects or sends back. Can overrule a Sales, Finance or Ops block with a reason, and can decide when a sign-off is overdue.</td><td>Overrule Legal; approve before required sign-offs</td></tr>
+      <tr><td><div class="persona"><span class="av" style="background:#A86B3C">HB</span><div><b>Hannah Brooks</b></div></div></td><td>Sales lead</td><td>Proposes promotions (submitting runs all four agents). Owns the Sales agent: demand, pricing, channel.</td><td>Sign for other departments</td></tr>
+      <tr><td><div class="persona"><span class="av" style="background:#3F7D5B">DO</span><div><b>David Okafor</b></div></div></td><td>Finance lead</td><td>Owns the Finance agent: margin, ROI, break-even. Confirms, adjusts or blocks its answer.</td><td>Decide the case</td></tr>
+      <tr><td><div class="persona"><span class="av" style="background:#4F6D8A">LM</span><div><b>Luis Moreno</b></div></div></td><td>Operations lead</td><td>Owns the Operations agent: inventory, DC capacity, fulfillment. Also proposes inventory moves.</td><td>Decide the case</td></tr>
+      <tr><td><div class="persona"><span class="av" style="background:#7A5C2A">PR</span><div><b>Priya Raman</b></div></div></td><td>Legal lead</td><td>Owns the Legal agent: claims, privacy, state rules. Approves, approves with conditions, or rejects. <b>Her rejection is final.</b></td><td>Approve a case a rule prohibits</td></tr>
+      <tr><td><div class="persona"><span class="av" style="background:#4A4D52">JE</span><div><b>Jordan Ellis</b> <span class="mono">PIN 4210</span></div></div></td><td>System administrator</td><td>Edits rules, thresholds and the Live AI / Replay setting (each change needs a reason). Resets the demo, tests providers, runs the test lab.</td><td>Sign off or decide (separation of duties)</td></tr>
+    </table>
+  </section>
+</section>
 
-<div class="step"><span class="num">1</span><div><b>Maya’s desk.</b> Sign in as Maya Chen. Her desk shows only her work: cases to analyze, decisions ready for her, and what is waiting on Legal.
-<div class="say">“Each person sees exactly what they need to act on, nothing else. Lighthouse supervises four agents across a 50-store Walmart U.S. pilot.”</div></div></div>
-<img class="shot" src="img/overview.jpg" /><div class="cap">Maya’s desk: run the agents, decide, and see what is waiting on others.</div>
-<div class="call"><b>Flow (any person):</b> the <i>Flow</i> page and the map at the top of every desk show the whole pipeline: <i>Agents analyze → Legal review → Decision → Sealed</i>, who owns each stage and how many cases sit there. Stages and cards that need the signed-in person glow brass; clicking a card’s button (Run agents, Review, Decide, Validate) jumps straight to that action on the case. Every case also shows a journey bar with “Your turn” or “Waiting on …”.</div>
+<!-- ============================================================ rules -->
+<section class="page" style="margin-top:0">
+  <div class="eyebrow">3 · The rules</div>
+  <h2>Why it is built this way, and the rules</h2>
+  <div class="grid3" style="margin-top:8pt">
+    <div class="card soft"><div class="display" style="font-size:10.5pt">Ownership</div><p class="muted" style="margin:2pt 0 0">Each department lead owns their agent. They can re-run it, confirm it, change its answer with a reason, or block it. Nobody runs another department’s agent.</p></div>
+    <div class="card soft"><div class="display" style="font-size:10.5pt">Management by exception</div><p class="muted" style="margin:2pt 0 0">A lead only signs when their agent says hold or reject, needs a review, is under 65% confident, or lacks evidence. In the 12 demo cases, about two out of three lanes clear automatically.</p></div>
+    <div class="card soft"><div class="display" style="font-size:10.5pt">Accountability</div><p class="muted" style="margin:2pt 0 0">The packet shows what the AI said and what each person signed. The executive can overrule Sales, Finance or Operations with a written reason. Legal can never be overruled.</p></div>
+  </div>
 
-<div class="step"><span class="num">2</span><div><b>Open the anchor case.</b> Click <i>D-2026-001</i> under “Run the agents” (D-2026-001: 15% rollback on Health &amp; Wellness, all 50 stores, 6 weeks, claim “Clinically proven cold &amp; flu relief”). Click <b>Run agents</b>.
-<div class="say">“Each agent first calls tools against the database: you can see the tool names stream in. Then the model reasons over that evidence. Four agents run in parallel.”</div></div></div>
-<img class="shot" src="img/running.jpg" /><div class="cap">Agents mid-run: deterministic tool calls (green wrench) followed by AI reasoning.</div>
 
-<div class="step"><span class="num">3</span><div><b>Read the four positions.</b> Sales: proceed (uplift ~+23%, real promo analog +13%). Finance: proceed (supplier funds 80%). Operations: proceed with conditions (DC load ~96%). Legal: <b>review required</b> (13 rules, clinical claim). Point at the model label on each card (e.g. “Groq · gpt-oss-120b”) and click <b>evidence</b> on Sales to show the real daily sales chart.
-<div class="say">“Every number on these cards traces to an evidence ID. If the AI cited evidence that doesn’t exist, it would be removed and flagged.”</div></div></div>
-<img class="shot" src="img/agents.jpg" /><div class="cap">Completed agent cards: recommendation, confidence ring, risk, key metrics, model used, evidence link.</div>
+  <div class="grid2" style="margin-top:8pt">
+    <div class="card">
+      <h3 style="margin-top:0">A lead must sign when their agent…</h3>
+      <ul>
+        <li>says <span class="pill p-warn">Hold</span> or <span class="pill p-bad">Reject</span></li>
+        <li>says <span class="pill p-brass">Review required</span> (for example, Legal flags a claim)</li>
+        <li>is less than <b>65%</b> confident (admin can change this)</li>
+        <li>is missing evidence (the output is marked invalid, never imputed)</li>
+      </ul>
+      <p class="muted">Otherwise the lane shows <i>Cleared automatically</i>. A lead can still step in on any lane.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">What a lead can do</h3>
+      <ul>
+        <li><b>Confirm</b> the agent’s answer (a note is optional)</li>
+        <li><b>Adjust</b> it to proceed / with conditions / hold: needs a 20+ character reason, and lowers Lighthouse’s confidence for that agent by 15%</li>
+        <li><b>Block</b> it: needs a reason. Legal’s version is <i>Reject</i>.</li>
+        <li><b>Re-run my agent</b> at any time. Its old sign-off is cleared and must be given again.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">When the executive can approve</h3>
+      <ul>
+        <li>Every lane is cleared or signed, <b>and</b></li>
+        <li>Legal has not rejected it and no legal rule prohibits it</li>
+        <li>A Sales, Finance or Ops <b>block</b> can be overruled with a written reason, and is recorded as an override</li>
+        <li>Going against Lighthouse’s recommendation, or a high-risk case, also needs a reason</li>
+      </ul>
+      <p class="muted">Reject and Send back are allowed any time after the agents run.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Deadlines and escalation</h3>
+      <ul>
+        <li>Each sign-off is due <b>48 hours</b> after the agents run (admin can change this)</li>
+        <li>An overdue Sales, Finance or Ops lane escalates: the executive may decide without it, with a reason, and the record names who didn’t sign</li>
+        <li>An overdue <b>Legal</b> lane never escalates. Approval stays locked.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="call">Lighthouse reconciles twice: first on the four AI answers, then again on what the departments actually signed. When the signed result differs, the packet says so in plain words: <i>“The AI agents alone said hold (75%). Department sign-offs changed it.”</i></div>
 
-<div class="step"><span class="num">4</span><div><b>The Lighthouse packet.</b> Scroll down. Show the headline, the confidence breakdown (“a synthesis score, not an average”), the surfaced disagreement, the governance gates (Legal = <span class="pill p-vio">PENDING</span>) and the conditions. Show that approval says <b>Waiting on Priya Raman · Legal review</b>.
-<div class="say">“Three functions support proceeding, but Legal imposes a mandatory gate. Lighthouse doesn’t average that away; it locks approval until a human lawyer reviews.”</div></div></div>
-<img class="shot" src="img/packet-legal.jpg" /><div class="cap">Lighthouse packet with the legal gate pending and approval locked.</div>
+  <section class="page" style="margin-top:0">
+    <div class="eyebrow">4 · Getting ready</div>
+    <h2>Before class (10 minutes)</h2>
+    <ul class="check">
+      <li>Open the live app. Sign in as <b>Jordan Ellis</b> (PIN 4210).</li>
+      <li><i>Rules &amp; agents → Demo controls → Reset demo cases</i>. Do this <b>on demo day</b>: sign-off deadlines run on real time, so a reset done days earlier makes every lane overdue.</li>
+      <li><i>Rules &amp; agents → Agents &amp; AI → Test providers</i>. Both Gemini and Groq should show OK.</li>
+      <li>Set the top-right switch: <b>Live AI</b> if the network is good, <b>Replay</b> if it isn’t (saved AI answers, identical results). The setting applies to everyone in that browser.</li>
+      <li>Tip: give each teammate one persona, so the hand-offs feel like real people. Switching person is one click (<i>Switch</i>, bottom left).</li>
+    </ul>
+    <figure><img class="shot" src="img/login.jpg" /><figcaption>Sign-in groups people by what they do: the executive, the four department leads, and the administrator.</figcaption></figure>
+  </section>
+</section>
 
-<div class="step"><span class="num">5</span><div><b>Legal review (Priya).</b> Switch → Priya Raman. Her desk lists only cases that need legal review. Open D-2026-001: she sees the claim, what the Legal agent found and the triggered rules. Choose <i>Approve with conditions</i>, add a note, click <b>Record legal disposition</b>.</div></div>
-<img class="shot" src="img/legal-case.jpg" /><div class="cap">Priya’s focused view: the claim, the Legal agent’s findings, triggered rules and her disposition.</div>
+<!-- ============================================================ demo script -->
+<section class="page" style="margin-top:0">
+  <div class="eyebrow">5 · The demo</div>
+  <h2>Demo script (about 8 minutes)</h2>
+  <p class="lede">The story follows one promotion from proposal to sealed decision, with a detour that shows a human disagreeing with their AI.</p>
+  <table class="timeline">
+    <tr><th>Time</th><th>Person</th><th>What the audience sees</th></tr>
+    <tr><td>0:00–0:45</td><td>Anyone</td><td>The problem, the five roles (sign-in screen)</td></tr>
+    <tr><td>0:45–2:15</td><td>Hannah · Sales</td><td>Submits D-2026-001; four agents run live; she lands on her own lane, cleared automatically</td></tr>
+    <tr><td>2:15–3:15</td><td>Priya · Legal</td><td>Only Legal is needed; she approves the claim with conditions</td></tr>
+    <tr><td>3:15–4:30</td><td>David · Finance</td><td>D-2026-003: his agent says reject; he re-runs it, then changes it to “proceed with conditions” with a reason</td></tr>
+    <tr><td>4:30–6:15</td><td>Maya · Executive</td><td>Her desk; D-2026-003 shows “AI said hold, sign-offs changed it”; D-2026-006 escalated; approves D-2026-001</td></tr>
+    <tr><td>6:15–7:15</td><td>Maya</td><td>Flow (four parallel lanes) and the Dashboard</td></tr>
+    <tr><td>7:15–8:00</td><td>Jordan · Admin</td><td>Audit chain verification and the 18 acceptance tests</td></tr>
+  </table>
 
-<div class="step"><span class="num">6</span><div><b>Decide (Maya).</b> Switch back to Maya. The Legal gate is now cleared. Click <b>Approve</b> with an empty rationale: it is refused (high-risk case). Type a rationale and approve.
-<div class="say">“The human is accountable: the system requires a reason, and the decision lands in the audit trail with the evidence that informed it.”</div></div></div>
-<img class="shot" src="img/approved.jpg" /><div class="cap">Recorded decision and the case’s hash-chained decision trace.</div>
+  <div class="step"><span class="num">1</span><div><b>Set the scene.</b> <span class="who">Sign-in screen</span><br/>
+  <div class="say">“A promotion decision touches four departments, and each now has an AI agent. Lighthouse gives each department ownership of its agent, asks a person to sign only when their agent has a concern, and leaves the final call to a named executive.”</div></div></div>
 
-<div class="step"><span class="num">7</span><div><b>Conflict cases (pick one or two).</b> D-2026-003 Finance vs Sales: strong demand but a $1.3M loss, Lighthouse says <span class="pill p-warn">Hold</span> and Finance reports a break-even discount. D-2026-005: alcohol BOGO in Texas, Legal prohibition → <span class="pill p-bad">Reject</span>, approval impossible. D-2026-006: inventory feed outage → Operations output marked invalid, no imputation → <span class="pill p-vio">Review required</span>.</div></div>
-<img class="shot" src="img/packet-conflict.jpg" /><div class="cap">D-2026-003: material conflict surfaced explicitly; Lighthouse holds.</div>
+  <div class="step"><span class="num">2</span><div><b>Hannah proposes and submits.</b> <span class="who">Hannah · Sales lead</span><br/>Her desk shows two things: a sign-off on D-2026-007 and her draft D-2026-001 (15% OTC rollback, all 50 stores, claim “Clinically proven cold &amp; flu relief”). Click <b>Submit for review</b>, then <b>Submit for review</b> again on the case.
+  <div class="say">“Submitting runs all four agents in parallel. Each one first calls tools against the database (you can see the tool names), then the model reasons over that evidence, then guardrails check it.”</div></div></div>
+</section>
 
-<div class="step"><span class="num">8</span><div><b>Audit.</b> Open <i>Audit</i> → <b>Verify chain</b>. About 22,000 entries are re-hashed in under a second.
-<div class="say">“If anyone edited a past decision, verification would point to the exact entry that was altered.”</div></div></div>
-<img class="shot" src="img/audit.jpg" /><div class="cap">Tamper-evidence check over the full audit chain.</div>
+<section class="page" style="margin-top:0">
+  <div class="grid2">
+    <figure><img class="shot" src="img/hannah-desk.jpg" /><figcaption>Hannah’s desk: only her work, each with the reason it needs her.</figcaption></figure>
+    <figure><img class="shot" src="img/running.jpg" /><figcaption>After Submit: four agents mid-run, tool calls first, then reasoning.</figcaption></figure>
+  </div>
+  <p>When the run finishes, Hannah lands on <b>her own lane</b>: the Sales agent says proceed (+23.5% unit uplift), so it <i>cleared automatically</i>. The journey bar shows <i>3 of 4 cleared · waiting on Legal</i>.</p>
+  <figure class="w92"><img class="shot" src="img/hannah-lane.jpg" /><figcaption>After submitting: the journey bar shows four parallel lanes. Sales, Finance and Operations cleared automatically; Legal is waiting.</figcaption></figure>
 
-<div class="step"><span class="num">9</span><div><b>Test lab.</b> Sign in as Jordan (PIN 4210) → <i>Test lab</i> → <b>Run all tests</b>: 15/15 acceptance tests from Deliverable 1 pass live (agreement, conflict, hard stop, legal gate, missing &amp; stale evidence, overrides, audit replay, guardrails, prompt-injection screening, 60-second target, scale).</div></div>
-<img class="shot" src="img/testlab.jpg" /><div class="cap">Acceptance suite run against the real engine and database.</div>
+</section>
 
-<div class="step"><span class="num">10</span><div><b>Close with the Dashboard.</b> Open <i>Dashboard</i> (every person has it): the <i>Data</i> tab shows exactly what is real vs generated. the <i>ROI</i> tab reproduces Deliverable 1 ($1.43M benefit, 24% ROI, 9.7-month payback) with live sliders and a tornado chart. Optional: sign in as Jordan (PIN 4210), change a threshold with a reason, and show the new audit entry.</div></div>
-<div class="two"><div><img class="shot" src="img/data.jpg" /><div class="cap">Real M5 Walmart demand by category.</div></div><div><img class="shot" src="img/roi.jpg" /><div class="cap">ROI model with sensitivity tornado.</div></div></div>
+<section class="page" style="margin-top:0">
+  <div class="step"><span class="num">3</span><div><b>Priya signs off on the claim.</b> <span class="who">Priya · Legal lead</span><br/>Her desk lists the cases where the Legal agent flagged a rule. Open D-2026-001: the claim, her agent’s finding and 7 triggered rules (FTC substantiation, OTC monograph). Choose <b>Approve with conditions</b>, add the condition and a note, and sign.
+  <div class="say">“Legal is the only department needed here. Priya doesn’t review the other three, and they don’t wait on her. Her rejection would be final; even the executive can’t overrule it.”</div></div></div>
+  <figure><img class="shot" src="img/priya-signoff.jpg" /><figcaption>Priya’s lane: her agent’s finding, the triggered rules, her sign-off form, and the status of the other three departments.</figcaption></figure>
+</section>
 
-<h2 class="pb" style="border-top:none">4. The twelve demo scenarios</h2>
-<p>All twelve start as <b>Draft</b> after a reset. Each one exercises a specific acceptance criterion.</p>
-<table>
-  <tr><th>Case</th><th>Scenario</th><th>Expected Lighthouse result</th></tr>
-  <tr><td>D-2026-001</td><td>Anchor: 15% OTC rollback, “clinically proven” claim</td><td><span class="pill p-info">Proceed with conditions</span> after legal approval</td></tr>
-  <tr><td>D-2026-002</td><td>8% pantry rollback, West, supplier funded</td><td>All four agents support · no conflict</td></tr>
-  <tr><td>D-2026-003</td><td>28% Home &amp; Kitchen rollback</td><td><span class="pill p-warn">Hold</span>: demand strong, economics fail (material conflict)</td></tr>
-  <tr><td>D-2026-004</td><td>BOGO household, launches in 3 days</td><td><span class="pill p-warn">Hold</span>: lead time longer than launch window (hard stop)</td></tr>
-  <tr><td>D-2026-005</td><td>Hard seltzer BOGO in Texas</td><td><span class="pill p-bad">Reject</span>: legal prohibition, approval impossible</td></tr>
-  <tr><td>D-2026-006</td><td>Electronics, Mid-Atlantic feed outage</td><td><span class="pill p-vio">Review required</span>: Operations evidence invalid, not imputed</td></tr>
-  <tr><td>D-2026-007</td><td>Fresh deli endcap, evidence 18 days old</td><td>Proceed with conditions, stale flag, confidence downgraded</td></tr>
-  <tr><td>D-2026-008</td><td>3-store baby digital coupon</td><td>Low confidence, test-first condition, legal review (children’s data)</td></tr>
-  <tr><td>D-2026-009</td><td>50% apparel clearance, West</td><td><span class="pill p-warn">Hold</span>: deep markdown economics; good case to demo a rejection</td></tr>
-  <tr><td>D-2026-010</td><td>Beauty digital coupon, skin-repair claim, CA</td><td>Privacy + cosmetic-drug claim review; economics hold</td></tr>
-  <tr><td>D-2026-011</td><td>8-week supplier endcap, all stores</td><td>Proceed with conditions after legal review (exclusivity)</td></tr>
-  <tr><td>D-2026-012</td><td>Move 6,000 TVs before the holidays</td><td>Proceed with conditions · no conflict</td></tr>
-</table>
-<p class="muted">AI wording varies slightly run to run; the governed recommendation is fixed by policy, so the outcome column stays the same.</p>
+<section class="page" style="margin-top:0">
+  <div class="step"><span class="num">4</span><div><b>David disagrees with his agent.</b> <span class="who">David · Finance lead</span><br/>Open D-2026-003 (28% Home &amp; Kitchen rollback). His agent says <span class="pill p-bad">Reject</span>: net benefit −$1.28M. Click <b>Re-run my agent</b> to show that he owns it (it re-runs in a few seconds; the others keep their answers). Then choose <b>Proceed with conditions</b>, type the reason (“Supplier confirmed 40% funding after the run…”) and sign.
+  <div class="say">“The AI is advice. The department head is accountable. If David changes his agent’s answer he has to say why, it costs Lighthouse confidence, and both versions stay on the record.”</div></div></div>
+  <figure><img class="shot" src="img/david-signoff.jpg" /><figcaption>David’s sign-off: the AI’s answer is marked “AI”. Changing it requires a reason.</figcaption></figure>
 
-<h2>5. Live AI, demo-safe mode and the backup plan</h2>
-<table>
-  <tr><th>Layer</th><th>What it is</th><th>When it is used</th></tr>
-  <tr><td>Gemini (free tier)</td><td>Newest Gemini Flash model the key can access</td><td>Primary on the deployed site</td></tr>
-  <tr><td>Groq (free tier)</td><td>gpt-oss-120b → Qwen → gpt-oss-20b</td><td>Automatically, if Gemini errors or hits a limit</td></tr>
-  <tr><td>Rules engine</td><td>Deterministic version of each agent</td><td>If no AI answers; outputs are labelled “Rules engine”</td></tr>
-  <tr><td>Replay</td><td>Replays the saved AI answers for that case (all 12 demo cases are saved)</td><td>Turn on with the top-right switch when Wi-Fi is unreliable</td></tr>
-</table>
-<div class="call warn"><b>Note on the GWU network:</b> campus Wi-Fi blocks Google’s Gemini API address. This does not affect the deployed site (Vercel’s servers call Gemini, not your laptop). If you run the app locally on campus, it automatically uses Groq.</div>
+</section>
 
-<h2>6. How it works (for questions)</h2>
-<h3>Agents and tools</h3>
-<ul>
-  <li><b>Sales:</b> 56-day baseline, seasonal index for the exact window, category elasticity, real promo-day analogs from M5, channel mix.</li>
-  <li><b>Finance:</b> incremental gross profit at the discounted price, basket halo, supplier funding, execution/labor/inventory costs, downside case (uplift −40%), break-even discount solver.</li>
-  <li><b>Operations:</b> inventory position, launch requirement vs lead time, DC utilization in the same calendar window, labor and online fulfillment capacity, projected fill rate.</li>
-  <li><b>Legal:</b> matches 180 active rules (250 incl. superseded versions) by category, mechanic, channel, states, discount, duration, flags and claim text.</li>
-</ul>
-<h3>Governance rules (Deliverable 1 §4.2)</h3>
-<ul>
-  <li>Legal prohibition → Reject; legal review required → approval locked until a human disposition.</li>
-  <li>Missing evidence → output invalid, Review required, never imputed.</li>
-  <li>Operations hard stop → Hold unless mitigation resolves it.</li>
-  <li>Support vs oppose → explicit conflict; confidence = weighted agent confidence × completeness × freshness × (1 − conflict penalty).</li>
-  <li>The AI writes the narrative; it cannot change the governed recommendation.</li>
-</ul>
+<section class="page" style="margin-top:0">
+  <div class="step"><span class="num">5</span><div><b>Maya’s desk.</b> <span class="who">Maya · Executive</span><br/>Five things need her: cases where every department has cleared, the prohibited Texas seltzer BOGO (D-2026-005, which can only be rejected), and D-2026-006, where Operations missed the deadline. Below that she sees what is still in sign-off and with whom.</div></div>
+  <figure><img class="shot" src="img/maya-desk.jpg" /><figcaption>The executive’s desk: decisions ready for her, each with a one-line reason.</figcaption></figure>
+</section>
 
-<h2>7. Likely questions</h2>
-<table>
-  <tr><th style="width:34%">Question</th><th>Answer</th></tr>
-  <tr><td>Is this real Walmart data?</td><td>Demand patterns are real public Walmart data from Kaggle (M5 daily sales; 45-store weekly sales), calibrated to the FY2026 10-K. Store IDs, inventory, legal rules and costs are generated and labelled. Nothing is Walmart internal data.</td></tr>
-  <tr><td>Why benchmark elasticities?</td><td>Price response measured directly in M5 is weak and noisy (weekly-averaged prices blur short promos). We show the measured values and use category-level benchmarks from the marketing literature, labelled as assumptions.</td></tr>
-  <tr><td>What if the AI hallucinates?</td><td>Numbers come from deterministic tools; the AI must cite evidence IDs; unknown IDs are removed; hard constraints are enforced after the AI answers; unsupported answers fall back to the rules engine. Test T12 demonstrates this.</td></tr>
-  <tr><td>What about prompt injection?</td><td>User text is passed as quoted data, screened for injection patterns, and never treated as instructions (test T13).</td></tr>
-  <tr><td>Why not let the AI decide?</td><td>Accountability, error containment and compliance. Lighthouse never executes decisions; a named human approves, with a recorded reason.</td></tr>
-  <tr><td>Does it meet the 60-second target?</td><td>Live runs complete in about 6–10 seconds; the reconciliation itself takes milliseconds (test T14).</td></tr>
-  <tr><td>What does it cost to run?</td><td>$0: Vercel Hobby, Neon free tier, Gemini and Groq free tiers.</td></tr>
-</table>
+<section class="page" style="margin-top:0">
+  <div class="step"><span class="num">6</span><div><b>Human vs AI, side by side.</b> Open D-2026-003. Each agent card has a footer saying who owns it and what they did. The packet reads <i>“Lighthouse recommends, after sign-off: Proceed with conditions. The AI agents alone said hold (75%). Department sign-offs changed it.”</i> The sign-off panel shows <i>AI said reject → proceed with conditions</i> with David’s reason.
+  <div class="say">“Nothing is averaged away. Maya sees exactly where a person overruled their AI, and why, before she decides.”</div></div></div>
+  <figure><img class="shot" src="img/maya-packet.jpg" /><figcaption>The reconciled packet after sign-off, the four department lanes, and the decision panel.</figcaption></figure>
+  <div class="grid2">
+    <figure><img class="shot" src="img/escalation.jpg" /><figcaption>D-2026-006: Operations is overdue, so Maya may decide without it (with a reason). Legal would never escalate.</figcaption></figure>
+    <figure><img class="shot" src="img/prohibited.jpg" /><figcaption>D-2026-005: a Texas rule prohibits the alcohol BOGO. Approval is locked for everyone.</figcaption></figure>
+  </div>
+</section>
 
-<h2>8. Troubleshooting</h2>
-<ul>
-  <li><b>An agent card says “Rules engine”:</b> no AI provider answered (rate limit or network). The result is still valid. Re-run in a minute, or use demo-safe mode.</li>
-  <li><b>Approval says “Waiting on Priya Raman”:</b> by design. Switch to Priya and record a legal disposition.</li>
-  <li><b>A demo case is already approved:</b> Jordan → Rules &amp; agents → Demo controls → Reset demo cases.</li>
-  <li><b>Need a clean printout:</b> on any case, click <i>Export packet</i> → Print / Save as PDF.</li>
-</ul>
+<section class="page" style="margin-top:0">
+  <div class="step"><span class="num">7</span><div><b>Approve D-2026-001.</b> Open it, type a reason (“Approved with Legal’s revised claim; supplier funds 80%…”) and click <b>Approve</b>. Try it first with an empty reason: it is refused, because the case is high-risk. The journey bar turns to <i>Decided and sealed in the audit trail</i>.</div></div>
+  <figure><img class="shot" src="img/approved.jpg" /><figcaption>Every step done: proposed, analyzed, signed off (three automatically), decided, sealed.</figcaption></figure>
+
+  <div class="step"><span class="num">8</span><div><b>Flow and Dashboard.</b> <i>Flow</i> shows every live case by stage. The sign-off stage is split into the four departments with their open counts, and the signed-in person’s cards glow brass. The <i>Dashboard</i> shows the pilot across 5,000 decisions, including how often each department needed a person and how often they agreed with their agent.</div></div>
+  <div class="grid2">
+    <figure><img class="shot" src="img/flow.jpg" /><figcaption>Flow: four stages, with department sign-off running in parallel.</figcaption></figure>
+    <figure><img class="shot" src="img/dashboard-signoffs.jpg" /><figcaption>Dashboard: department sign-offs (confirmed, changed, blocked) and recent activity.</figcaption></figure>
+  </div>
+</section>
+
+<section class="page" style="margin-top:0">
+  <div class="step"><span class="num">9</span><div><b>Audit and tests.</b> <span class="who">Jordan · Admin</span><br/><i>Audit → Verify chain</i> re-hashes about 22,000 entries in under a second. <i>Test lab → Run all tests</i> runs 18 acceptance tests live: Deliverable 1’s criteria plus the sign-off rules (management by exception, escalation without skipping Legal, human adjustments costing confidence).
+  <div class="say">“If anyone edited a past decision or sign-off, verification would point to the exact entry that changed.”</div></div></div>
+  <div class="grid2">
+    <figure><img class="shot" src="img/audit.jpg" /><figcaption>Tamper-evidence check over the full audit chain.</figcaption></figure>
+    <figure><img class="shot" src="img/testlab.jpg" /><figcaption>18 of 18 acceptance tests passing against the real engine and database.</figcaption></figure>
+  </div>
+  <div class="call ok"><b>If you have extra time:</b> as Priya, open <i>My sign-offs</i> (how often she agreed with her agent); as Jordan, change the sign-off confidence floor with a reason and show the new audit entry; open <i>Dashboard → Data</i> and <i>ROI</i>.</div>
+  <div class="grid2">
+    <figure><img class="shot" src="img/history.jpg" /><figcaption>My sign-offs: each lead’s record of confirming, changing or blocking their agent.</figcaption></figure>
+    <figure><img class="shot" src="img/roi.jpg" /><figcaption>ROI model (Deliverable 1: $1.43M benefit, 24% ROI, 9.7-month payback) with live sliders.</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============================================================ scenarios -->
+<section class="page" style="margin-top:0">
+  <div class="eyebrow">6 · Reference</div>
+  <h2>The twelve demo cases after a reset</h2>
+  <p class="muted">With Replay on, outcomes are exactly as listed. Live AI wording varies a little from run to run, but the governance rules fix the outcome.</p>
+  <table>
+    <tr><th style="width:11%">Case</th><th style="width:31%">Scenario</th><th style="width:20%">Starting state</th><th>Who must sign · what it shows</th></tr>
+    <tr><td>D-2026-001</td><td>15% OTC rollback, “clinically proven” claim</td><td>Proposed (submit live)</td><td>Legal only. The anchor case: legal gate, then approval.</td></tr>
+    <tr><td>D-2026-002</td><td>8% pantry rollback, supplier-funded</td><td>With executive</td><td>Nobody: all four cleared automatically. <span class="pill p-info">With conditions</span></td></tr>
+    <tr><td>D-2026-003</td><td>28% Home &amp; Kitchen rollback</td><td>In sign-off</td><td>Finance. Demand strong, economics fail: <span class="pill p-warn">Hold</span>. Best case for a human adjustment.</td></tr>
+    <tr><td>D-2026-004</td><td>BOGO launching in 3 days</td><td>In sign-off</td><td>Operations (Legal already signed). Lead time beats launch: hard stop, <span class="pill p-warn">Hold</span>.</td></tr>
+    <tr><td>D-2026-005</td><td>Hard seltzer BOGO in Texas</td><td>With executive</td><td>Nobody: a legal rule prohibits it. <span class="pill p-bad">Reject</span>, approval impossible.</td></tr>
+    <tr><td>D-2026-006</td><td>Electronics during an inventory feed outage</td><td>In sign-off, Ops overdue</td><td>Operations is 54h overdue, so it escalates to Maya. Evidence invalid, never imputed.</td></tr>
+    <tr><td>D-2026-007</td><td>Deli endcap on 18-day-old evidence</td><td>In sign-off</td><td>Sales, Operations, Legal: stale data drops every agent below 65% confidence.</td></tr>
+    <tr><td>D-2026-008</td><td>3-store baby digital coupon</td><td>In sign-off</td><td>Finance (hold) and Legal (children’s data).</td></tr>
+    <tr><td>D-2026-009</td><td>50% apparel clearance</td><td>In sign-off</td><td>Finance (reject) and Legal (reference-price rules).</td></tr>
+    <tr><td>D-2026-010</td><td>Beauty coupon, skin-repair claim, California</td><td>In sign-off</td><td>Finance and Legal (privacy plus cosmetic-drug claim).</td></tr>
+    <tr><td>D-2026-011</td><td>8-week supplier endcap, all stores</td><td>In sign-off</td><td>Legal (exclusivity terms).</td></tr>
+    <tr><td>D-2026-012</td><td>Move 6,000 TVs before the holidays</td><td>Approved</td><td>Proposed by Luis (Operations); shows a sealed case.</td></tr>
+  </table>
+  <p class="muted">Desk counts after a reset: Maya 3 · Hannah 2 · David 4 · Luis 3 · Priya 5.</p>
+
+</section>
+
+<section class="page" style="margin-top:0">
+  <section style="margin-top:0">
+    <div class="eyebrow">7 · Reliability</div>
+    <h2>Live AI, Replay and the backup plan</h2>
+    <table>
+      <tr><th style="width:20%">Layer</th><th>What it is</th><th style="width:34%">When it is used</th></tr>
+      <tr><td>Gemini (free)</td><td>The newest Gemini Flash model the key can use</td><td>First choice on the deployed site</td></tr>
+      <tr><td>Groq (free)</td><td>gpt-oss-120b → Qwen → gpt-oss-20b</td><td>Automatically if Gemini errors or times out (15s). A failed provider is skipped for 10 minutes.</td></tr>
+      <tr><td>Rules engine</td><td>Deterministic version of each agent</td><td>If no AI answers; cards are labelled “Rules engine”</td></tr>
+      <tr><td>Replay</td><td>The saved AI answers for each demo case</td><td>Admin switch (top right) when the network is unreliable</td></tr>
+    </table>
+    <div class="call warn"><b>GWU campus network:</b> campus Wi-Fi blocks Google’s Gemini address. The deployed site isn’t affected (Vercel’s servers call Gemini, not your laptop). Running locally on campus, the app falls back to Groq.</div>
+  </section>
+</section>
+
+  <section>
+  <div class="eyebrow">8 · Under the hood</div>
+  <h2>How it works</h2>
+  <div class="grid2">
+    <div>
+      <h3>Agents and their tools</h3>
+      <ul>
+        <li><b>Sales:</b> 56-day baseline, seasonality for the exact window, category elasticity, real promo-day analogs from M5, channel mix.</li>
+        <li><b>Finance:</b> incremental gross profit, basket halo, supplier funding, execution costs, a downside case (−40% uplift), break-even discount solver.</li>
+        <li><b>Operations:</b> inventory position, launch requirement vs lead time, DC utilization, labor and online fulfillment, projected fill rate.</li>
+        <li><b>Legal:</b> matches 180 active rules (250 including superseded versions) by category, mechanic, channel, state, discount, duration, flags and claim text.</li>
+      </ul>
+      <h3>Pipeline</h3>
+      <p><i>Tools compute, agents reason, guardrails enforce, people sign, the executive decides.</i> Numbers always come from deterministic tools. The model returns a recommendation, confidence, risk, conditions and cited evidence IDs (schema-validated). Guardrails remove made-up citations and enforce hard limits.</p>
+    </div>
+    <div>
+      <h3>Governance (Deliverable 1 §4.2, extended)</h3>
+      <ul>
+        <li>Legal prohibition → Reject; nobody can approve it.</li>
+        <li>Missing evidence → invalid output, Review required, never imputed.</li>
+        <li>Operations hard stop, or a Finance hold or reject → no proceed.</li>
+        <li>Support vs oppose → an explicit conflict, never averaged.</li>
+        <li>Confidence = weighted agent confidence × completeness × freshness × (1 − conflict penalty). A human adjustment multiplies that agent’s confidence by 0.85.</li>
+        <li>Department sign-offs as above; then the executive decides.</li>
+        <li>Append-only audit log with a SHA-256 hash chain. Database triggers refuse edits and deletes.</li>
+      </ul>
+    </div>
+  </div>
+
+  </section>
+</section>
+
+<section class="page" style="margin-top:0">
+  <section style="margin-top:0">
+    <div class="eyebrow">9 · Questions</div>
+    <h2>Likely questions</h2>
+    <table>
+      <tr><th style="width:32%">Question</th><th>Answer</th></tr>
+      <tr><td>Why doesn’t every lead review every case?</td><td>Review fatigue. Leads sign only where their agent has a concern; clean answers clear automatically. Every lane still shows who owns it, and any lead can step in.</td></tr>
+      <tr><td>Isn’t the human just rubber-stamping the AI?</td><td>The record says otherwise. Changing an answer needs a reason and is shown side by side with the AI; the Dashboard tracks how often each department confirmed, changed or blocked its agent.</td></tr>
+      <tr><td>What if a lead never responds?</td><td>After 48 hours a Sales, Finance or Ops lane escalates and the executive may decide without it, with a reason. Legal never escalates.</td></tr>
+      <tr><td>Can the executive overrule Legal?</td><td>No. A Legal rejection or a prohibiting rule locks approval for everyone.</td></tr>
+      <tr><td>Why is the administrator separate?</td><td>Separation of duties: the person who sets the rules and thresholds can’t also decide cases under them.</td></tr>
+      <tr><td>Is this real Walmart data?</td><td>Demand patterns are real public Walmart data from Kaggle (M5 daily sales; 45-store weekly sales), calibrated to the FY2026 10-K. Stores, inventory, rules and costs are generated and labelled. No Walmart internal data.</td></tr>
+      <tr><td>What if the AI hallucinates?</td><td>Numbers come from tools; the AI must cite evidence IDs; unknown IDs are removed; hard limits apply after the AI answers (test T12). The department lead is the last check.</td></tr>
+      <tr><td>Prompt injection?</td><td>User text is passed as quoted data, screened for injection patterns, and never treated as instructions (test T13).</td></tr>
+      <tr><td>Does it meet the 60-second target?</td><td>Live runs take about 6–15 seconds; a single-agent re-run about 3–5; reconciliation takes milliseconds (test T14).</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <div class="eyebrow">10 · Help</div>
+    <h2>Troubleshooting</h2>
+    <ul>
+      <li><b>Every lane says overdue:</b> the reset was done more than 48 hours ago. Reset again, or raise the sign-off deadline in <i>Rules &amp; agents</i>.</li>
+      <li><b>An agent card says “Rules engine”:</b> no AI provider answered. The result is still valid. Re-run, or switch to Replay.</li>
+      <li><b>Approve is locked:</b> by design. The panel says which department is still open; switch to that person.</li>
+      <li><b>A demo case is already decided:</b> Jordan → <i>Rules &amp; agents → Demo controls → Reset demo cases</i>.</li>
+      <li><b>Need a printout:</b> on any case, <i>Export packet</i> → Print / Save as PDF. It lists every department’s sign-off.</li>
+    </ul>
+  </section>
+</section>
 </body>
 </html>

@@ -6,6 +6,8 @@ import { Card, LinkButton } from "@/components/ui";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { legalDesk, ownerDesk, reviewerDesk } from "@/lib/desk";
+import { loadFlow } from "@/lib/flow";
+import { StageMap } from "@/components/flow";
 import { ROLE_LABEL } from "@/lib/personas";
 
 export const dynamic = "force-dynamic";
@@ -13,12 +15,24 @@ export const metadata = { title: "My desk" };
 
 export default async function Home() {
   const persona = await requireSession();
+  const flow = await loadFlow(persona);
+  const map = (
+    <div className="mb-12">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 className="text-[11.5px] tracking-[0.14em] text-muted uppercase">Where everything is</h2>
+        <Link href="/flow" className="text-[12.5px] text-ink-2 hover:text-ink">
+          Open Flow →
+        </Link>
+      </div>
+      <StageMap stages={flow} viewer={persona} />
+    </div>
+  );
 
   if (persona.role === "DECISION_OWNER") {
     const d = await ownerDesk(persona.name);
     const need = d.ready.length + d.toRun.length;
     return (
-      <div className="mx-auto max-w-[880px]">
+      <div className="mx-auto max-w-[1040px]">
         <div className="flex items-start justify-between gap-4">
           <Greeting
             name={persona.name}
@@ -29,6 +43,7 @@ export default async function Home() {
             <Plus className="size-4" /> New decision
           </LinkButton>
         </div>
+        {map}
         <DeskSection title="Run the agents" count={d.toRun.length} empty={d.toRun.length ? undefined : "No drafts."}>
           {d.toRun.map((i) => (
             <DeskRow key={i.decision_id} item={i} action="Analyze" sub={i.note} />
@@ -51,12 +66,13 @@ export default async function Home() {
   if (persona.role === "LEGAL_REVIEWER") {
     const d = await legalDesk();
     return (
-      <div className="mx-auto max-w-[880px]">
+      <div className="mx-auto max-w-[1040px]">
         <Greeting
           name={persona.name}
           eyebrow={ROLE_LABEL[persona.role]}
           line={d.total ? `${d.total} ${d.total === 1 ? "case needs" : "cases need"} your legal review before anyone can approve.` : "No cases need legal review."}
         />
+        {map}
         <DeskSection title="Needs your review" count={d.total} empty={d.todo.length ? undefined : "Nothing to review right now."}>
           {d.todo.map((i) => (
             <DeskRow key={i.decision_id} item={i} action="Review" sub={i.note ? `Flagged: ${i.note}` : undefined} showRec={false} />
@@ -80,8 +96,9 @@ export default async function Home() {
       ["Audit entries", Number(s.audit).toLocaleString(), "/audit"],
     ] as const;
     return (
-      <div className="mx-auto max-w-[880px]">
+      <div className="mx-auto max-w-[1040px]">
         <Greeting name={persona.name} eyebrow={ROLE_LABEL[persona.role]} line="Rules, thresholds and the audit trail. You can observe every decision but not make one." />
+        {map}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {tiles.map(([l, v, href]) => (
             <Link key={l} href={href}>
@@ -105,12 +122,13 @@ export default async function Home() {
   const d = await reviewerDesk(persona);
   const agentName = AGENT_META[d.agent].name;
   return (
-    <div className="mx-auto max-w-[880px]">
+    <div className="mx-auto max-w-[1040px]">
       <Greeting
         name={persona.name}
         eyebrow={ROLE_LABEL[persona.role]}
         line={d.todo.length ? `The ${agentName} agent raised conditions or concerns on ${d.todo.length} open ${d.todo.length === 1 ? "case" : "cases"}.` : `Nothing from the ${agentName} agent needs your eyes.`}
       />
+      {map}
       <DeskSection title={`${agentName} concerns to validate`} count={d.todo.length} empty={d.todo.length ? undefined : "All clear."}>
         {d.todo.map((i) => (
           <DeskRow key={i.decision_id} item={i} action="Validate" sub={i.note} />

@@ -9,6 +9,8 @@ import { PROMO_LABEL } from "@/lib/engine/common";
 import { dateLabel, titleCase } from "@/lib/format";
 import { getCase } from "@/lib/repo";
 import { loadDecisionBundle } from "@/lib/views";
+import { JourneyBar } from "@/components/journey";
+import { buildJourney } from "@/lib/journey";
 import { FocusView } from "./focus-view";
 import { Timeline } from "./timeline";
 import { Workspace } from "./workspace";
@@ -39,6 +41,19 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
     titleCase(c.channel),
     c.vendor_funding_pct ? `${c.vendor_funding_pct}% supplier-funded` : null,
   ].filter(Boolean);
+  const legalReview = [...bundle.reviews].reverse().find((r) => r.reviewer_role === "LEGAL_REVIEWER" && r.revision === c.revision) ?? null;
+  const steps = buildJourney({
+    status: c.status,
+    revision: c.revision,
+    created_at: c.created_at,
+    created_by: c.created_by,
+    hasPacket: !!bundle.packet,
+    analyzedAt: bundle.packet?.created_at ?? null,
+    requiresLegal: bundle.packet?.requires_legal_review ?? null,
+    legalBlocked: bundle.packet?.gates.some((g) => g.key === "LEGAL_REVIEW" && g.status === "BLOCKED") ?? false,
+    legal: legalReview,
+    final: bundle.packet?.final_decision ? { decision: bundle.packet.final_decision, by: bundle.packet.decided_by, at: bundle.packet.decided_at } : null,
+  });
   const back = persona.role === "DECISION_OWNER" || persona.role === "ADMIN" ? { href: "/decisions", label: "Decisions" } : { href: "/home", label: "My desk" };
 
   return (
@@ -57,6 +72,7 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
         <p className="mt-3 text-[14px] text-muted">{facts.join("  ·  ")}</p>
         {!focusAgent && c.claim_text && <p className="mt-1.5 text-[14px] text-ink-2">“{c.claim_text}”</p>}
       </div>
+      <JourneyBar steps={steps} viewer={persona} className="no-print mb-8" />
       {focusAgent ? (
         <FocusView
           persona={persona}

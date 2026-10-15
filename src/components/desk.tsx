@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn, money } from "@/lib/format";
 import type { DeskItem } from "@/lib/desk";
+import { quickJourney } from "@/lib/journey";
+import { JourneyDots } from "./journey";
 import type { Recommendation } from "@/lib/types";
 import { RecBadge } from "./domain";
 
@@ -39,6 +41,9 @@ export function DeskRow({ item, action, sub, showRec = true }: { item: DeskItem;
         <div className="flex items-center gap-2.5">
           <span className="font-mono text-[11.5px] text-faint">{item.decision_id}</span>
           {showRec && item.rec && <RecBadge rec={item.rec as Recommendation} short />}
+          <span className="ml-1 hidden sm:inline-flex">
+            <JourneyDots steps={quickJourney(item.status, item.revision, item.requires_legal, item.owner)} />
+          </span>
         </div>
         <div className="mt-1 truncate text-[15px] text-ink">{item.title.replace(/ - /g, " · ")}</div>
         {sub && <div className="mt-0.5 truncate text-[13px] text-muted">{sub}</div>}
@@ -57,7 +62,10 @@ export function WaitingRow({ item, who }: { item: DeskItem; who: string }) {
       <Hourglass className="size-4 shrink-0 text-brass" strokeWidth={1.6} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[14px] text-ink">{item.title.replace(/ - /g, " · ")}</div>
-        <div className="text-[12.5px] text-muted">Waiting on {who}</div>
+        <div className="flex items-center gap-3 text-[12.5px] text-muted">
+          <span>Waiting on {who}</span>
+          <JourneyDots steps={quickJourney(item.status, item.revision, item.requires_legal, item.owner)} />
+        </div>
       </div>
       <span className="font-mono text-[11.5px] text-faint">{item.decision_id}</span>
     </Link>

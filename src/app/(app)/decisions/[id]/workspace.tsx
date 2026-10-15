@@ -191,7 +191,7 @@ export function Workspace(props: Props) {
   return (
     <>
       {/* run bar */}
-      <div className="no-print mb-6 flex flex-col gap-3 rounded-[12px] border border-line bg-white p-3 sm:flex-row sm:items-center">
+      <div id={hasRun ? undefined : "act"} className="no-print mb-6 flex scroll-mt-24 flex-col gap-3 rounded-[12px] border border-line bg-white p-3 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 items-center gap-3 px-1">
           <span className={cn("grid size-9 shrink-0 place-items-center rounded-full", running ? "bg-brand-600 text-[#F4F1EA]" : "bg-canvas text-brass")}>
             {running ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
@@ -254,7 +254,7 @@ export function Workspace(props: Props) {
           )}
           {props.timeline}
         </div>
-        <div className="space-y-4">
+        <div id={hasRun ? "act" : undefined} className="scroll-mt-24 space-y-4">
           <DecisionPanel persona={persona} decisionId={decisionId} status={status} revision={revision} packet={running ? null : props.packet} reviews={props.reviews} hasRun={hasRun && !running} />
         </div>
       </div>

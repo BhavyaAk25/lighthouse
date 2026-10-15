@@ -11,6 +11,9 @@ export const REVIEWER_AGENT: Partial<Record<Role, AgentType>> = {
 
 export interface DeskItem {
   decision_id: string;
+  revision: number;
+  owner: string;
+  requires_legal: boolean | null;
   title: string;
   status: string;
   rec: string | null;
@@ -24,6 +27,9 @@ const iso = (v: unknown) => (v instanceof Date ? v.toISOString() : String(v ?? "
 const map = (rows: Record<string, unknown>[]): DeskItem[] =>
   rows.map((r) => ({
     decision_id: String(r.decision_id),
+    revision: Number(r.revision ?? 1),
+    owner: String(r.created_by ?? "Maya Chen"),
+    requires_legal: r.requires_legal_review === null || r.requires_legal_review === undefined ? null : Boolean(r.requires_legal_review),
     title: String(r.title),
     status: String(r.status),
     rec: r.rec ? String(r.rec) : null,
@@ -37,17 +43,17 @@ const map = (rows: Record<string, unknown>[]): DeskItem[] =>
 export async function ownerDesk(owner: string) {
   const sql = db();
   const [ready, toRun, waiting] = await Promise.all([
-    sql`select c.decision_id, c.title, c.status, c.updated_at, l.synthesized_recommendation rec, l.lighthouse_confidence confidence,
+    sql`select c.decision_id, c.title, c.status, c.updated_at, c.revision, c.created_by, l.requires_legal_review, l.synthesized_recommendation rec, l.lighthouse_confidence confidence,
                l.financial_impact impact, l.headline note
         from decision_cases c join lighthouse_decisions l using (decision_id)
         where c.status = 'READY_FOR_DECISION' and c.created_by = ${owner}
         order by (c.decision_id like 'D-2026-%') desc, c.updated_at desc limit 6`,
-    sql`select c.decision_id, c.title, c.status, c.updated_at, null rec, null confidence, null impact,
+    sql`select c.decision_id, c.title, c.status, c.updated_at, c.revision, c.created_by, null::boolean requires_legal_review, null rec, null confidence, null impact,
                case when c.status = 'REVISION_REQUESTED' then 'Revision requested' else null end note
         from decision_cases c
         where (c.decision_id like 'D-2026-%') and c.status in ('DRAFT','REVISION_REQUESTED')
         order by c.decision_id limit 20`,
-    sql`select c.decision_id, c.title, c.status, c.updated_at, l.synthesized_recommendation rec, l.lighthouse_confidence confidence,
+    sql`select c.decision_id, c.title, c.status, c.updated_at, c.revision, c.created_by, l.requires_legal_review, l.synthesized_recommendation rec, l.lighthouse_confidence confidence,
                l.financial_impact impact, null note
         from decision_cases c join lighthouse_decisions l using (decision_id)
         where c.status = 'AWAITING_LEGAL_REVIEW' and c.created_by = ${owner}
@@ -63,7 +69,7 @@ export async function ownerDesk(owner: string) {
 export async function legalDesk() {
   const sql = db();
   const [todo, upstream] = await Promise.all([
-    sql`select c.decision_id, c.title, c.status, c.updated_at, l.synthesized_recommendation rec, l.lighthouse_confidence confidence, l.financial_impact impact,
+    sql`select c.decision_id, c.title, c.status, c.updated_at, c.revision, c.created_by, l.requires_legal_review, l.synthesized_recommendation rec, l.lighthouse_confidence confidence, l.financial_impact impact,
                (select o.key_metrics->>'top_rule' from agent_outputs o where o.run_id = l.run_id and o.agent_type = 'LEGAL' limit 1) note
         from decision_cases c join lighthouse_decisions l using (decision_id)
         where c.status = 'AWAITING_LEGAL_REVIEW'
@@ -79,7 +85,7 @@ export async function reviewerDesk(persona: Persona) {
   const agent = REVIEWER_AGENT[persona.role]!;
   const sql = db();
   const todo = await sql`
-    select c.decision_id, c.title, c.status, c.updated_at, o.recommendation rec, o.confidence, l.financial_impact impact,
+    select c.decision_id, c.title, c.status, c.updated_at, c.revision, c.created_by, l.requires_legal_review, o.recommendation rec, o.confidence, l.financial_impact impact,
            coalesce(o.dissent_reason, o.rationale) note
     from decision_cases c join lighthouse_decisions l using (decision_id)
     join agent_outputs o on o.run_id = l.run_id and o.agent_type = ${agent}

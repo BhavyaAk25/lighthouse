@@ -158,7 +158,7 @@ export function FocusView({
         )}
       </div>
 
-      <div className="space-y-4">
+      <div id="act" className="scroll-mt-24 space-y-4">
         {final ? (
           <WaitingNote>
             Decided by {packet.decided_by}: {final.replace(/_/g, " ").toLowerCase()}.

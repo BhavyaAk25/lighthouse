@@ -2,7 +2,7 @@
 
 import * as Switch from "@radix-ui/react-switch";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { ChevronsUpDown, FlaskConical, Gauge, History, Inbox, LayoutDashboard, Layers, LogOut, Menu, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
+import { ChevronsUpDown, FlaskConical, Gauge, History, Inbox, LayoutDashboard, Layers, LogOut, Menu, ShieldCheck, SlidersHorizontal, Workflow, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -14,15 +14,17 @@ import { Wordmark } from "./logo";
 
 type NavItem = { href: string; label: string; icon: typeof Inbox; badge?: boolean; match?: string[] };
 const HOME: NavItem = { href: "/home", label: "My desk", icon: Inbox, badge: true };
+const FLOW: NavItem = { href: "/flow", label: "Flow", icon: Workflow };
 const INSIGHTS: NavItem = { href: "/overview", label: "Insights", icon: LayoutDashboard, match: ["/overview", "/data", "/roi"] };
 const NAV_BY_ROLE: Record<Persona["role"], NavItem[]> = {
-  DECISION_OWNER: [HOME, { href: "/decisions", label: "Decisions", icon: Layers }, INSIGHTS, { href: "/audit", label: "Audit", icon: ShieldCheck }],
-  LEGAL_REVIEWER: [HOME, { href: "/history", label: "My reviews", icon: History }],
-  FINANCE_REVIEWER: [HOME, { href: "/history", label: "My notes", icon: History }],
-  SALES_REVIEWER: [HOME, { href: "/history", label: "My notes", icon: History }],
-  OPERATIONS_REVIEWER: [HOME, { href: "/history", label: "My notes", icon: History }],
+  DECISION_OWNER: [HOME, FLOW, { href: "/decisions", label: "Decisions", icon: Layers }, INSIGHTS, { href: "/audit", label: "Audit", icon: ShieldCheck }],
+  LEGAL_REVIEWER: [HOME, FLOW, { href: "/history", label: "My reviews", icon: History }],
+  FINANCE_REVIEWER: [HOME, FLOW, { href: "/history", label: "My notes", icon: History }],
+  SALES_REVIEWER: [HOME, FLOW, { href: "/history", label: "My notes", icon: History }],
+  OPERATIONS_REVIEWER: [HOME, FLOW, { href: "/history", label: "My notes", icon: History }],
   ADMIN: [
     { href: "/home", label: "System", icon: Gauge },
+    FLOW,
     { href: "/admin", label: "Rules & agents", icon: SlidersHorizontal },
     { href: "/audit", label: "Audit", icon: ShieldCheck },
     { href: "/test-lab", label: "Test lab", icon: FlaskConical },

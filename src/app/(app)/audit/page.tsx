@@ -62,7 +62,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/audit">) {
     <div>
       <PageHeader
         title="Audit log"
-        subtitle="Append-only and hash-chained. Each entry stores the SHA-256 of the previous entry; the database rejects any update or delete. Verify the whole chain at any time."
+        subtitle="Append-only. Every entry is chained to the one before it."
       />
       <VerifyChain />
       <form className="mt-5 flex flex-col gap-2 sm:flex-row" action="/audit">
@@ -103,7 +103,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/audit">) {
                     <span
                       className={cn(
                         "rounded-md px-1.5 py-0.5 text-[11.5px] font-semibold",
-                        String(r.action).includes("OVERRIDE") ? "bg-warn-soft text-[#9a5b00]" : String(r.action).includes("DECISION") ? "bg-ok-soft text-[#087443]" : "bg-line-2 text-ink-2",
+                        String(r.action).includes("OVERRIDE") ? "bg-warn-soft text-[#8A5A12]" : String(r.action).includes("DECISION") ? "bg-ok-soft text-[#2F6347]" : "bg-line-2 text-ink-2",
                       )}
                     >
                       {String(r.action).replace(/_/g, " ").toLowerCase()}

@@ -106,7 +106,7 @@ export function NewCaseForm({
                 key={v}
                 type="button"
                 onClick={() => set("promo_type", v)}
-                className={cn("rounded-xl border p-2.5 text-left transition", f.promo_type === v ? "border-brand-400 bg-brand-50 ring-2 ring-brand-100" : "border-line bg-white hover:border-[#c9cfdc]")}
+                className={cn("rounded-xl border p-2.5 text-left transition", f.promo_type === v ? "border-brand-400 bg-brand-50 ring-2 ring-brand-100" : "border-line bg-white hover:border-[#CFC8BA]")}
               >
                 <div className="text-[12.5px] font-semibold text-ink">{l}</div>
                 <div className="mt-0.5 text-[11px] leading-snug text-muted">{d}</div>
@@ -213,7 +213,7 @@ export function NewCaseForm({
             </p>
           </div>
           {cat?.regulated && (
-            <p className="mt-3 flex gap-1.5 rounded-lg bg-violet-soft px-2.5 py-2 text-[12px] text-[#5b3fd1]">
+            <p className="mt-3 flex gap-1.5 rounded-lg bg-violet-soft px-2.5 py-2 text-[12px] text-[#7A5C2A]">
               <Info className="mt-0.5 size-3.5 shrink-0" /> Regulated category: expect the Legal agent to check product claims carefully.
             </p>
           )}

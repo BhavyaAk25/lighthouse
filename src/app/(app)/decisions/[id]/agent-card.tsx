@@ -74,14 +74,14 @@ export function AgentCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      className={cn("card relative flex flex-col overflow-hidden", thinking && "ring-2 ring-brand-100")}
+      className={cn("card relative flex flex-col overflow-hidden", thinking && "border-[#D8C9A8]")}
     >
-      <div className="h-[3px] w-full" style={{ background: meta.color, opacity: output ? 1 : 0.35 }} />
+      <div className="h-[2px] w-full" style={{ background: meta.color, opacity: output ? 0.9 : 0.25 }} />
       <div className="flex items-start gap-3 px-4 pt-3.5 pb-3">
         <AgentAvatar agent={agent} size={36} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-[15px] font-semibold tracking-[-0.01em]">{meta.name} Agent</h3>
+            <h3 className="text-[15px] font-medium">{meta.name}</h3>
           </div>
           <p className="text-[12.5px] text-muted">{meta.focus}</p>
         </div>
@@ -100,7 +100,7 @@ export function AgentCard({
                 <RecBadge rec={output.recommendation} />
                 <RiskBadge risk={output.risk_level} />
                 {!output.valid && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-bad-soft px-2 py-0.5 text-[12px] font-medium text-[#b42318] ring-1 ring-inset ring-[#f9cbc7]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-bad-soft px-2 py-0.5 text-[12px] font-medium text-[#9C3A2A] ring-1 ring-inset ring-[#EBCFC8]">
                     <AlertTriangle className="size-3" /> Invalid evidence
                   </span>
                 )}
@@ -110,16 +110,16 @@ export function AgentCard({
                   const raw = output.key_metrics?.[m.key];
                   const warn = m.warn && raw !== null && raw !== undefined && m.warn(Number(raw));
                   return (
-                    <div key={m.key} className="rounded-[10px] border border-line-2 bg-canvas/60 px-2.5 py-2">
+                    <div key={m.key} className="rounded-[8px] bg-canvas px-2.5 py-2">
                       <div className="text-[11.5px] text-muted">{m.label}</div>
-                      <div className={cn("tnum mt-0.5 text-[15px] font-semibold", warn ? "text-[#b42318]" : "text-ink")}>{raw === undefined ? "-" : m.fmt(raw)}</div>
+                      <div className={cn("tnum mt-0.5 text-[15px]", warn ? "text-[#9C3A2A]" : "text-ink")}>{raw === undefined ? "-" : m.fmt(raw)}</div>
                     </div>
                   );
                 })}
               </div>
               <p className={cn("mt-3 text-[13px] leading-relaxed text-ink-2", !open && "line-clamp-3")}>{output.rationale}</p>
               {output.dissent_reason && open && (
-                <p className="mt-2 rounded-lg bg-warn-soft px-2.5 py-1.5 text-[12.5px] text-[#9a5b00]">
+                <p className="mt-2 rounded-lg bg-warn-soft px-2.5 py-1.5 text-[12.5px] text-[#8A5A12]">
                   <span className="font-semibold">Dissent:</span> {output.dissent_reason}
                 </p>
               )}
@@ -134,7 +134,7 @@ export function AgentCard({
                 </ul>
               )}
               {output.guardrail_adjustments.length > 0 && (
-                <div className="mt-2.5 flex gap-2 rounded-lg border border-[#ddd3fd] bg-violet-soft px-2.5 py-2 text-[12px] text-[#5b3fd1]">
+                <div className="mt-2.5 flex gap-2 rounded-lg border border-[#E9DCC0] bg-violet-soft px-2.5 py-2 text-[12px] text-[#7A5C2A]">
                   <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
                   <span>
                     <span className="font-semibold">Guardrail applied.</span> {output.guardrail_adjustments[0]}
@@ -144,7 +144,7 @@ export function AgentCard({
               {open && output.validation_issues.length > 0 && (
                 <ul className="mt-2 space-y-1">
                   {output.validation_issues.map((v, i) => (
-                    <li key={i} className="flex gap-2 text-[12px] text-[#9a5b00]">
+                    <li key={i} className="flex gap-2 text-[12px] text-[#8A5A12]">
                       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                       {v}
                     </li>
@@ -185,14 +185,14 @@ export function AgentCard({
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand-400 opacity-75" />
                   <span className="relative inline-flex size-2 rounded-full bg-brand-600" />
                 </span>
-                Reasoning over evidence…
+                Reasoning…
               </div>
               <div className="skeleton mt-2 h-3 w-full" />
               <div className="skeleton h-3 w-4/5" />
             </motion.div>
           ) : (
             <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl border border-dashed border-line px-3 py-5 text-center text-[12.5px] text-muted">
-              Waiting for a run. This agent will gather evidence with its tools, then reason over it.
+              Waiting for a run
             </motion.div>
           )}
         </AnimatePresence>

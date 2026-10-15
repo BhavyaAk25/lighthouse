@@ -1,14 +1,14 @@
-import { CircleDollarSign, Gavel, Scale, ShieldAlert, ShieldCheck, Sparkles, TrendingUp, Truck } from "lucide-react";
+import { CircleDollarSign, Gavel, Scale, ShieldAlert, ShieldCheck, TrendingUp, Truck } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn, titleCase } from "@/lib/format";
 import type { AgentType, CaseStatus, Provenance, Recommendation, RiskLevel } from "@/lib/types";
 import { Badge } from "./ui";
 
 export const AGENT_META: Record<AgentType, { name: string; color: string; soft: string; icon: ReactNode; focus: string }> = {
-  SALES: { name: "Sales", color: "var(--color-sales)", soft: "#fdf0e8", icon: <TrendingUp className="size-4" />, focus: "Demand & commercial effect" },
-  FINANCE: { name: "Finance", color: "var(--color-finance)", soft: "#e7f7ef", icon: <CircleDollarSign className="size-4" />, focus: "Economic value & downside" },
-  OPERATIONS: { name: "Operations", color: "var(--color-ops)", soft: "#e5f6f7", icon: <Truck className="size-4" />, focus: "Executability & capacity" },
-  LEGAL: { name: "Legal", color: "var(--color-legal)", soft: "#f4ecfb", icon: <Scale className="size-4" />, focus: "Regulatory & contract risk" },
+  SALES: { name: "Sales", color: "var(--color-sales)", soft: "#F6EEE6", icon: <TrendingUp className="size-4" />, focus: "Demand & commercial effect" },
+  FINANCE: { name: "Finance", color: "var(--color-finance)", soft: "#EDF4EF", icon: <CircleDollarSign className="size-4" />, focus: "Economic value & downside" },
+  OPERATIONS: { name: "Operations", color: "var(--color-ops)", soft: "#EDF1F5", icon: <Truck className="size-4" />, focus: "Executability & capacity" },
+  LEGAL: { name: "Legal", color: "var(--color-legal)", soft: "#F5EEDF", icon: <Scale className="size-4" />, focus: "Regulatory & contract risk" },
 };
 
 export function AgentAvatar({ agent, size = 32 }: { agent: AgentType; size?: number }) {
@@ -80,10 +80,13 @@ export function ProvTag({ p, className }: { p: Provenance | string; className?: 
 
 export function SyntheticNotice({ className }: { className?: string }) {
   return (
-    <div className={cn("inline-flex items-center gap-1.5 rounded-full bg-warn-soft px-2.5 py-1 text-[11.5px] font-medium text-[#9a5b00] ring-1 ring-inset ring-[#fde3b0]", className)}>
-      <Sparkles className="size-3" />
-      Pilot data: real Kaggle Walmart sales + generated records. Not Walmart internal data.
-    </div>
+    <span
+      title="Demand patterns from public Kaggle Walmart data; stores, inventory, rules and costs are generated. Not Walmart internal data."
+      className={cn("inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-0.5 text-[11.5px] text-muted", className)}
+    >
+      <span className="size-1.5 rounded-full bg-brass" />
+      Pilot data
+    </span>
   );
 }
 

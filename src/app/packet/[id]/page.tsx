@@ -44,7 +44,7 @@ export default async function PacketPage({ params }: PageProps<"/packet/[id]">) 
           <div>Exported {dateLabel(new Date(), true)} by {persona.name}</div>
         </div>
       </header>
-      <div className="mt-3 rounded-lg bg-warn-soft px-3 py-2 text-[11.5px] text-[#9a5b00]">
+      <div className="mt-3 rounded-lg bg-warn-soft px-3 py-2 text-[11.5px] text-[#8A5A12]">
         SYNTHETIC PILOT DATA: demand patterns from public Kaggle Walmart datasets (M5, 45-store weekly sales); store IDs, inventory, legal rules and costs are generated
         for the capstone. Legal outputs are compliance-risk indicators, not legal advice.
       </div>

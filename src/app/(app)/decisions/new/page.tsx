@@ -21,7 +21,7 @@ export default async function NewDecisionPage() {
       <PageHeader
         eyebrow="New decision case"
         title="Describe the decision"
-        subtitle="Lighthouse will pull evidence for the stores and category you choose, then the four agents analyze it in parallel."
+        subtitle="Choose what, where and how much. The agents do the rest."
       />
       <NewCaseForm
         clock={clock}

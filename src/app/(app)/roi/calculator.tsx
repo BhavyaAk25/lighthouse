@@ -51,10 +51,10 @@ export function RoiCalculator({ observed }: { observed: { perMonth: number; conf
     }).sort((a, b) => b.span - a.span);
   }, [i]);
   const parts = [
-    { l: "Reconciliation time saved", v: r.labor, c: "#3d63dd" },
-    { l: "Margin / markdown decisions", v: r.margin, c: "#12a26b" },
-    { l: "Inventory / fulfillment loss", v: r.inventory, c: "#0e93b8" },
-    { l: "Compliance / rework", v: r.compliance, c: "#8e4ec6" },
+    { l: "Reconciliation time saved", v: r.labor, c: "#142B45" },
+    { l: "Margin / markdown decisions", v: r.margin, c: "#3F7D5B" },
+    { l: "Inventory / fulfillment loss", v: r.inventory, c: "#4F6D8A" },
+    { l: "Compliance / rework", v: r.compliance, c: "#7A5C2A" },
   ];
   return (
     <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
@@ -93,7 +93,7 @@ export function RoiCalculator({ observed }: { observed: { perMonth: number; conf
             <div className="text-[13px] font-medium text-muted">Annual modeled benefit</div>
             <div className="tnum mt-1 text-[26px] font-semibold tracking-tight">{money(r.benefit)}</div>
           </Card>
-          <Card className={cn("p-4", r.roi >= 0 ? "border-[#c6ecd9]" : "border-[#f9cbc7]")}>
+          <Card className={cn("p-4", r.roi >= 0 ? "border-[#D3E5D9]" : "border-[#EBCFC8]")}>
             <div className="text-[13px] font-medium text-muted">Year-1 ROI</div>
             <div className={cn("tnum mt-1 text-[26px] font-semibold tracking-tight", r.roi >= 0 ? "text-ok" : "text-bad")}>{r.roi.toFixed(1)}%</div>
           </Card>

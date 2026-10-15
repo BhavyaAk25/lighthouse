@@ -1,3 +1,4 @@
+import { InsightTabs } from "@/components/insight-tabs";
 import { PageHeader } from "@/components/ui";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -16,10 +17,8 @@ export default async function RoiPage() {
     from decision_cases c join lighthouse_decisions l using (decision_id)`;
   return (
     <div>
-      <PageHeader
-        title="ROI model"
-        subtitle="Illustrative enterprise-pilot economics from Deliverable 1. Every input is an adjustable assumption, not a Walmart forecast; the tornado shows which assumptions matter most."
-      />
+      <PageHeader title="Insights" subtitle="Illustrative pilot economics. Every input is an assumption you can move." />
+      <InsightTabs active="roi" />
       <RoiCalculator observed={{ perMonth: Number(o.per_month), conflictPct: Number(o.conflict_pct), legalPct: Number(o.legal_pct), overridePct: Number(o.override_pct) }} />
     </div>
   );

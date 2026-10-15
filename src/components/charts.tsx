@@ -3,33 +3,33 @@
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { money } from "@/lib/format";
 
-const AX = { fontSize: 11, fill: "#667085" };
-const TT = { contentStyle: { borderRadius: 10, border: "1px solid #e6e9f2", boxShadow: "0 8px 24px -8px rgba(16,24,40,.18)", fontSize: 12 } };
+const AX = { fontSize: 11, fill: "#6B6F76" };
+const TT = { contentStyle: { borderRadius: 10, border: "1px solid #E6E1D6", boxShadow: "0 8px 24px -8px rgba(16,24,40,.18)", fontSize: 12 } };
 
 export function WeeklyOutcomes({ data }: { data: { week: string; APPROVED: number; REJECTED: number; REVISION_REQUESTED: number; OPEN: number }[] }) {
   return (
     <ResponsiveContainer width="100%" height={240}>
       <BarChart data={data} margin={{ left: -12, right: 8, top: 8 }}>
-        <CartesianGrid vertical={false} stroke="#eef1f7" />
+        <CartesianGrid vertical={false} stroke="#EFECE5" />
         <XAxis dataKey="week" tick={AX} axisLine={false} tickLine={false} minTickGap={18} />
         <YAxis tick={AX} axisLine={false} tickLine={false} />
-        <Tooltip {...TT} cursor={{ fill: "#f6f8fc" }} />
+        <Tooltip {...TT} cursor={{ fill: "#F7F5F0" }} />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="APPROVED" name="Approved" stackId="a" fill="#12a26b" />
-        <Bar dataKey="REVISION_REQUESTED" name="Revision" stackId="a" fill="#f5b544" />
-        <Bar dataKey="REJECTED" name="Rejected" stackId="a" fill="#f0766c" />
-        <Bar dataKey="OPEN" name="Open" stackId="a" fill="#7b91f4" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="APPROVED" name="Approved" stackId="a" fill="#3F7D5B" />
+        <Bar dataKey="REVISION_REQUESTED" name="Revision" stackId="a" fill="#C9A15B" />
+        <Bar dataKey="REJECTED" name="Rejected" stackId="a" fill="#C98576" />
+        <Bar dataKey="OPEN" name="Open" stackId="a" fill="#8E9DB3" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
 const REC_COLORS: Record<string, string> = {
-  PROCEED: "#12a26b",
-  PROCEED_WITH_CONDITIONS: "#0e93b8",
-  HOLD: "#f5b544",
-  REJECT: "#f0766c",
-  REVIEW_REQUIRED: "#9b7bfa",
+  PROCEED: "#3F7D5B",
+  PROCEED_WITH_CONDITIONS: "#4F6D8A",
+  HOLD: "#C9A15B",
+  REJECT: "#C98576",
+  REVIEW_REQUIRED: "#B08A4A",
 };
 const REC_NAMES: Record<string, string> = {
   PROCEED: "Proceed",
@@ -80,10 +80,10 @@ export function DissentBars({ data }: { data: { agent: string; dissent: number; 
   return (
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24, top: 4 }}>
-        <CartesianGrid horizontal={false} stroke="#eef1f7" />
+        <CartesianGrid horizontal={false} stroke="#EFECE5" />
         <XAxis type="number" tick={AX} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
-        <YAxis type="category" dataKey="agent" tick={{ ...AX, fill: "#344054" }} axisLine={false} tickLine={false} width={80} />
-        <Tooltip {...TT} formatter={(v) => `${Number(v).toFixed(1)}% of runs`} cursor={{ fill: "#f6f8fc" }} />
+        <YAxis type="category" dataKey="agent" tick={{ ...AX, fill: "#33373D" }} axisLine={false} tickLine={false} width={80} />
+        <Tooltip {...TT} formatter={(v) => `${Number(v).toFixed(1)}% of runs`} cursor={{ fill: "#F7F5F0" }} />
         <Bar dataKey="dissent" name="Opposes or gates" radius={[0, 6, 6, 0]} barSize={18}>
           {data.map((d) => (
             <Cell key={d.agent} fill={d.color} />
@@ -98,7 +98,7 @@ export function CategorySales({ data, keys }: { data: Record<string, number | st
   return (
     <ResponsiveContainer width="100%" height={280}>
       <AreaChart data={data} margin={{ left: 0, right: 8, top: 8 }}>
-        <CartesianGrid vertical={false} stroke="#eef1f7" />
+        <CartesianGrid vertical={false} stroke="#EFECE5" />
         <XAxis dataKey="week" tick={AX} axisLine={false} tickLine={false} minTickGap={24} />
         <YAxis tick={AX} axisLine={false} tickLine={false} tickFormatter={(v) => money(v)} width={56} />
         <Tooltip {...TT} formatter={(v) => money(Number(v), false)} />
@@ -114,13 +114,13 @@ export function DcLines({ data }: { data: Record<string, number | string>[] }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data} margin={{ left: -8, right: 8, top: 8 }}>
-        <CartesianGrid vertical={false} stroke="#eef1f7" />
+        <CartesianGrid vertical={false} stroke="#EFECE5" />
         <XAxis dataKey="week" tick={AX} axisLine={false} tickLine={false} minTickGap={24} />
         <YAxis tick={AX} axisLine={false} tickLine={false} domain={[60, "auto"]} tickFormatter={(v) => `${v}%`} />
         <Tooltip {...TT} formatter={(v) => `${Number(v).toFixed(1)}%`} />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-        <Line type="monotone" dataKey="DC-P01" stroke="#3d63dd" dot={false} strokeWidth={2} />
-        <Line type="monotone" dataKey="DC-P02" stroke="#0e9aa7" dot={false} strokeWidth={2} />
+        <Line type="monotone" dataKey="DC-P01" stroke="#142B45" dot={false} strokeWidth={2} />
+        <Line type="monotone" dataKey="DC-P02" stroke="#4F6D8A" dot={false} strokeWidth={2} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -132,13 +132,13 @@ export function Tornado({ data }: { data: { driver: string; low: number; high: n
   return (
     <ResponsiveContainer width="100%" height={Math.max(200, rows.length * 44)}>
       <BarChart data={rows} layout="vertical" margin={{ left: 12, right: 28, top: 4 }} stackOffset="sign">
-        <CartesianGrid horizontal={false} stroke="#eef1f7" />
+        <CartesianGrid horizontal={false} stroke="#EFECE5" />
         <XAxis type="number" tick={AX} axisLine={false} tickLine={false} tickFormatter={(v) => `${v > 0 ? "+" : ""}${v.toFixed(0)} pts`} />
-        <YAxis type="category" dataKey="driver" tick={{ ...AX, fill: "#344054" }} axisLine={false} tickLine={false} width={150} />
-        <Tooltip {...TT} formatter={(v) => `${Number(v) > 0 ? "+" : ""}${Number(v).toFixed(1)} ROI pts`} cursor={{ fill: "#f6f8fc" }} />
-        <ReferenceLine x={0} stroke="#98a2b3" />
-        <Bar dataKey="low" name="Pessimistic" stackId="t" fill="#f0766c" barSize={18} />
-        <Bar dataKey="high" name="Optimistic" stackId="t" fill="#12a26b" barSize={18} />
+        <YAxis type="category" dataKey="driver" tick={{ ...AX, fill: "#33373D" }} axisLine={false} tickLine={false} width={150} />
+        <Tooltip {...TT} formatter={(v) => `${Number(v) > 0 ? "+" : ""}${Number(v).toFixed(1)} ROI pts`} cursor={{ fill: "#F7F5F0" }} />
+        <ReferenceLine x={0} stroke="#9A9C9F" />
+        <Bar dataKey="low" name="Pessimistic" stackId="t" fill="#C98576" barSize={18} />
+        <Bar dataKey="high" name="Optimistic" stackId="t" fill="#3F7D5B" barSize={18} />
       </BarChart>
     </ResponsiveContainer>
   );

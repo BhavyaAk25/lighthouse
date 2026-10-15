@@ -74,7 +74,7 @@ export default async function DecisionsPage({ searchParams }: PageProps<"/decisi
     <div>
       <PageHeader
         title="Decisions"
-        subtitle="Every cross-functional promotion and inventory decision in the 50-store pilot, with the four agent positions and the governed Lighthouse recommendation."
+        subtitle="Every promotion and inventory decision in the pilot."
         actions={
           persona.role === "DECISION_OWNER" && (
             <LinkButton href="/decisions/new">
@@ -123,7 +123,7 @@ export default async function DecisionsPage({ searchParams }: PageProps<"/decisi
                               <GitCompareArrows className="size-3.5" />
                             </span>
                           )}
-                          {r.override_flag && <span className="rounded bg-warn-soft px-1 text-[10.5px] font-semibold text-[#9a5b00]">OVERRIDE</span>}
+                          {r.override_flag && <span className="rounded bg-warn-soft px-1 text-[10.5px] font-semibold text-[#8A5A12]">OVERRIDE</span>}
                         </div>
                         <div className="truncate text-[13.5px] font-medium text-ink group-hover:text-brand-700">{String(r.title)}</div>
                         <div className="text-[12px] text-muted">

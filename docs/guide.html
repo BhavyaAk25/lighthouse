@@ -5,22 +5,22 @@
 <title>Lighthouse · Demo & User Guide</title>
 <style>
   @page { size: Letter; margin: 0.6in 0.65in 0.7in; }
-  :root { --brand:#3d63dd; --ink:#0f172a; --ink2:#344054; --muted:#667085; --line:#e6e9f2; --soft:#f6f8fc; --ok:#12a26b; --warn:#c77700; --bad:#d92d20; --violet:#7a5af8; }
+  :root { --brand:#142B45; --ink:#0f172a; --ink2:#344054; --muted:#667085; --line:#e6e9f2; --soft:#f6f8fc; --ok:#12a26b; --warn:#c77700; --bad:#d92d20; --violet:#B08A4A; }
   * { box-sizing: border-box; }
   body { font-family: "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); font-size: 10.4pt; line-height: 1.52; margin: 0; }
-  h1 { font-size: 26pt; letter-spacing: -0.03em; margin: 0 0 6pt; line-height: 1.1; }
-  h2 { font-size: 15pt; letter-spacing: -0.02em; margin: 22pt 0 6pt; padding-top: 6pt; border-top: 1px solid var(--line); }
+  h1 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: 26pt; letter-spacing: -0.03em; margin: 0 0 6pt; line-height: 1.1; }
+  h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: 17pt; letter-spacing: -0.02em; margin: 22pt 0 6pt; padding-top: 6pt; border-top: 1px solid var(--line); }
   h3 { font-size: 11.5pt; margin: 14pt 0 4pt; }
   p { margin: 4pt 0 6pt; }
   .muted { color: var(--muted); }
-  .eyebrow { color: var(--brand); font-weight: 600; font-size: 9.5pt; letter-spacing: .06em; text-transform: uppercase; }
+  .eyebrow { color: #B08A4A; font-weight: 600; font-size: 9.5pt; letter-spacing: .06em; text-transform: uppercase; }
   .cover { height: 9.1in; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always;
-           background: radial-gradient(700px 300px at 0% 0%, rgba(61,99,221,.16), transparent 60%), radial-gradient(600px 300px at 100% 10%, rgba(122,90,248,.14), transparent 60%); border-radius: 18px; padding: 34pt; }
-  .logo { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg,#3d63dd,#6a5af8 55%,#0e93b8); display:inline-grid; place-items:center; color:#fff; font-weight:700; font-size: 20px; }
-  .grad { background: linear-gradient(90deg,#3d63dd,#7a5af8,#0e93b8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+           background: #0E2238; color: #F4F1EA; border-radius: 6px; padding: 40pt; }
+  .logo { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #B08A4A; display:inline-grid; place-items:center; color:#D9B97A; font-family: Georgia, serif; font-size: 20px; }
+  .grad { color: #D9B97A; }
   .box { border: 1px solid var(--line); border-radius: 12px; padding: 10pt 12pt; margin: 8pt 0; background: #fff; }
   .soft { background: var(--soft); }
-  .call { border-left: 4px solid var(--brand); background: #eef2ff; border-radius: 0 10px 10px 0; padding: 8pt 12pt; margin: 8pt 0; }
+  .call { border-left: 3px solid #B08A4A; background: #F5EEDF; border-radius: 0 10px 10px 0; padding: 8pt 12pt; margin: 8pt 0; }
   .warn { border-left-color: var(--warn); background: #fff5e1; }
   .ok { border-left-color: var(--ok); background: #e7f7ef; }
   table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9.4pt; }
@@ -30,8 +30,8 @@
   img.shot { width: 100%; border: 1px solid var(--line); border-radius: 10px; margin: 6pt 0 2pt; box-shadow: 0 6px 18px -8px rgba(16,24,40,.25); }
   .cap { font-size: 8.6pt; color: var(--muted); margin-bottom: 8pt; }
   .step { display: grid; grid-template-columns: 26px 1fr; gap: 8pt; margin: 9pt 0; page-break-inside: avoid; }
-  .num { width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; font-size: 9pt; display: grid; place-items: center; }
-  .say { color: var(--ink2); font-style: italic; border-left: 2px solid #c7d4fe; padding-left: 8pt; margin-top: 3pt; }
+  .num { width: 22px; height: 22px; border-radius: 50%; background: #142B45; color: #fff; font-weight: 700; font-size: 9pt; display: grid; place-items: center; }
+  .say { color: var(--ink2); font-style: italic; border-left: 2px solid #E9DCC0; padding-left: 8pt; margin-top: 3pt; }
   .pill { display:inline-block; padding: 1pt 7pt; border-radius: 999px; font-size: 8.4pt; font-weight: 600; }
   .p-ok{background:#e7f7ef;color:#087443}.p-info{background:#e6f6fb;color:#0b7290}.p-warn{background:#fff5e1;color:#9a5b00}.p-bad{background:#fdecec;color:#b42318}.p-vio{background:#f1edfe;color:#5b3fd1}
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
@@ -45,19 +45,19 @@
 <section class="cover">
   <div style="display:flex;align-items:center;gap:12px">
     <span class="logo">L</span>
-    <div><div style="font-weight:700;font-size:15pt">Lighthouse</div><div class="muted" style="font-size:9.5pt">AI Agent Orchestration &amp; Decision Intelligence</div></div>
+    <div><div style="font-weight:700;font-size:15pt">Lighthouse</div><div style="font-size:9.5pt;color:#9FA9B7">AI Agent Orchestration &amp; Decision Intelligence</div></div>
   </div>
   <div>
     <div class="eyebrow">Demo &amp; user guide</div>
     <h1 style="font-size:36pt">Four AI agents.<br/>One auditable decision.<br/><span class="grad">A human always decides.</span></h1>
-    <p style="font-size:12pt;max-width:5.6in" class="muted">How to open, use and present the Lighthouse prototype: a governance layer that reconciles Sales, Finance, Operations and Legal AI agents for a 50-store Walmart U.S. pilot.</p>
-    <div class="box soft" style="max-width:5.8in;margin-top:16pt">
+    <p style="font-size:12pt;max-width:5.6in;color:#C9CFD8">How to open, use and present the Lighthouse prototype: a governance layer that reconciles Sales, Finance, Operations and Legal AI agents for a 50-store Walmart U.S. pilot.</p>
+    <div class="box" style="max-width:5.8in;margin-top:16pt;background:#13293F;border-color:#2A3F57;color:#F4F1EA">
       <b>Live app:</b> <span class="mono">{{LIVE_URL}}</span><br/>
       <b>Code:</b> <span class="mono">github.com/BhavyaAk25/lighthouse</span><br/>
       <b>Administrator PIN:</b> <span class="mono">4210</span> (only needed for Jordan Ellis)
     </div>
   </div>
-  <div class="muted" style="font-size:9pt">ISTM 6210 / 4210 Capstone · Fall 2026 · The George Washington University<br/>Ajay · Bhavya · Ehson · Jaehoon · Kunal · Wilfred · Faculty Advisor: Dr. Soheil Sibdari<br/>Academic prototype, not affiliated with Walmart Inc. Pilot data = public Kaggle Walmart sales + clearly labelled generated records.</div>
+  <div style="font-size:9pt;color:#9FA9B7">ISTM 6210 / 4210 Capstone · Fall 2026 · The George Washington University<br/>Ajay · Bhavya · Ehson · Jaehoon · Kunal · Wilfred · Faculty Advisor: Dr. Soheil Sibdari<br/>Academic prototype, not affiliated with Walmart Inc. Pilot data = public Kaggle Walmart sales + clearly labelled generated records.</div>
 </section>
 
 <h2 style="border-top:none;margin-top:0">1. Lighthouse in one minute</h2>
@@ -74,7 +74,7 @@
 </table>
 
 <h2>2. Signing in &amp; roles</h2>
-<p>Open the live app and choose a person. There are no passwords for the demo personas; the Administrator needs PIN <code>4210</code>. Use <b>Switch role</b> at the bottom left to change persona at any time.</p>
+<p>Open the live app and choose a person. Each person lands on <b>My desk</b>, which shows only their own work; anything that depends on someone else shows as “Waiting on …”. The Administrator needs PIN <code>4210</code>. Use <b>Switch</b> at the bottom left to change person.</p>
 <img class="shot" src="img/login.jpg" /><div class="cap">Sign-in screen: each card is a role with its own permissions.</div>
 <table>
   <tr><th>Persona</th><th>Role</th><th>Can do</th></tr>
@@ -85,13 +85,13 @@
 </table>
 
 <h2 class="pb" style="border-top:none">3. The demo script (about 8 minutes)</h2>
-<div class="call ok"><b>Before class (5 minutes):</b> sign in as Jordan → <i>Rules &amp; agents → Demo controls → Reset demo cases</i>. Then <i>Agents &amp; AI → Test providers</i> to confirm Gemini / Groq answer. Keep <b>Live AI</b> on. If the Wi-Fi is bad, switch the top-right toggle to <b>Demo-safe replay</b> (see section 5).</div>
+<div class="call ok"><b>Before class (5 minutes):</b> sign in as Jordan → <i>Rules &amp; agents → Demo controls → Reset demo cases</i>. Then <i>Agents &amp; AI → Test providers</i>. Keep the top-right switch on <b>Live AI</b>; if the Wi-Fi is bad, switch it to <b>Replay</b> (section 5).</div>
 
-<div class="step"><span class="num">1</span><div><b>Overview (Maya).</b> Sign in as Maya Chen. Point at the KPI row and the yellow label.
-<div class="say">“Lighthouse supervises four agents across a 50-store Walmart U.S. pilot. 5,000 decision cases, 20,000 agent outputs, and every number is labelled real, derived, generated or assumption.”</div></div></div>
-<img class="shot" src="img/overview.jpg" /><div class="cap">Overview dashboard: open items, conflict rate, confidence, overrides, weekly outcomes.</div>
+<div class="step"><span class="num">1</span><div><b>Maya’s desk.</b> Sign in as Maya Chen. Her desk shows only her work: cases to analyze, decisions ready for her, and what is waiting on Legal.
+<div class="say">“Each person sees exactly what they need to act on, nothing else. Lighthouse supervises four agents across a 50-store Walmart U.S. pilot.”</div></div></div>
+<img class="shot" src="img/overview.jpg" /><div class="cap">Maya’s desk: run the agents, decide, and see what is waiting on others.</div>
 
-<div class="step"><span class="num">2</span><div><b>Open the anchor case.</b> Click <i>Open anchor case</i> (D-2026-001: 15% rollback on Health &amp; Wellness, all 50 stores, 6 weeks, claim “Clinically proven cold &amp; flu relief”). Click <b>Run agents</b>.
+<div class="step"><span class="num">2</span><div><b>Open the anchor case.</b> Click <i>D-2026-001</i> under “Run the agents” (D-2026-001: 15% rollback on Health &amp; Wellness, all 50 stores, 6 weeks, claim “Clinically proven cold &amp; flu relief”). Click <b>Run agents</b>.
 <div class="say">“Each agent first calls tools against the database: you can see the tool names stream in. Then the model reasons over that evidence. Four agents run in parallel.”</div></div></div>
 <img class="shot" src="img/running.jpg" /><div class="cap">Agents mid-run: deterministic tool calls (green wrench) followed by AI reasoning.</div>
 
@@ -99,11 +99,12 @@
 <div class="say">“Every number on these cards traces to an evidence ID. If the AI cited evidence that doesn’t exist, it would be removed and flagged.”</div></div></div>
 <img class="shot" src="img/agents.jpg" /><div class="cap">Completed agent cards: recommendation, confidence ring, risk, key metrics, model used, evidence link.</div>
 
-<div class="step"><span class="num">4</span><div><b>The Lighthouse packet.</b> Scroll down. Show the headline, the confidence breakdown (“a synthesis score, not an average”), the surfaced disagreement, the governance gates (Legal = <span class="pill p-vio">PENDING</span>) and the conditions. Show that <b>Approve is locked</b>.
+<div class="step"><span class="num">4</span><div><b>The Lighthouse packet.</b> Scroll down. Show the headline, the confidence breakdown (“a synthesis score, not an average”), the surfaced disagreement, the governance gates (Legal = <span class="pill p-vio">PENDING</span>) and the conditions. Show that approval says <b>Waiting on Priya Raman · Legal review</b>.
 <div class="say">“Three functions support proceeding, but Legal imposes a mandatory gate. Lighthouse doesn’t average that away; it locks approval until a human lawyer reviews.”</div></div></div>
 <img class="shot" src="img/packet-legal.jpg" /><div class="cap">Lighthouse packet with the legal gate pending and approval locked.</div>
 
-<div class="step"><span class="num">5</span><div><b>Legal review (Priya).</b> Switch role → Priya Raman. Her review queue shows D-2026-001. Open it, choose <i>Approve with conditions</i>, type a note such as “Replace ‘clinically proven’ with drug-facts wording; substantiation attached”, click <b>Record legal disposition</b>.</div></div>
+<div class="step"><span class="num">5</span><div><b>Legal review (Priya).</b> Switch → Priya Raman. Her desk lists only cases that need legal review. Open D-2026-001: she sees the claim, what the Legal agent found and the triggered rules. Choose <i>Approve with conditions</i>, add a note, click <b>Record legal disposition</b>.</div></div>
+<img class="shot" src="img/legal-case.jpg" /><div class="cap">Priya’s focused view: the claim, the Legal agent’s findings, triggered rules and her disposition.</div>
 
 <div class="step"><span class="num">6</span><div><b>Decide (Maya).</b> Switch back to Maya. The Legal gate is now cleared. Click <b>Approve</b> with an empty rationale: it is refused (high-risk case). Type a rationale and approve.
 <div class="say">“The human is accountable: the system requires a reason, and the decision lands in the audit trail with the evidence that informed it.”</div></div></div>
@@ -112,14 +113,14 @@
 <div class="step"><span class="num">7</span><div><b>Conflict cases (pick one or two).</b> D-2026-003 Finance vs Sales: strong demand but a $1.3M loss, Lighthouse says <span class="pill p-warn">Hold</span> and Finance reports a break-even discount. D-2026-005: alcohol BOGO in Texas, Legal prohibition → <span class="pill p-bad">Reject</span>, approval impossible. D-2026-006: inventory feed outage → Operations output marked invalid, no imputation → <span class="pill p-vio">Review required</span>.</div></div>
 <img class="shot" src="img/packet-conflict.jpg" /><div class="cap">D-2026-003: material conflict surfaced explicitly; Lighthouse holds.</div>
 
-<div class="step"><span class="num">8</span><div><b>Audit log.</b> Open <i>Audit log</i> → <b>Verify chain</b>. About 22,000 entries are re-hashed in under a second.
+<div class="step"><span class="num">8</span><div><b>Audit.</b> Open <i>Audit</i> → <b>Verify chain</b>. About 22,000 entries are re-hashed in under a second.
 <div class="say">“If anyone edited a past decision, verification would point to the exact entry that was altered.”</div></div></div>
 <img class="shot" src="img/audit.jpg" /><div class="cap">Tamper-evidence check over the full audit chain.</div>
 
-<div class="step"><span class="num">9</span><div><b>Test lab.</b> Open <i>Test lab</i> → <b>Run all tests</b>: 15/15 acceptance tests from Deliverable 1 pass live (agreement, conflict, hard stop, legal gate, missing &amp; stale evidence, overrides, audit replay, guardrails, prompt-injection screening, 60-second target, scale).</div></div>
+<div class="step"><span class="num">9</span><div><b>Test lab.</b> Sign in as Jordan (PIN 4210) → <i>Test lab</i> → <b>Run all tests</b>: 15/15 acceptance tests from Deliverable 1 pass live (agreement, conflict, hard stop, legal gate, missing &amp; stale evidence, overrides, audit replay, guardrails, prompt-injection screening, 60-second target, scale).</div></div>
 <img class="shot" src="img/testlab.jpg" /><div class="cap">Acceptance suite run against the real engine and database.</div>
 
-<div class="step"><span class="num">10</span><div><b>Close with data &amp; ROI.</b> <i>Data &amp; evidence</i> shows exactly what is real vs generated. <i>ROI model</i> reproduces Deliverable 1 ($1.43M benefit, 24% ROI, 9.7-month payback) with live sliders and a tornado chart. Optional: sign in as Jordan (PIN 4210), change a threshold with a reason, and show the new audit entry.</div></div>
+<div class="step"><span class="num">10</span><div><b>Close with Insights.</b> As Maya, open <i>Insights</i>: the <i>Data</i> tab shows exactly what is real vs generated. the <i>ROI</i> tab reproduces Deliverable 1 ($1.43M benefit, 24% ROI, 9.7-month payback) with live sliders and a tornado chart. Optional: sign in as Jordan (PIN 4210), change a threshold with a reason, and show the new audit entry.</div></div>
 <div class="two"><div><img class="shot" src="img/data.jpg" /><div class="cap">Real M5 Walmart demand by category.</div></div><div><img class="shot" src="img/roi.jpg" /><div class="cap">ROI model with sensitivity tornado.</div></div></div>
 
 <h2 class="pb" style="border-top:none">4. The twelve demo scenarios</h2>
@@ -147,7 +148,7 @@
   <tr><td>Gemini (free tier)</td><td>Newest Gemini Flash model the key can access</td><td>Primary on the deployed site</td></tr>
   <tr><td>Groq (free tier)</td><td>gpt-oss-120b → Qwen → gpt-oss-20b</td><td>Automatically, if Gemini errors or hits a limit</td></tr>
   <tr><td>Rules engine</td><td>Deterministic version of each agent</td><td>If no AI answers; outputs are labelled “Rules engine”</td></tr>
-  <tr><td>Demo-safe replay</td><td>Replays the last saved AI answers for that case</td><td>Turn on with the top-right toggle when Wi-Fi is unreliable</td></tr>
+  <tr><td>Replay</td><td>Replays the saved AI answers for that case (all 12 demo cases are saved)</td><td>Turn on with the top-right switch when Wi-Fi is unreliable</td></tr>
 </table>
 <div class="call warn"><b>Note on the GWU network:</b> campus Wi-Fi blocks Google’s Gemini API address. This does not affect the deployed site (Vercel’s servers call Gemini, not your laptop). If you run the app locally on campus, it automatically uses Groq.</div>
 
@@ -183,7 +184,7 @@
 <h2>8. Troubleshooting</h2>
 <ul>
   <li><b>An agent card says “Rules engine”:</b> no AI provider answered (rate limit or network). The result is still valid. Re-run in a minute, or use demo-safe mode.</li>
-  <li><b>Approve button is locked:</b> by design. Check the Legal gate; switch to Priya to record a disposition.</li>
+  <li><b>Approval says “Waiting on Priya Raman”:</b> by design. Switch to Priya and record a legal disposition.</li>
   <li><b>A demo case is already approved:</b> Jordan → Rules &amp; agents → Demo controls → Reset demo cases.</li>
   <li><b>Need a clean printout:</b> on any case, click <i>Export packet</i> → Print / Save as PDF.</li>
 </ul>

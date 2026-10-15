@@ -4,19 +4,18 @@ import { cn } from "@/lib/format";
 
 type BtnVariant = "primary" | "secondary" | "ghost" | "danger" | "success" | "soft";
 const BTN: Record<BtnVariant, string> = {
-  primary:
-    "bg-brand-600 text-white shadow-[0_1px_2px_rgba(16,24,40,.08),inset_0_1px_0_rgba(255,255,255,.15)] hover:bg-brand-700 active:bg-brand-800",
-  secondary: "bg-white text-ink-2 border border-line shadow-card hover:bg-canvas hover:border-[#d6dae6]",
+  primary: "bg-brand-600 text-[#F4F1EA] hover:bg-brand-700 active:bg-brand-800",
+  secondary: "bg-white text-ink border border-line hover:bg-canvas hover:border-[#D8D3C7]",
   ghost: "text-ink-2 hover:bg-line-2",
-  danger: "bg-bad text-white hover:bg-[#b42318]",
+  danger: "bg-bad text-white hover:bg-[#9C3A2A]",
   success: "bg-ok text-white hover:bg-[#0e8a5b]",
-  soft: "bg-brand-50 text-brand-700 hover:bg-brand-100",
+  soft: "bg-brass-soft text-brass-dark hover:bg-[#EFE4CC]",
 };
 const SIZE = { sm: "h-8 px-3 text-[13px] gap-1.5", md: "h-9 px-3.5 text-sm gap-2", lg: "h-11 px-5 text-[15px] gap-2" };
 
 export function buttonClass(variant: BtnVariant = "primary", size: keyof typeof SIZE = "md", className?: string) {
   return cn(
-    "inline-flex items-center justify-center rounded-[10px] font-medium transition-all duration-150 select-none whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[.98]",
+    "inline-flex items-center justify-center rounded-[8px] font-medium transition-all duration-150 select-none whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[.98]",
     BTN[variant],
     SIZE[size],
     className,
@@ -64,11 +63,11 @@ type Tone = "neutral" | "brand" | "ok" | "warn" | "bad" | "info" | "violet";
 const TONE: Record<Tone, string> = {
   neutral: "bg-line-2 text-ink-2 ring-line",
   brand: "bg-brand-50 text-brand-700 ring-brand-100",
-  ok: "bg-ok-soft text-[#087443] ring-[#c6ecd9]",
-  warn: "bg-warn-soft text-[#9a5b00] ring-[#fde3b0]",
-  bad: "bg-bad-soft text-[#b42318] ring-[#f9cbc7]",
-  info: "bg-info-soft text-[#0b7290] ring-[#c3eaf5]",
-  violet: "bg-violet-soft text-[#5b3fd1] ring-[#ddd3fd]",
+  ok: "bg-ok-soft text-[#2F6347] ring-[#D3E5D9]",
+  warn: "bg-warn-soft text-[#8A5A12] ring-[#EEDCB8]",
+  bad: "bg-bad-soft text-[#9C3A2A] ring-[#EBCFC8]",
+  info: "bg-info-soft text-[#3E5873] ring-[#D5DEE8]",
+  violet: "bg-violet-soft text-[#7A5C2A] ring-[#E9DCC0]",
 };
 
 export function Badge({ tone = "neutral", className, children, dot }: { tone?: Tone; className?: string; children: ReactNode; dot?: boolean }) {
@@ -84,10 +83,10 @@ export function Stat({ label, value, sub, icon, tone = "neutral", className }: {
   return (
     <Card className={cn("p-4", className)}>
       <div className="flex items-center justify-between">
-        <span className="text-[13px] font-medium text-muted">{label}</span>
-        {icon && <span className={cn("grid size-7 place-items-center rounded-lg ring-1 ring-inset", TONE[tone])}>{icon}</span>}
+        <span className="text-[12.5px] text-muted">{label}</span>
+        {icon && tone === "brand" ? <span className="text-faint">{icon}</span> : null}
       </div>
-      <div className="tnum mt-2 text-[26px] font-semibold tracking-[-0.02em] text-ink">{value}</div>
+      <div className="tnum font-display mt-1.5 text-[34px] leading-none text-ink">{value}</div>
       {sub && <div className="mt-1 text-[12.5px] text-muted">{sub}</div>}
     </Card>
   );
@@ -96,7 +95,7 @@ export function Stat({ label, value, sub, icon, tone = "neutral", className }: {
 export function SectionTitle({ children, action, className }: { children: ReactNode; action?: ReactNode; className?: string }) {
   return (
     <div className={cn("mb-3 flex items-center justify-between", className)}>
-      <h2 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">{children}</h2>
+      <h2 className="text-[11.5px] font-medium uppercase tracking-[0.14em] text-muted">{children}</h2>
       {action}
     </div>
   );
@@ -105,7 +104,7 @@ export function SectionTitle({ children, action, className }: { children: ReactN
 export function EmptyState({ icon, title, body, action }: { icon?: ReactNode; title: string; body?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
-      {icon && <div className="mb-3 grid size-11 place-items-center rounded-xl bg-brand-50 text-brand-600">{icon}</div>}
+      {icon && <div className="mb-3 text-brass">{icon}</div>}
       <p className="text-[15px] font-semibold text-ink">{title}</p>
       {body && <p className="mt-1 max-w-sm text-sm text-muted">{body}</p>}
       {action && <div className="mt-4">{action}</div>}
@@ -169,11 +168,11 @@ export function Mono({ children, className }: { children: ReactNode; className?:
 
 export function PageHeader({ title, subtitle, actions, eyebrow }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow && <div className="mb-1.5 text-[13px] font-medium text-brand-700">{eyebrow}</div>}
-        <h1 className="text-[26px] font-semibold tracking-[-0.025em] text-ink">{title}</h1>
-        {subtitle && <p className="mt-1 max-w-2xl text-[14px] text-muted">{subtitle}</p>}
+        {eyebrow && <div className="mb-2 text-[11.5px] font-medium tracking-[0.14em] text-brass-dark uppercase">{eyebrow}</div>}
+        <h1 className="font-display text-[38px] leading-[1.05] text-ink">{title}</h1>
+        {subtitle && <p className="mt-2 max-w-xl text-[14px] text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </div>

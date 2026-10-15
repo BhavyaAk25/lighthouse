@@ -2,55 +2,60 @@
 
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-serif), "Iowan Old Style", Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Warm blue brand */
-  --color-brand-25: #f7f9ff;
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d4fe;
-  --color-brand-300: #a3b6fb;
-  --color-brand-400: #7b91f4;
-  --color-brand-500: #5873ea;
-  --color-brand-600: #3d63dd;
-  --color-brand-700: #3150c0;
-  --color-brand-800: #2a419a;
-  --color-brand-900: #26397a;
+  /* Harbor navy (primary) */
+  --color-brand-25: #f8f7f3;
+  --color-brand-50: #eef1f5;
+  --color-brand-100: #dce2ea;
+  --color-brand-200: #b9c4d3;
+  --color-brand-300: #8e9db3;
+  --color-brand-400: #5f7290;
+  --color-brand-500: #3b5072;
+  --color-brand-600: #142b45;
+  --color-brand-700: #0e2238;
+  --color-brand-800: #0b1b2d;
+  --color-brand-900: #081422;
 
-  --color-ink: #0f172a;
-  --color-ink-2: #344054;
-  --color-muted: #667085;
-  --color-faint: #98a2b3;
-  --color-line: #e6e9f2;
-  --color-line-2: #eef1f7;
-  --color-canvas: #f6f8fc;
+  /* Lamp brass (accent) */
+  --color-brass: #b08a4a;
+  --color-brass-dark: #7a5c2a;
+  --color-brass-soft: #f5eedf;
+
+  --color-ink: #12171d;
+  --color-ink-2: #33373d;
+  --color-muted: #6b6f76;
+  --color-faint: #9a9c9f;
+  --color-line: #e6e1d6;
+  --color-line-2: #efece5;
+  --color-canvas: #f7f5f0;
   --color-surface: #ffffff;
 
-  --color-ok: #12a26b;
-  --color-ok-soft: #e7f7ef;
-  --color-warn: #c77700;
-  --color-warn-soft: #fff5e1;
-  --color-bad: #d92d20;
-  --color-bad-soft: #fdecec;
-  --color-info: #0e93b8;
-  --color-info-soft: #e6f6fb;
-  --color-violet: #7a5af8;
-  --color-violet-soft: #f1edfe;
+  --color-ok: #3f7d5b;
+  --color-ok-soft: #edf4ef;
+  --color-warn: #a8741e;
+  --color-warn-soft: #f8f0e0;
+  --color-bad: #b4442f;
+  --color-bad-soft: #f7ece9;
+  --color-info: #4f6d8a;
+  --color-info-soft: #edf1f5;
+  --color-violet: #b08a4a;
+  --color-violet-soft: #f5eedf;
 
-  --color-sales: #e5793b;
-  --color-finance: #12a26b;
-  --color-ops: #0e9aa7;
-  --color-legal: #8e4ec6;
+  --color-sales: #a86b3c;
+  --color-finance: #3f7d5b;
+  --color-ops: #4f6d8a;
+  --color-legal: #7a5c2a;
 
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
-  --shadow-pop: 0 12px 32px -8px rgba(16, 24, 40, 0.18), 0 4px 10px -4px rgba(16, 24, 40, 0.08);
-  --shadow-glow: 0 0 0 4px rgba(61, 99, 221, 0.12);
+  --shadow-card: 0 1px 2px rgba(18, 23, 29, 0.04);
+  --shadow-pop: 0 18px 40px -16px rgba(18, 23, 29, 0.22), 0 4px 10px -6px rgba(18, 23, 29, 0.08);
+  --shadow-glow: 0 0 0 3px rgba(176, 138, 74, 0.18);
 
-  --radius-card: 14px;
+  --radius-card: 12px;
 
   --animate-shimmer: shimmer 1.6s linear infinite;
-  --animate-pulse-soft: pulse-soft 1.8s ease-in-out infinite;
-  --animate-beam: beam 6s linear infinite;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
 }
 
 @keyframes shimmer {
@@ -59,11 +64,12 @@
 }
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  50% { opacity: 0.4; }
 }
-@keyframes beam {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes sweep {
+  0% { transform: rotate(-24deg); opacity: 0.0; }
+  20% { opacity: 0.9; }
+  100% { transform: rotate(24deg); opacity: 0; }
 }
 
 :root {
@@ -78,12 +84,18 @@ body {
 
 body {
   font-family: var(--font-sans);
-  font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.003em;
 }
 
 ::selection {
-  background: var(--color-brand-100);
+  background: var(--color-brass-soft);
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 .tnum {
@@ -98,36 +110,51 @@ body {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #eef1f7 0px, #f7f9fc 80px, #eef1f7 160px);
+  background: linear-gradient(90deg, #efece5 0px, #f8f6f1 80px, #efece5 160px);
   background-size: 800px 100%;
   animation: var(--animate-shimmer);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
-/* subtle Stripe-like gradient mesh */
+/* quiet surfaces (no gradients) */
 .mesh {
-  background:
-    radial-gradient(1200px 400px at 0% 0%, rgba(61, 99, 221, 0.16), transparent 60%),
-    radial-gradient(900px 380px at 100% 0%, rgba(122, 90, 248, 0.14), transparent 60%),
-    radial-gradient(800px 300px at 50% 100%, rgba(14, 147, 184, 0.1), transparent 60%),
-    #ffffff;
+  background: var(--color-surface);
+}
+.night {
+  background: #0e2238;
+  color: #f4f1ea;
 }
 
 .gradient-border {
   position: relative;
   background: var(--color-surface);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
 }
 .gradient-border::before {
   content: "";
   position: absolute;
-  inset: 0;
-  padding: 1.5px;
-  border-radius: inherit;
-  background: linear-gradient(120deg, #3d63dd, #7a5af8 45%, #0e93b8);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  left: 24px;
+  right: 24px;
+  top: -1px;
+  height: 2px;
+  background: var(--color-brass);
+  border-radius: 2px;
+}
+
+.hairline {
+  height: 1px;
+  background: var(--color-line);
+}
+
+.beam {
+  position: absolute;
+  inset: auto auto 0 50%;
+  width: 140%;
+  height: 140%;
+  transform-origin: 0% 100%;
+  background: conic-gradient(from 250deg at 0% 100%, rgba(231, 194, 122, 0) 0deg, rgba(231, 194, 122, 0.16) 18deg, rgba(231, 194, 122, 0) 36deg);
+  animation: sweep 7s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -136,12 +163,12 @@ body {
   height: 8px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #d0d5dd;
+  background: #d8d3c7;
   border-radius: 8px;
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-brand-500);
+  outline: 2px solid var(--color-brass);
   outline-offset: 2px;
   border-radius: 6px;
 }

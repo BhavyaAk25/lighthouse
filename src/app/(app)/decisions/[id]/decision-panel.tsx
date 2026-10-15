@@ -41,9 +41,7 @@ export function DecisionPanel({
       <Card className="p-5">
         <h3 className="text-[15px] font-semibold">Decision</h3>
         <p className="mt-1 text-[13px] text-muted">
-          {persona.role === "DECISION_OWNER"
-            ? "Run the agents to generate the recommendation packet. Then approve, reject or request a revision."
-            : "The Decision Owner has not run the agents for this revision yet."}
+          {persona.role === "DECISION_OWNER" ? "Run the agents first." : "Waiting on Maya Chen to run the agents."}
         </p>
       </Card>
     );
@@ -64,9 +62,7 @@ export function DecisionPanel({
             <ShieldAlert className="size-5 shrink-0 text-muted" />
             <div>
               <h3 className="text-[14px] font-semibold">Separation of duties</h3>
-              <p className="mt-1 text-[13px] text-muted">
-                The System Administrator maintains rules, thresholds and the agent registry and can audit every decision, but cannot approve, reject or review cases.
-              </p>
+              <p className="mt-1 text-[13px] text-muted">Administrators can audit this case but not decide it.</p>
             </div>
           </div>
         </Card>
@@ -102,7 +98,7 @@ function FinalDecision({ packet }: { packet: PacketView }) {
   const d = packet.final_decision!;
   const tone = d === "APPROVED" ? "ok" : d === "REJECTED" ? "bad" : "warn";
   return (
-    <Card className={cn("overflow-hidden p-0", tone === "ok" && "border-[#c6ecd9]", tone === "bad" && "border-[#f9cbc7]")}>
+    <Card className={cn("overflow-hidden p-0", tone === "ok" && "border-[#D3E5D9]", tone === "bad" && "border-[#EBCFC8]")}>
       <div className={cn("flex items-center gap-3 px-5 py-4", tone === "ok" ? "bg-ok-soft" : tone === "bad" ? "bg-bad-soft" : "bg-warn-soft")}>
         {d === "APPROVED" ? <CheckCircle2 className="size-6 text-ok" /> : d === "REJECTED" ? <XCircle className="size-6 text-bad" /> : <RotateCcw className="size-6 text-warn" />}
         <div>
@@ -150,19 +146,19 @@ function OwnerPanel({ decisionId, packet, legal, status }: { decisionId: string;
     <Card className="p-5">
       <div className="flex items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 text-[15px] font-semibold">
-          <Gavel className="size-4 text-brand-600" /> Your decision
+          Your decision
         </h3>
-        <span className="text-[12px] text-muted">Lighthouse says: {REC_META[rec].label}</span>
+        <span className="text-[12px] text-muted">Recommended: {REC_META[rec].short}</span>
       </div>
       {approveLocked && (
-        <div className="mt-3 flex gap-2.5 rounded-xl border border-[#ddd3fd] bg-violet-soft px-3 py-2.5 text-[12.5px] text-[#5b3fd1]">
+        <div className="mt-3 flex gap-2.5 rounded-xl border border-[#E9DCC0] bg-violet-soft px-3 py-2.5 text-[12.5px] text-[#7A5C2A]">
           <Lock className="mt-0.5 size-4 shrink-0" />
           <span>
             {legalBlocked
-              ? "Approval is locked: the Legal agent found a prohibited condition. You can reject or request a revision."
+              ? "Approval locked: prohibited by the Legal agent."
               : legalRejected
-                ? "Legal & Compliance rejected this revision. Approval is not available."
-                : "Approval is locked until Legal & Compliance records a disposition. Switch to Priya Raman (Legal) to review."}
+                ? "Approval locked: rejected by Priya Raman (Legal)."
+                : "Waiting on Priya Raman · Legal review"}
           </span>
         </div>
       )}
@@ -171,24 +167,14 @@ function OwnerPanel({ decisionId, packet, legal, status }: { decisionId: string;
         onChange={(e) => setRationale(e.target.value)}
         rows={3}
         className={cn(textareaCls, "mt-3")}
-        placeholder={
-          highRisk || !supportive
-            ? "Rationale (required for high-risk cases and for any decision that overrides Lighthouse)"
-            : "Rationale (optional for decisions that follow Lighthouse)"
-        }
+        placeholder="Your reason"
       />
-      <p className="mt-1.5 text-[11.5px] text-muted">
-        {!supportive
-          ? "Approving would override Lighthouse’s recommendation; a 20+ character rationale is required and logged."
-          : highRisk
-            ? "High-risk case: a 20+ character rationale is required for any decision."
-            : "Rejecting would override Lighthouse’s recommendation and requires a rationale."}
-      </p>
+      {(highRisk || !supportive) && <p className="mt-1.5 text-[11.5px] text-muted">A short reason is required.</p>}
       <div className="mt-3 grid grid-cols-3 gap-2">
         <Button variant="success" onClick={() => act("APPROVED")} disabled={pending || approveLocked} title={approveLocked ? "Locked by governance gate" : undefined}>
           {pending ? <Loader2 className="size-4 animate-spin" /> : approveLocked ? <Lock className="size-4" /> : <ThumbsUp className="size-4" />} Approve
         </Button>
-        <Button variant="secondary" onClick={() => act("REJECTED")} disabled={pending} className="text-[#b42318]">
+        <Button variant="secondary" onClick={() => act("REJECTED")} disabled={pending} className="text-[#9C3A2A]">
           <ThumbsDown className="size-4" /> Reject
         </Button>
         <Button variant="secondary" onClick={() => act("REVISION_REQUESTED")} disabled={pending}>
@@ -220,32 +206,34 @@ function LegalPanel({ decisionId, packet, legal, final }: { decisionId: string; 
       </Card>
     );
   const OPTS = [
-    { v: "APPROVED", l: "Approve", d: "Claims and terms are compliant as written." },
-    { v: "APPROVED_WITH_CONDITIONS", l: "Approve with conditions", d: "Compliant once the conditions below are met." },
-    { v: "REJECTED", l: "Reject", d: "Cannot launch as proposed." },
+    { v: "APPROVED", l: "Approve", d: "Compliant as written" },
+    { v: "APPROVED_WITH_CONDITIONS", l: "Approve with conditions", d: "Compliant once conditions are met" },
+    { v: "REJECTED", l: "Reject", d: "Cannot launch as proposed" },
   ] as const;
   return (
-    <Card className="border-[#ddd3fd] p-5">
+    <Card className="border-[#E9DCC0] p-5">
       <h3 className="flex items-center gap-2 text-[15px] font-semibold">
-        <Gavel className="size-4 text-violet" /> Legal & Compliance review
+        Your legal disposition
       </h3>
-      <p className="mt-1 text-[13px] text-muted">The Legal agent gated this case. Your disposition unlocks or blocks the decision owner’s approval.</p>
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+      
+      <div className="mt-3 grid gap-2">
         {OPTS.map((o) => (
           <button
             key={o.v}
             onClick={() => setDisp(o.v)}
             className={cn(
               "rounded-xl border p-2.5 text-left transition",
-              disp === o.v ? (o.v === "REJECTED" ? "border-bad bg-bad-soft" : "border-violet bg-violet-soft") : "border-line hover:border-[#c9cfdc]",
+              disp === o.v ? (o.v === "REJECTED" ? "border-bad bg-bad-soft" : "border-brass bg-brass-soft") : "border-line hover:border-[#CFC8BA]",
             )}
           >
-            <div className="text-[13px] font-semibold">{o.l}</div>
-            <div className="text-[11.5px] text-muted">{o.d}</div>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-[13.5px] text-ink">{o.l}</span>
+              <span className="text-[11.5px] text-muted">{o.d}</span>
+            </div>
           </button>
         ))}
       </div>
-      <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={cn(textareaCls, "mt-3")} placeholder="Review note / conditions (required)" />
+      <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={cn(textareaCls, "mt-3")} placeholder="Note or conditions" />
       <Button
         className="mt-3 w-full"
         disabled={pending}
@@ -283,9 +271,9 @@ function ReviewerPanel({ decisionId, persona }: { decisionId: string; persona: P
   return (
     <Card className="p-5">
       <h3 className="flex items-center gap-2 text-[15px] font-semibold">
-        <MessageSquarePlus className="size-4 text-brand-600" /> {ROLE_LABEL[persona.role]} note
+        Your note
       </h3>
-      <p className="mt-1 text-[13px] text-muted">Validate the assumptions in your domain. Notes are attached to the packet and the audit log.</p>
+      
       <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={cn(textareaCls, "mt-3")} placeholder="e.g. Margin assumption matches the category plan." />
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Button variant="secondary" disabled={pending} onClick={() => send("CONCUR")}>

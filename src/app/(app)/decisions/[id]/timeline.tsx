@@ -46,7 +46,7 @@ function describe(a: AuditView) {
 export function Timeline({ entries }: { entries: AuditView[] }) {
   return (
     <Card>
-      <CardHeader title="Decision trace" subtitle="Append-only audit entries for this case. Each entry is hash-chained to the one before it." icon={<Link2 className="size-4" />} />
+      <CardHeader title="Decision trace" subtitle="Every step, hash-chained" icon={<Link2 className="size-4" />} />
       <ol className="relative px-5 pb-5">
         {entries.length === 0 && <li className="text-[13px] text-muted">No entries yet.</li>}
         {entries.map((a, i) => (

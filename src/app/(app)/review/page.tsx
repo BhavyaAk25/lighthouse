@@ -61,7 +61,7 @@ export default async function ReviewQueue() {
                     <div className="mt-1 truncate text-[14px] font-medium text-ink group-hover:text-brand-700">{String(r.title)}</div>
                     <div className="mt-0.5 text-[12.5px] text-muted">
                       {r.top_rule ? (
-                        <span className="inline-flex items-center gap-1 text-[#5b3fd1]">
+                        <span className="inline-flex items-center gap-1 text-[#7A5C2A]">
                           <Gavel className="size-3.5" /> {String(r.review_rules)} rule(s) need review · top: {String(r.top_rule)}
                         </span>
                       ) : (

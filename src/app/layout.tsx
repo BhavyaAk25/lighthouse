@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
+import { Geist_Mono, Instrument_Serif, Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+const serif = Instrument_Serif({ variable: "--font-serif", subsets: ["latin"], weight: "400" });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: { default: "Lighthouse", template: "%s · Lighthouse" },
-  description: "Governance layer that reconciles Finance, Sales, Operations and Legal AI agents into auditable human decisions.",
+  description: "Four AI agents. One governed, auditable decision. A human always decides.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} ${serif.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full">
         {children}
-        <Toaster position="bottom-right" richColors closeButton toastOptions={{ style: { fontFamily: "var(--font-sans)" } }} />
+        <Toaster position="bottom-right" closeButton toastOptions={{ style: { fontFamily: "var(--font-sans)", borderRadius: 10 } }} />
       </body>
     </html>
   );

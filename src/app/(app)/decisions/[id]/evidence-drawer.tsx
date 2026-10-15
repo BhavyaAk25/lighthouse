@@ -51,14 +51,14 @@ function FinanceWaterfall({ m }: { m: Record<string, unknown> }) {
   return (
     <ResponsiveContainer width="100%" height={210}>
       <BarChart data={rows} margin={{ left: 4, right: 8, top: 8 }}>
-        <CartesianGrid vertical={false} stroke="#eef1f7" />
-        <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#667085" }} axisLine={false} tickLine={false} />
-        <YAxis tickFormatter={(v) => money(v)} tick={{ fontSize: 11, fill: "#667085" }} axisLine={false} tickLine={false} width={64} />
-        <Tooltip formatter={(v) => money(Number(v), false)} cursor={{ fill: "#f6f8fc" }} />
-        <ReferenceLine y={0} stroke="#d0d5dd" />
+        <CartesianGrid vertical={false} stroke="#EFECE5" />
+        <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6B6F76" }} axisLine={false} tickLine={false} />
+        <YAxis tickFormatter={(v) => money(v)} tick={{ fontSize: 11, fill: "#6B6F76" }} axisLine={false} tickLine={false} width={64} />
+        <Tooltip formatter={(v) => money(Number(v), false)} cursor={{ fill: "#F7F5F0" }} />
+        <ReferenceLine y={0} stroke="#D8D3C7" />
         <Bar dataKey="v" radius={[6, 6, 6, 6]}>
           {rows.map((r) => (
-            <Cell key={r.name} fill={r.name === "Net" ? (r.v >= 0 ? "#12a26b" : "#d92d20") : r.v >= 0 ? "#7b91f4" : "#f4a29b"} />
+            <Cell key={r.name} fill={r.name === "Net" ? (r.v >= 0 ? "#3F7D5B" : "#B4442F") : r.v >= 0 ? "#8E9DB3" : "#DDB3A8"} />
           ))}
         </Bar>
       </BarChart>
@@ -127,20 +127,20 @@ export function EvidenceDrawer({
                   <AreaChart data={series.sales} margin={{ left: 0, right: 8, top: 6 }}>
                     <defs>
                       <linearGradient id="gS" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3d63dd" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#3d63dd" stopOpacity={0.02} />
+                        <stop offset="0%" stopColor="#142B45" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#142B45" stopOpacity={0.02} />
                       </linearGradient>
                       <linearGradient id="gE" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#7a5af8" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#7a5af8" stopOpacity={0.02} />
+                        <stop offset="0%" stopColor="#B08A4A" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#B08A4A" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid vertical={false} stroke="#eef1f7" />
-                    <XAxis dataKey="date" tickFormatter={short} tick={{ fontSize: 10.5, fill: "#667085" }} axisLine={false} tickLine={false} minTickGap={28} />
-                    <YAxis tickFormatter={(v) => money(v)} tick={{ fontSize: 10.5, fill: "#667085" }} axisLine={false} tickLine={false} width={58} />
+                    <CartesianGrid vertical={false} stroke="#EFECE5" />
+                    <XAxis dataKey="date" tickFormatter={short} tick={{ fontSize: 10.5, fill: "#6B6F76" }} axisLine={false} tickLine={false} minTickGap={28} />
+                    <YAxis tickFormatter={(v) => money(v)} tick={{ fontSize: 10.5, fill: "#6B6F76" }} axisLine={false} tickLine={false} width={58} />
                     <Tooltip formatter={(v) => money(Number(v), false)} labelFormatter={(l, p) => `${l}${p?.[0]?.payload?.event ? ` · ${p[0].payload.event}` : ""}`} />
-                    <Area type="monotone" dataKey="store" stackId="1" stroke="#3d63dd" fill="url(#gS)" name="Store" />
-                    <Area type="monotone" dataKey="ecom" stackId="1" stroke="#7a5af8" fill="url(#gE)" name="Online" />
+                    <Area type="monotone" dataKey="store" stackId="1" stroke="#142B45" fill="url(#gS)" name="Store" />
+                    <Area type="monotone" dataKey="ecom" stackId="1" stroke="#B08A4A" fill="url(#gE)" name="Online" />
                   </AreaChart>
                 </ResponsiveContainer>
                 <p className="mt-1 text-[11px] text-muted">Shape from real M5 Walmart daily sales (re-dated to the pilot year); level calibrated to Walmart 10-K averages.</p>
@@ -152,12 +152,12 @@ export function EvidenceDrawer({
                   <div className="mb-1 text-[12.5px] font-semibold">Inventory on hand + inbound (units, last 60 days)</div>
                   <ResponsiveContainer width="100%" height={170}>
                     <AreaChart data={series.ops} margin={{ left: 0, right: 8, top: 6 }}>
-                      <CartesianGrid vertical={false} stroke="#eef1f7" />
-                      <XAxis dataKey="date" tickFormatter={short} tick={{ fontSize: 10.5, fill: "#667085" }} axisLine={false} tickLine={false} minTickGap={28} />
-                      <YAxis tick={{ fontSize: 10.5, fill: "#667085" }} axisLine={false} tickLine={false} width={58} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+                      <CartesianGrid vertical={false} stroke="#EFECE5" />
+                      <XAxis dataKey="date" tickFormatter={short} tick={{ fontSize: 10.5, fill: "#6B6F76" }} axisLine={false} tickLine={false} minTickGap={28} />
+                      <YAxis tick={{ fontSize: 10.5, fill: "#6B6F76" }} axisLine={false} tickLine={false} width={58} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
                       <Tooltip formatter={(v) => Number(v).toLocaleString()} />
-                      <Area type="monotone" dataKey="on_hand" stackId="1" stroke="#0e9aa7" fill="#0e9aa733" name="On hand" />
-                      <Area type="monotone" dataKey="inbound" stackId="1" stroke="#7b91f4" fill="#7b91f433" name="Inbound" />
+                      <Area type="monotone" dataKey="on_hand" stackId="1" stroke="#4F6D8A" fill="#0e9aa733" name="On hand" />
+                      <Area type="monotone" dataKey="inbound" stackId="1" stroke="#8E9DB3" fill="#7b91f433" name="Inbound" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -165,13 +165,13 @@ export function EvidenceDrawer({
                   <div className="mb-1 text-[12.5px] font-semibold">Distribution center utilization (%)</div>
                   <ResponsiveContainer width="100%" height={160}>
                     <LineChart data={dcByDate} margin={{ left: 0, right: 8, top: 6 }}>
-                      <CartesianGrid vertical={false} stroke="#eef1f7" />
-                      <XAxis dataKey="date" tickFormatter={short} tick={{ fontSize: 10.5, fill: "#667085" }} axisLine={false} tickLine={false} minTickGap={28} />
-                      <YAxis domain={[60, "auto"]} tick={{ fontSize: 10.5, fill: "#667085" }} axisLine={false} tickLine={false} width={36} />
+                      <CartesianGrid vertical={false} stroke="#EFECE5" />
+                      <XAxis dataKey="date" tickFormatter={short} tick={{ fontSize: 10.5, fill: "#6B6F76" }} axisLine={false} tickLine={false} minTickGap={28} />
+                      <YAxis domain={[60, "auto"]} tick={{ fontSize: 10.5, fill: "#6B6F76" }} axisLine={false} tickLine={false} width={36} />
                       <Tooltip />
-                      <ReferenceLine y={100} stroke="#d92d20" strokeDasharray="4 4" />
-                      <Line type="monotone" dataKey="DC-P01" stroke="#3d63dd" dot={false} strokeWidth={2} />
-                      <Line type="monotone" dataKey="DC-P02" stroke="#0e9aa7" dot={false} strokeWidth={2} />
+                      <ReferenceLine y={100} stroke="#B4442F" strokeDasharray="4 4" />
+                      <Line type="monotone" dataKey="DC-P01" stroke="#142B45" dot={false} strokeWidth={2} />
+                      <Line type="monotone" dataKey="DC-P02" stroke="#4F6D8A" dot={false} strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
                   <p className="mt-1 text-[11px] text-muted">Generated operations data driven by the real demand series. Gaps indicate store feed outages.</p>

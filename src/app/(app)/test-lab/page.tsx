@@ -11,7 +11,7 @@ export default async function TestLab() {
     <div>
       <PageHeader
         title="Test lab"
-        subtitle="Fifteen scripted acceptance tests from Deliverable 1 (section 7.2 and objectives OBJ-01 to OBJ-07), run live against the real engine and database. Read-only: nothing is changed."
+        subtitle="Fifteen acceptance tests from Deliverable 1, run live."
       />
       <TestRunner />
     </div>

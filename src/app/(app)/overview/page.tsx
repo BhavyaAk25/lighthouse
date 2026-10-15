@@ -1,17 +1,17 @@
-import { ArrowRight, BadgeCheck, Gavel, GitCompareArrows, Inbox, Plus, ShieldCheck, Sparkles, UserRoundCog } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { DissentBars, RecDonut, WeeklyOutcomes } from "@/components/charts";
-import { AGENT_META, RecBadge, StatusBadge, SyntheticNotice } from "@/components/domain";
-import { Card, CardHeader, LinkButton, Stat } from "@/components/ui";
+import { AGENT_META, RecBadge, StatusBadge } from "@/components/domain";
+import { InsightTabs } from "@/components/insight-tabs";
+import { Card, CardHeader, PageHeader, Stat } from "@/components/ui";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { money, relTime, titleCase } from "@/lib/format";
-import { ROLE_LABEL } from "@/lib/personas";
 import { getPilotClock } from "@/lib/repo";
 import type { AgentType, CaseStatus, Recommendation } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Overview" };
+export const metadata = { title: "Insights" };
 
 const SCENARIO_COPY: Record<string, string> = {
   ANCHOR_LEGAL_GATE: "Three agents support; Legal gates a clinical claim",
@@ -29,7 +29,7 @@ const SCENARIO_COPY: Record<string, string> = {
 };
 
 export default async function Overview() {
-  const persona = await requireSession();
+  await requireSession();
   const sql = db();
   const clock = await getPilotClock();
   const [[k], weekly, mix, dissent, demo, activity] = await Promise.all([
@@ -57,44 +57,19 @@ export default async function Overview() {
         left join lighthouse_decisions l using (decision_id) where c.decision_id like 'D-2026-0%' order by c.decision_id`,
     sql`select seq, ts, actor, role, action, decision_id from audit_log order by seq desc limit 9`,
   ]);
-  const first = persona.name.split(" ")[0];
   const order: AgentType[] = ["SALES", "FINANCE", "OPERATIONS", "LEGAL"];
 
   return (
     <div className="space-y-6">
-      <section className="mesh relative overflow-hidden rounded-[18px] border border-line px-6 py-7 shadow-card sm:px-8">
-        <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-2xl">
-            <div className="text-[13px] font-medium text-brand-700">
-              {ROLE_LABEL[persona.role]} · {persona.title}
-            </div>
-            <h1 className="mt-1 text-[28px] font-semibold tracking-[-0.03em]">Welcome back, {first}</h1>
-            <p className="mt-2 text-[14.5px] leading-relaxed text-ink-2">
-              Lighthouse supervises four AI agents across a 50-store Walmart U.S. pilot. It never averages away disagreement, enforces legal and capacity gates, and
-              leaves every consequential call to a named human, with a tamper-evident record of why.
-            </p>
-            <SyntheticNotice className="mt-3" />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <LinkButton href="/decisions/D-2026-001" size="lg">
-              Open anchor case <ArrowRight className="size-4" />
-            </LinkButton>
-            {persona.role === "DECISION_OWNER" && (
-              <LinkButton href="/decisions/new" variant="secondary" size="lg">
-                <Plus className="size-4" /> New decision
-              </LinkButton>
-            )}
-          </div>
-        </div>
-      </section>
-
+      <PageHeader title="Insights" subtitle="How the pilot is performing across 5,000 decisions." />
+      <InsightTabs active="overview" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-6">
-        <Stat label="Needs a decision" value={k.open} sub="Ready or awaiting legal" icon={<Inbox className="size-4" />} tone="brand" />
-        <Stat label="Awaiting legal" value={k.legal} sub="Approval locked" icon={<Gavel className="size-4" />} tone="violet" />
-        <Stat label="Material conflicts" value={`${k.conflict_rate ?? 0}%`} sub="Last 90 days" icon={<GitCompareArrows className="size-4" />} tone="warn" />
-        <Stat label="Avg Lighthouse confidence" value={Number(k.avg_conf ?? 0).toFixed(2)} sub="Synthesis score" icon={<Sparkles className="size-4" />} tone="info" />
-        <Stat label="Approved value" value={money(k.approved_value)} sub="Revenue + markdown, 90 days" icon={<BadgeCheck className="size-4" />} tone="ok" />
-        <Stat label="Human overrides" value={`${k.override_rate ?? 0}%`} sub="Always with rationale" icon={<UserRoundCog className="size-4" />} tone="neutral" />
+        <Stat label="Needs a decision" value={k.open} sub="Ready or awaiting legal" />
+        <Stat label="Awaiting legal" value={k.legal} sub="Approval locked" />
+        <Stat label="Material conflicts" value={`${k.conflict_rate ?? 0}%`} sub="Last 90 days" />
+        <Stat label="Avg Lighthouse confidence" value={Number(k.avg_conf ?? 0).toFixed(2)} sub="Synthesis score" />
+        <Stat label="Approved value" value={money(k.approved_value)} sub="Revenue + markdown, 90 days" />
+        <Stat label="Human overrides" value={`${k.override_rate ?? 0}%`} sub="Always with rationale" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -116,7 +91,7 @@ export default async function Overview() {
         <Card>
           <CardHeader
             title="Demo scenarios"
-            subtitle="Twelve curated cases covering every acceptance test: agreement, conflict, hard stops, legal gate, missing and stale evidence."
+            subtitle="Twelve curated cases, one per acceptance test."
             action={
               <Link href="/decisions?tab=demo" className="text-[13px] font-medium text-brand-700 hover:underline">
                 View all

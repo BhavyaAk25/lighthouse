@@ -24,11 +24,11 @@ export default async function AdminPage() {
     <div>
       <PageHeader
         title="Rules & agents"
-        subtitle="The governance configuration behind every recommendation: the legal rule catalog, decision thresholds, the agent registry and AI providers. Every change requires a reason and is written to the audit log."
+        subtitle="Every change needs a reason and is logged."
         actions={
           !isAdmin && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[12.5px] font-medium text-ink-2">
-              <Lock className="size-3.5" /> View only · sign in as the Administrator to edit
+              <Lock className="size-3.5" /> View only
             </span>
           )
         }

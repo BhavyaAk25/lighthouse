@@ -2,7 +2,7 @@
 
 import { ArrowRight, Bot, CheckCircle2, GitCompareArrows, Lightbulb, ListChecks, Scale } from "lucide-react";
 import { motion } from "motion/react";
-import { AGENT_META, AgentAvatar, GateIcon, RecBadge, RiskBadge } from "@/components/domain";
+import { AgentAvatar, GateIcon, RecBadge, RiskBadge } from "@/components/domain";
 import { LogoMark } from "@/components/logo";
 import { ConfidenceRing } from "@/components/ui";
 import { cn, money } from "@/lib/format";
@@ -31,10 +31,10 @@ export interface PacketData {
 }
 
 const SEVERITY: Record<string, { label: string; cls: string }> = {
-  NONE: { label: "No conflict", cls: "bg-ok-soft text-[#087443]" },
-  MINOR: { label: "Minor conflict", cls: "bg-info-soft text-[#0b7290]" },
-  MATERIAL: { label: "Material conflict", cls: "bg-warn-soft text-[#9a5b00]" },
-  HARD_STOP: { label: "Hard stop", cls: "bg-bad-soft text-[#b42318]" },
+  NONE: { label: "No conflict", cls: "bg-ok-soft text-[#2F6347]" },
+  MINOR: { label: "Minor conflict", cls: "bg-info-soft text-[#3E5873]" },
+  MATERIAL: { label: "Material conflict", cls: "bg-warn-soft text-[#8A5A12]" },
+  HARD_STOP: { label: "Hard stop", cls: "bg-bad-soft text-[#9C3A2A]" },
 };
 
 const BREAKDOWN_LABEL: Record<string, string> = {
@@ -49,13 +49,13 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
   const sev = SEVERITY[p.conflict_severity] ?? SEVERITY.NONE;
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="gradient-border shadow-card">
-      <div className="mesh rounded-t-[14px] border-b border-line px-5 py-5">
+      <div className="rounded-t-[12px] border-b border-line px-6 py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
           <div className="flex min-w-0 flex-1 items-start gap-3.5">
-            <LogoMark size={40} />
+            <LogoMark size={34} />
             <div className="min-w-0">
-              <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-700">Lighthouse recommendation</div>
-              <h2 className="mt-1 text-[21px] leading-tight font-semibold tracking-[-0.02em] text-ink">{p.headline}</h2>
+              <div className="text-[11.5px] tracking-[0.14em] text-brass-dark uppercase">Lighthouse recommends</div>
+              <h2 className="font-display mt-1 text-[28px] leading-tight text-ink">{p.headline}</h2>
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <RecBadge rec={p.synthesized_recommendation} className="text-[13px]" />
                 <RiskBadge risk={p.risk_level} />
@@ -67,13 +67,13 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4 rounded-xl border border-white/70 bg-white/70 px-4 py-3 backdrop-blur">
+          <div className="flex items-center gap-4 rounded-[10px] bg-canvas px-4 py-3">
             <ConfidenceRing value={p.lighthouse_confidence} size={64} stroke={5} />
             <div className="w-[190px] space-y-1">
               {Object.entries(p.confidence_breakdown).map(([k, v]) => (
                 <div key={k} className="flex items-center justify-between gap-2 text-[11.5px]">
                   <span className="truncate text-muted">{BREAKDOWN_LABEL[k] ?? k}</span>
-                  <span className={cn("tnum font-semibold", k === "conflict_penalty" && Number(v) > 0 ? "text-[#b42318]" : "text-ink")}>
+                  <span className={cn("tnum font-semibold", k === "conflict_penalty" && Number(v) > 0 ? "text-[#9C3A2A]" : "text-ink")}>
                     {k === "conflict_penalty" ? `-${(Number(v) * 100).toFixed(0)}%` : Number(v).toFixed(2)}
                   </span>
                 </div>
@@ -88,7 +88,7 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
         <div className="border-b border-line p-5 lg:border-r lg:border-b-0">
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink">
-              <Bot className="size-4 text-brand-600" /> Executive summary
+              <Bot className="size-4 text-brass" /> Summary
             </h3>
             <span className="text-[11.5px] text-muted">{synthesizing ? "Writing…" : modelLabel(p.provider, p.model)}</span>
           </div>
@@ -104,12 +104,12 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
           {p.decisive_factors.length > 0 && (
             <div className="mt-4">
               <h4 className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
-                <Lightbulb className="size-3.5" /> Decisive factors
+                <Lightbulb className="size-3.5" /> Why
               </h4>
               <ul className="mt-2 space-y-1.5">
                 {p.decisive_factors.map((f, i) => (
                   <li key={i} className="flex gap-2 text-[13px] text-ink-2">
-                    <ArrowRight className="mt-0.5 size-3.5 shrink-0 text-brand-600" /> {f}
+                    <ArrowRight className="mt-0.5 size-3.5 shrink-0 text-brass" /> {f}
                   </li>
                 ))}
               </ul>
@@ -118,7 +118,7 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
           {p.conflicts.length > 0 && (
             <div className="mt-4">
               <h4 className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">
-                <Scale className="size-3.5" /> Disagreements surfaced (never averaged)
+                <Scale className="size-3.5" /> Disagreements
               </h4>
               <div className="mt-2 space-y-2">
                 {p.conflicts.map((c, i) => (
@@ -157,10 +157,10 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
                     <span
                       className={cn(
                         "rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide",
-                        g.status === "CLEAR" && "bg-ok-soft text-[#087443]",
-                        g.status === "PENDING" && "bg-violet-soft text-[#5b3fd1]",
-                        g.status === "WARNING" && "bg-warn-soft text-[#9a5b00]",
-                        g.status === "BLOCKED" && "bg-bad-soft text-[#b42318]",
+                        g.status === "CLEAR" && "bg-ok-soft text-[#2F6347]",
+                        g.status === "PENDING" && "bg-violet-soft text-[#7A5C2A]",
+                        g.status === "WARNING" && "bg-warn-soft text-[#8A5A12]",
+                        g.status === "BLOCKED" && "bg-bad-soft text-[#9C3A2A]",
                       )}
                     >
                       {g.status}
@@ -174,12 +174,12 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
           {p.conditions.length > 0 && (
             <>
               <h3 className="mt-5 flex items-center gap-1.5 text-[13px] font-semibold text-ink">
-                <ListChecks className="size-4 text-brand-600" /> Conditions to proceed
+                <ListChecks className="size-4 text-brass" /> Conditions
               </h3>
               <ul className="mt-2 space-y-1.5">
                 {p.conditions.map((c, i) => (
                   <li key={i} className="flex gap-2 text-[12.5px] text-ink-2">
-                    <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-ok" /> {c}
+                    <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-brass" /> {c}
                   </li>
                 ))}
               </ul>
@@ -199,10 +199,6 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
             </>
           )}
         </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-b-[14px] border-t border-line bg-canvas/60 px-5 py-2.5 text-[11.5px] text-muted">
-        <span>All four agent positions are preserved below the recommendation.</span>
-        {Object.keys(AGENT_META).length === 4 && <span>Human approval is mandatory · Lighthouse never executes decisions.</span>}
       </div>
     </motion.div>
   );

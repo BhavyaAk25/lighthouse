@@ -1,6 +1,7 @@
 import { AlertTriangle, Database, ExternalLink, FileSpreadsheet, Landmark, Sparkles } from "lucide-react";
 import { CategorySales, DcLines } from "@/components/charts";
-import { ProvTag, SyntheticNotice } from "@/components/domain";
+import { ProvTag } from "@/components/domain";
+import { InsightTabs } from "@/components/insight-tabs";
 import { Card, CardHeader, PageHeader, Stat } from "@/components/ui";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -9,7 +10,7 @@ import { dateLabel, int, money } from "@/lib/format";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Data & evidence" };
 
-const PALETTE = ["#3d63dd", "#5873ea", "#7b91f4", "#0e93b8", "#12a26b", "#e5793b", "#f5b544", "#8e4ec6", "#c084fc", "#f0766c", "#0e9aa7", "#94a3b8"];
+const PALETTE = ["#142B45", "#24405F", "#3B5878", "#577290", "#7A90A8", "#A3B3C4", "#C9A15B", "#B08A4A", "#8E6F3B", "#D7C5A0", "#9DB3A3", "#5F8A72"];
 
 export default async function DataPage() {
   await requireSession();
@@ -52,11 +53,8 @@ export default async function DataPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Data & evidence"
-        subtitle="Where every number comes from. Real public Walmart data drives demand; generated records fill what no public dataset covers. Nothing is Walmart internal data."
-        actions={<SyntheticNotice />}
-      />
+      <PageHeader title="Insights" subtitle="Where every number comes from." />
+      <InsightTabs active="data" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Daily sales rows" value={int(counts.sales)} sub="50 stores × 12 categories × 365 days" icon={<Database className="size-4" />} tone="brand" />
         <Stat label="Operations rows" value={int(counts.ops)} sub="Inventory, capacity, lead time" icon={<Database className="size-4" />} tone="info" />

@@ -31,7 +31,7 @@ export function TestRunner() {
           ) : (
             <>
               <div className="text-[16px] font-semibold">Run the acceptance suite</div>
-              <div className="text-[13px] text-muted">Agreement, conflict, hard stops, legal gate, missing and stale evidence, overrides, audit replay, guardrails, injection screening, performance and scale.</div>
+              <div className="text-[13px] text-muted">Read-only. Takes about two seconds.</div>
             </>
           )}
         </div>

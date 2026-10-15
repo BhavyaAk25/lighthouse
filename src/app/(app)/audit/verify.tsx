@@ -10,7 +10,7 @@ export function VerifyChain() {
   const [pending, start] = useTransition();
   const [res, setRes] = useState<{ entries: number; first_broken_seq: number | null; last_hash: string; ms: number } | null>(null);
   return (
-    <div className={cn("card flex flex-col gap-3 p-4 sm:flex-row sm:items-center", res && (res.first_broken_seq ? "border-[#f9cbc7]" : "border-[#c6ecd9]"))}>
+    <div className={cn("card flex flex-col gap-3 p-4 sm:flex-row sm:items-center", res && (res.first_broken_seq ? "border-[#EBCFC8]" : "border-[#D3E5D9]"))}>
       <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl", res?.first_broken_seq ? "bg-bad-soft text-bad" : "bg-ok-soft text-ok")}>
         {res?.first_broken_seq ? <ShieldAlert className="size-5" /> : <ShieldCheck className="size-5" />}
       </span>
@@ -18,7 +18,7 @@ export function VerifyChain() {
         {res ? (
           res.first_broken_seq ? (
             <>
-              <div className="text-[14px] font-semibold text-[#b42318]">Chain broken at entry #{res.first_broken_seq}</div>
+              <div className="text-[14px] font-semibold text-[#9C3A2A]">Chain broken at entry #{res.first_broken_seq}</div>
               <div className="text-[12.5px] text-muted">An entry was altered after it was written.</div>
             </>
           ) : (
@@ -30,7 +30,7 @@ export function VerifyChain() {
         ) : (
           <>
             <div className="text-[14px] font-semibold">Tamper-evidence check</div>
-            <div className="text-[12.5px] text-muted">Recomputes every SHA-256 link from the first entry to the latest inside the database.</div>
+            <div className="text-[12.5px] text-muted">Re-hashes every entry from the first to the latest.</div>
           </>
         )}
       </div>

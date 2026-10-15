@@ -191,23 +191,23 @@ export function Workspace(props: Props) {
   return (
     <>
       {/* run bar */}
-      <div className="no-print mb-5 flex flex-col gap-3 rounded-[14px] border border-line bg-white p-3 shadow-card sm:flex-row sm:items-center">
+      <div className="no-print mb-6 flex flex-col gap-3 rounded-[12px] border border-line bg-white p-3 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 items-center gap-3 px-1">
-          <span className={cn("grid size-9 shrink-0 place-items-center rounded-[10px]", running ? "bg-brand-600 text-white" : "bg-brand-50 text-brand-600")}>
+          <span className={cn("grid size-9 shrink-0 place-items-center rounded-full", running ? "bg-brand-600 text-[#F4F1EA]" : "bg-canvas text-brass")}>
             {running ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
           </span>
           <div className="min-w-0">
             <div className="text-[13.5px] font-semibold">
-              {running ? `Agents working… ${elapsed.toFixed(1)}s` : hasRun ? "Agents have analyzed this revision" : "Ready to analyze"}
+              {running ? `Agents working · ${elapsed.toFixed(1)}s` : hasRun ? "Analysis complete" : "Not analyzed yet"}
             </div>
             <div className="truncate text-[12px] text-muted">
               {running
                 ? demoSafe
-                  ? "Demo-safe: replaying saved AI answers"
-                  : "Four agents run in parallel: Gemini first, Groq as automatic fallback"
+                  ? "Replaying saved answers"
+                  : "Gathering evidence, then reasoning"
                 : props.runs[0]
-                  ? `Last run ${dateLabel(props.runs[0].started_at, true)} · ${props.runs[0].mode.replace("_", " ").toLowerCase()} · ${props.runs[0].provider_summary ?? ""}${props.runs[0].duration_ms ? ` · ${(props.runs[0].duration_ms / 1000).toFixed(1)}s` : ""}`
-                  : `Revision ${revision} · no runs yet`}
+                  ? `${dateLabel(props.runs[0].started_at, true)} · ${props.runs[0].provider_summary ?? ""}${props.runs[0].duration_ms ? ` · ${(props.runs[0].duration_ms / 1000).toFixed(1)}s` : ""}`
+                  : "Four agents will analyze this case in parallel"}
             </div>
           </div>
         </div>
@@ -230,8 +230,8 @@ export function Workspace(props: Props) {
         </div>
       </div>
       {fallbackNotes.length > 0 && (
-        <div className="mb-4 rounded-xl border border-[#fde3b0] bg-warn-soft px-3.5 py-2.5 text-[12.5px] text-[#9a5b00]">
-          Some agents fell back to the rules engine because no AI provider answered. Results remain valid and are labelled. Turn on demo-safe mode for offline demos.
+        <div className="mb-4 rounded-xl border border-[#EEDCB8] bg-warn-soft px-3.5 py-2.5 text-[12.5px] text-[#8A5A12]">
+          No AI provider answered for some agents, so the rules engine filled in. Results are valid and labelled.
         </div>
       )}
 
@@ -248,12 +248,8 @@ export function Workspace(props: Props) {
           {packetData ? (
             <Packet p={packetData} synthesizing={running && !!rec && !synth} />
           ) : (
-            <div className="rounded-[14px] border border-dashed border-line bg-white/60 px-6 py-10 text-center">
-              <p className="text-[14px] font-semibold">The Lighthouse packet appears here</p>
-              <p className="mx-auto mt-1 max-w-md text-[13px] text-muted">
-                After all four agents report, Lighthouse validates their evidence, detects conflicts, applies the legal and capacity gates, and produces one governed
-                recommendation for a human to decide on.
-              </p>
+            <div className="rounded-[12px] border border-dashed border-line px-6 py-12 text-center">
+              <p className="font-display text-[22px] text-ink">Lighthouse’s recommendation will appear here.</p>
             </div>
           )}
           {props.timeline}

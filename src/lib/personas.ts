@@ -28,7 +28,7 @@ export const PERSONAS: Persona[] = [
     title: "VP, Regional Merchandising",
     role: "DECISION_OWNER",
     initials: "MC",
-    color: "#3D63DD",
+    color: "#142B45",
     blurb: "Opens decision cases, runs the agents and makes the final approve / reject / revise call.",
   },
   {
@@ -37,7 +37,7 @@ export const PERSONAS: Persona[] = [
     title: "Senior Counsel, Compliance",
     role: "LEGAL_REVIEWER",
     initials: "PR",
-    color: "#8E4EC6",
+    color: "#7A5C2A",
     blurb: "Reviews cases the Legal agent gates and records the human legal disposition.",
   },
   {
@@ -46,7 +46,7 @@ export const PERSONAS: Persona[] = [
     title: "Director, Merchandise Finance",
     role: "FINANCE_REVIEWER",
     initials: "DO",
-    color: "#12A26B",
+    color: "#3F7D5B",
     blurb: "Validates financial assumptions and adds concur / concern notes to packets.",
   },
   {
@@ -55,7 +55,7 @@ export const PERSONAS: Persona[] = [
     title: "Director, Commercial Strategy",
     role: "SALES_REVIEWER",
     initials: "HB",
-    color: "#E5793B",
+    color: "#A86B3C",
     blurb: "Validates demand, pricing and channel assumptions on escalated cases.",
   },
   {
@@ -64,7 +64,7 @@ export const PERSONAS: Persona[] = [
     title: "Director, Supply Chain Operations",
     role: "OPERATIONS_REVIEWER",
     initials: "LM",
-    color: "#0E9AA7",
+    color: "#4F6D8A",
     blurb: "Validates capacity, inventory and fulfillment assumptions.",
   },
   {
@@ -73,7 +73,7 @@ export const PERSONAS: Persona[] = [
     title: "AI Governance Administrator",
     role: "ADMIN",
     initials: "JE",
-    color: "#475467",
+    color: "#4A4D52",
     blurb: "Maintains the rule catalog, thresholds and agent registry; verifies the audit chain. Cannot approve decisions.",
   },
 ];

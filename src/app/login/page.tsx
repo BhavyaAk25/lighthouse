@@ -17,7 +17,7 @@ export default async function LoginPage() {
             <div className="beam" />
           </div>
           <LogoMark size={64} light className="relative mb-10 opacity-90" />
-          <h1 className="font-display relative max-w-[520px] text-[56px] leading-[1.02] text-[#F4F1EA]">
+          <h1 className="font-display relative max-w-[520px] text-[46px] leading-[1.02] text-[#F4F1EA]">
             Four agents.
             <br />
             One decision.
@@ -37,7 +37,7 @@ export default async function LoginPage() {
             <Wordmark />
           </div>
           <div className="text-[11.5px] tracking-[0.14em] text-brass-dark uppercase">Sign in</div>
-          <h2 className="font-display mt-2 text-[40px] leading-none text-ink">Who are you today?</h2>
+          <h2 className="font-display mt-2 text-[32px] leading-none text-ink">Who are you today?</h2>
           <PersonaPicker personas={PERSONAS} currentId={current?.id} />
         </div>
       </section>

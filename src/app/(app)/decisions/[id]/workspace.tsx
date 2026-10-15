@@ -249,7 +249,7 @@ export function Workspace(props: Props) {
             <Packet p={packetData} synthesizing={running && !!rec && !synth} />
           ) : (
             <div className="rounded-[12px] border border-dashed border-line px-6 py-12 text-center">
-              <p className="font-display text-[22px] text-ink">Lighthouse’s recommendation will appear here.</p>
+              <p className="font-display text-[19px] text-ink">Lighthouse’s recommendation will appear here.</p>
             </div>
           )}
           {props.timeline}

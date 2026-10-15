@@ -87,7 +87,7 @@ export default async function Home() {
             <Link key={l} href={href}>
               <Card className="p-4 transition hover:border-[#D8D3C7]">
                 <div className="text-[12.5px] text-muted">{l}</div>
-                <div className="font-display tnum mt-1.5 text-[34px] leading-none">{v}</div>
+                <div className="font-display tnum mt-1.5 text-[28px] leading-none">{v}</div>
               </Card>
             </Link>
           ))}

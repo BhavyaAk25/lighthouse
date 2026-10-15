@@ -12,7 +12,7 @@ export function Greeting({ name, line, eyebrow }: { name: string; line: ReactNod
   return (
     <div className="mb-10">
       <div className="text-[11.5px] tracking-[0.14em] text-brass-dark uppercase">{eyebrow}</div>
-      <h1 className="font-display mt-2 text-[44px] leading-[1.02] text-ink">
+      <h1 className="font-display mt-2 text-[36px] leading-[1.02] text-ink">
         {part}, {name.split(" ")[0]}.
       </h1>
       <p className="mt-3 text-[15px] text-muted">{line}</p>

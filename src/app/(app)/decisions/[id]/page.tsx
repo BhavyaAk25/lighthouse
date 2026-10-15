@@ -53,7 +53,7 @@ export default async function DecisionPage({ params }: PageProps<"/decisions/[id
           {c.revision > 1 && <span className="text-[12px] text-muted">Revision {c.revision}</span>}
           <SyntheticNotice />
         </div>
-        <h1 className="font-display mt-3 max-w-4xl text-[36px] leading-[1.08] text-ink">{c.title.replace(/ - /g, " · ")}</h1>
+        <h1 className="font-display mt-3 max-w-4xl text-[28px] leading-[1.08] text-ink">{c.title.replace(/ - /g, " · ")}</h1>
         <p className="mt-3 text-[14px] text-muted">{facts.join("  ·  ")}</p>
         {!focusAgent && c.claim_text && <p className="mt-1.5 text-[14px] text-ink-2">“{c.claim_text}”</p>}
       </div>

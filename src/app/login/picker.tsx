@@ -64,7 +64,7 @@ export function PersonaPicker({ personas, currentId }: { personas: Persona[]; cu
           <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-[2px]" />
           <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[92vw] max-w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-pop">
             <KeyRound className="size-5 text-brass" />
-            <Dialog.Title className="font-display mt-3 text-[26px] leading-none">Administrator PIN</Dialog.Title>
+            <Dialog.Title className="font-display mt-3 text-[22px] leading-none">Administrator PIN</Dialog.Title>
             <Dialog.Description className="mt-2 text-[13px] text-muted">Every attempt is logged.</Dialog.Description>
             <form
               onSubmit={(e) => {

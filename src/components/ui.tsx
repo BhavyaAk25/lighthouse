@@ -86,7 +86,7 @@ export function Stat({ label, value, sub, icon, tone = "neutral", className }: {
         <span className="text-[12.5px] text-muted">{label}</span>
         {icon && tone === "brand" ? <span className="text-faint">{icon}</span> : null}
       </div>
-      <div className="tnum font-display mt-1.5 text-[34px] leading-none text-ink">{value}</div>
+      <div className="tnum font-display mt-1.5 text-[28px] leading-none text-ink">{value}</div>
       {sub && <div className="mt-1 text-[12.5px] text-muted">{sub}</div>}
     </Card>
   );
@@ -171,7 +171,7 @@ export function PageHeader({ title, subtitle, actions, eyebrow }: { title: React
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {eyebrow && <div className="mb-2 text-[11.5px] font-medium tracking-[0.14em] text-brass-dark uppercase">{eyebrow}</div>}
-        <h1 className="font-display text-[38px] leading-[1.05] text-ink">{title}</h1>
+        <h1 className="font-display text-[30px] leading-[1.05] text-ink">{title}</h1>
         {subtitle && <p className="mt-2 max-w-xl text-[14px] text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}

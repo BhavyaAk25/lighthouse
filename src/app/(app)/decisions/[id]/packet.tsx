@@ -55,7 +55,7 @@ export function Packet({ p, synthesizing }: { p: PacketData; synthesizing?: bool
             <LogoMark size={34} />
             <div className="min-w-0">
               <div className="text-[11.5px] tracking-[0.14em] text-brass-dark uppercase">Lighthouse recommends</div>
-              <h2 className="font-display mt-1 text-[28px] leading-tight text-ink">{p.headline}</h2>
+              <h2 className="font-display mt-1 text-[22px] leading-tight text-ink">{p.headline}</h2>
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <RecBadge rec={p.synthesized_recommendation} className="text-[13px]" />
                 <RiskBadge risk={p.risk_level} />

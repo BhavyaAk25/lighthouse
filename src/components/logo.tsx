@@ -20,7 +20,7 @@ export function Wordmark({ className, light = false }: { className?: string; lig
   return (
     <span className={cn("flex items-center gap-2", className)}>
       <LogoMark size={28} light={light} />
-      <span className={cn("font-display text-[21px] leading-none", light ? "text-[#F4F1EA]" : "text-ink")}>Lighthouse</span>
+      <span className={cn("font-display text-[17px] leading-none", light ? "text-[#F4F1EA]" : "text-ink")}>Lighthouse</span>
     </span>
   );
 }

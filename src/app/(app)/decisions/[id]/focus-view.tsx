@@ -75,7 +75,7 @@ export function FocusView({
         {isLegal && claim && (
           <div>
             <div className="mb-2 text-[11.5px] tracking-[0.14em] text-muted uppercase">Customer-facing claim</div>
-            <p className="font-display text-[30px] leading-tight text-ink">“{claim}”</p>
+            <p className="font-display text-[22px] leading-tight text-ink">“{claim}”</p>
           </div>
         )}
         <Card className="p-6">

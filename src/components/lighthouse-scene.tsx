@@ -509,9 +509,6 @@ function soundOff() {
 
 export default function LighthouseScene({ className }: { className?: string }) {
   const host = useRef<HTMLDivElement>(null);
-  const hint = useRef<HTMLDivElement>(null);
-  const toggleRef = useRef<() => void>(() => {});
-  const [on, setOn] = useState(false);
   const [ready, setReady] = useState(false);
   const audioRef = useRef<HarborAudio | null>(null);
   const [muted, setMuted] = useState(soundOff);
@@ -641,11 +638,9 @@ export default function LighthouseScene({ className }: { className?: string }) {
       state.on = !state.on;
       state.target = state.on ? 1 : 0;
       if (state.on) state.ignite = 0;
-      setOn(state.on);
       audio.lamp(state.on);
       setHeard(true);
     };
-    toggleRef.current = toggle;
     const onMove = (e: PointerEvent) => {
       const r = el.getBoundingClientRect();
       pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
@@ -667,7 +662,6 @@ export default function LighthouseScene({ className }: { className?: string }) {
     const clock = new THREE.Clock();
     let t = 0;
     let raf = 0;
-    const proj = new THREE.Vector3();
     const tmp = new THREE.Vector3();
     const frame = () => {
       raf = requestAnimationFrame(frame);
@@ -732,11 +726,6 @@ export default function LighthouseScene({ className }: { className?: string }) {
       camera.position.set(camBase.x + pointer.x * 0.9, camBase.y - pointer.y * 0.35 + Math.sin(t * 0.4) * 0.05, camBase.z);
       camera.lookAt(look);
 
-      // keep the hint next to the lamp
-      if (hint.current) {
-        proj.copy(lampWorld).project(camera);
-        hint.current.style.transform = `translate(${((proj.x + 1) / 2) * el.clientWidth}px, ${((1 - proj.y) / 2) * el.clientHeight}px)`;
-      }
       composer.render();
     };
     frame();
@@ -767,16 +756,6 @@ export default function LighthouseScene({ className }: { className?: string }) {
   return (
     <div className={className} aria-label="Night harbor with a lighthouse. Click the lighthouse to switch its light on or off.">
       <div ref={host} className={`absolute inset-0 transition-opacity duration-[1400ms] ${ready ? "opacity-100" : "opacity-0"}`} />
-      <div ref={hint} className="pointer-events-none absolute top-0 left-0 will-change-transform">
-        <button
-          type="button"
-          onClick={() => toggleRef.current()}
-          className="pointer-events-auto absolute -translate-x-[calc(100%+28px)] -translate-y-1/2 rounded-full border border-[#D9B97A]/40 bg-[#0E2238]/70 px-3 py-1.5 text-[12px] whitespace-nowrap text-[#E8D3A6] backdrop-blur-sm transition hover:border-[#D9B97A]/80 hover:text-[#F4F1EA]"
-        >
-          <span className={`mr-1.5 inline-block size-1.5 rounded-full align-middle ${on ? "bg-[#FFD28A] shadow-[0_0_8px_2px_rgba(255,210,138,0.7)]" : "bg-[#D9B97A]/60"}`} />
-          {on ? "Lights out" : "Light the lighthouse"}
-        </button>
-      </div>
       <button
         type="button"
         onClick={() => {

@@ -1,5 +1,5 @@
 import "server-only";
-import { lanesFrom, rowToOutput, rowToSignoff } from "./caseflow";
+import { laneClock, lanesFrom, rowToOutput, rowToSignoff } from "./caseflow";
 import { db } from "./db";
 import { getThresholds } from "./repo";
 import { laneSummary, type Lane, type Signoff } from "./signoff";
@@ -75,7 +75,7 @@ export async function loadDecisionBundle(id: string) {
   const [packetRow] = await sql`select * from lighthouse_decisions where decision_id = ${id}`;
   const runRows = await sql`select * from agent_runs where decision_id = ${id} and status = 'COMPLETED' order by started_at desc limit 10`;
   const runId = packetRow ? String(packetRow.run_id) : runRows[0] ? String(runRows[0].run_id) : null;
-  const [outs, ev, reviews, audit, cfg, [caseRow]] = await Promise.all([
+  const [outs, ev, reviews, audit, cfg, [caseRow], clock] = await Promise.all([
     runId ? sql`select * from agent_outputs where run_id = ${runId}` : Promise.resolve([]),
     runId ? sql`select * from evidence where run_id = ${runId} order by evidence_id` : Promise.resolve([]),
     sql`select * from reviews where decision_id = ${id} order by created_at`,
@@ -85,6 +85,7 @@ export async function loadDecisionBundle(id: string) {
         order by seq`,
     getThresholds(),
     sql`select revision from decision_cases where decision_id = ${id}`,
+    laneClock(),
   ]);
   const outputs = Object.fromEntries(outs.map((o) => [o.agent_type, rowToOutput(o)])) as Partial<Record<AgentType, AgentOutput>>;
   const evidence: EvidenceItem[] = ev.map((e) => ({
@@ -110,7 +111,7 @@ export async function loadDecisionBundle(id: string) {
     : null;
   const revision = Number(caseRow?.revision ?? 1);
   const signoffs: Signoff[] = reviews.filter((r) => r.department && Number(r.revision) === revision).map(rowToSignoff);
-  const lanes: Lane[] = lanesFrom(packet ? outputs : {}, signoffs, cfg, packet?.analyzed_at ?? null);
+  const lanes: Lane[] = lanesFrom(packet ? outputs : {}, signoffs, cfg, packet?.analyzed_at ?? null, clock);
   return {
     packet,
     lanes,

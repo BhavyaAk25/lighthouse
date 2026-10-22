@@ -44,7 +44,7 @@ export function buildJourney(i: JourneyInput): JourneyStep[] {
     role: "PROPOSER",
     state: draft ? "current" : "done",
     detail: i.status === "REVISION_REQUESTED" ? "Sent back for changes" : draft ? (i.revision > 1 ? `Revision ${i.revision} · not submitted` : "Not submitted yet") : i.revision > 1 ? `Revision ${i.revision}` : "Submitted",
-    at: i.created_at,
+    at: null,
   };
   const analyze: JourneyStep = {
     key: "analyze",

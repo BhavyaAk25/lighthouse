@@ -8,17 +8,32 @@ import { recordDecision, recordSignoff } from "@/app/actions";
 import { AGENT_META, AgentAvatar, LANE_META, laneLabel, REC_META } from "@/components/domain";
 import { Badge, Button, Card } from "@/components/ui";
 import { approvalLock } from "@/lib/governance";
-import { cn, dateLabel } from "@/lib/format";
+import { cn, relTime } from "@/lib/format";
 import type { Persona } from "@/lib/personas";
 import { laneSummary, REC_WORD, type Lane } from "@/lib/signoff";
 import type { AgentType, CaseStatus, Recommendation } from "@/lib/types";
 import type { PacketView } from "@/lib/views";
+import { NextUp, type NextItem } from "@/components/next-up";
 
 const textareaCls =
   "w-full rounded-xl border border-line bg-white px-3 py-2.5 text-[13.5px] outline-none transition placeholder:text-faint focus:border-brand-400 focus:shadow-glow";
 
 /** Executive / admin side panel: the four sign-offs, then the decision. */
-export function DecisionPanel({ persona, decisionId, status, packet, lanes }: { persona: Persona; decisionId: string; status: CaseStatus; packet: PacketView | null; lanes: Lane[] }) {
+export function DecisionPanel({
+  persona,
+  decisionId,
+  status,
+  packet,
+  lanes,
+  next,
+}: {
+  persona: Persona;
+  decisionId: string;
+  status: CaseStatus;
+  packet: PacketView | null;
+  lanes: Lane[];
+  next?: NextItem | null;
+}) {
   if (!packet)
     return (
       <Card className="p-5">
@@ -29,6 +44,7 @@ export function DecisionPanel({ persona, decisionId, status, packet, lanes }: { 
   return (
     <div className="space-y-4">
       {packet.final_decision && <FinalDecision packet={packet} />}
+      {persona.role === "DECISION_OWNER" && (packet.final_decision || status === "REVISION_REQUESTED") && next !== undefined && <NextUp next={next} />}
       <SignoffSummary lanes={lanes} />
       {persona.role === "DECISION_OWNER" && !packet.final_decision && status !== "REVISION_REQUESTED" && <ExecutivePanel decisionId={decisionId} packet={packet} lanes={lanes} />}
       {persona.role === "ADMIN" && (
@@ -106,7 +122,9 @@ function FinalDecision({ packet }: { packet: PacketView }) {
           <div className="text-[15px] font-semibold">
             {d === "APPROVED" ? "Approved" : d === "REJECTED" ? "Rejected" : "Sent back for changes"} by {packet.decided_by}
           </div>
-          <div className="text-[12.5px] text-ink-2">{dateLabel(packet.decided_at, true)}</div>
+          <div className="text-[12.5px] text-ink-2" suppressHydrationWarning>
+            {packet.decided_at ? relTime(packet.decided_at) : ""}
+          </div>
         </div>
         {packet.override_flag && (
           <Badge tone="warn" className="ml-auto">
@@ -208,8 +226,21 @@ export function SignoffPanel({ decisionId, lane }: { decisionId: string; lane: L
       ];
   const asRec: Recommendation = pos === "BLOCK" ? "REJECT" : pos;
   const same = !legal && asRec === ai;
-  const label = legal ? (pos === "BLOCK" ? "Reject" : pos === "PROCEED" ? "Approve" : "Approve with conditions") : same ? "Confirm the agent" : pos === "BLOCK" ? "Block it" : `Sign off as ${REC_WORD[pos]}`;
-  const needNote = legal || !same;
+  const label = legal
+    ? pos === "BLOCK"
+      ? "Reject"
+      : pos === "PROCEED"
+        ? "Approve"
+        : "Approve with conditions"
+    : same
+      ? pos === "BLOCK"
+        ? "Confirm the agent: block it"
+        : "Confirm the agent"
+      : pos === "BLOCK"
+        ? "Block it"
+        : `Sign off as ${REC_WORD[pos]}`;
+  // a block always needs a reason, even when it agrees with the agent
+  const needNote = legal || !same || pos === "BLOCK";
   return (
     <Card className="border-[#E9DCC0] p-5">
       <h3 className="text-[15px] font-semibold">Your sign-off</h3>
@@ -244,9 +275,15 @@ export function SignoffPanel({ decisionId, lane }: { decisionId: string; lane: L
         onChange={(e) => setNote(e.target.value)}
         rows={3}
         className={cn(textareaCls, "mt-3")}
-        placeholder={needNote ? (legal ? "Legal note" : "Why you are changing the agent’s answer") : "Note (optional)"}
+        placeholder={needNote ? (legal ? "Legal note" : pos === "BLOCK" ? "Why it can’t go ahead (the executive sees this)" : "Why you are changing the agent’s answer") : "Note (optional)"}
       />
-      {needNote && !legal && <p className="mt-1.5 text-[11.5px] text-muted">Changing the AI’s answer needs a reason (20+ characters). It lowers Lighthouse’s confidence and goes on the record.</p>}
+      {needNote && !legal && (
+        <p className="mt-1.5 text-[11.5px] text-muted">
+          {pos === "BLOCK" && same
+            ? "Blocking needs a reason (20+ characters). The executive can overrule it, but only with a reason of their own."
+            : "Changing the AI’s answer needs a reason (20+ characters). It lowers Lighthouse’s confidence and goes on the record."}
+        </p>
+      )}
       <Button
         className="mt-3 w-full"
         variant={pos === "BLOCK" ? "secondary" : "primary"}

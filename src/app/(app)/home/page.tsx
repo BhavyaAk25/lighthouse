@@ -1,11 +1,14 @@
-import { ArrowRight, Check, Hourglass, Plus } from "lucide-react";
+import { ArrowRight, Check, Hourglass, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { LaneDots, RecBadge } from "@/components/domain";
 import { Card, LinkButton } from "@/components/ui";
 import type { AgentType } from "@/lib/types";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { cn, money } from "@/lib/format";
+import { cn, money, relTime } from "@/lib/format";
+import { activitySince } from "@/lib/activity";
+import { MarkSeen } from "@/components/mark-seen";
+import { REC_WORD } from "@/lib/signoff";
 import { DEPT_OF, ROLE_LABEL } from "@/lib/personas";
 import { DEPT_NAME } from "@/lib/signoff";
 import type { Recommendation } from "@/lib/types";
@@ -44,7 +47,8 @@ function YourPart({ steps }: { steps: { label: string; you: boolean }[] }) {
   );
 }
 
-function NowRow({ w }: { w: WorkItem }) {
+function NowRow({ w, preview }: { w: WorkItem; preview?: boolean }) {
+  const changed = preview && w.c.ai_rec && w.c.rec && w.c.ai_rec !== w.c.rec;
   return (
     <Link href={`/decisions/${w.c.decision_id}#act`} className="group flex flex-col gap-3 px-5 py-4 hover:bg-canvas/70 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1">
@@ -55,6 +59,17 @@ function NowRow({ w }: { w: WorkItem }) {
         </div>
         <div className="mt-1 text-[15px] text-ink">{w.c.title}</div>
         <div className="mt-1 text-[13px] text-muted">{w.why}</div>
+        {preview && w.c.lanes.some((l) => l.state !== "NOT_STARTED") && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted">
+            <LaneDots lanes={w.c.lanes.map((l) => ({ dept: l.dept, state: l.state, lead: l.lead.name }))} className="-ml-1.5" />
+            {w.c.confidence !== null && <span className="tnum">Confidence {Math.round(w.c.confidence * 100)}%</span>}
+            {changed && (
+              <span className="text-brass-dark">
+                AI alone said {REC_WORD[w.c.ai_rec!]}; sign-offs made it {REC_WORD[w.c.rec!]}
+              </span>
+            )}
+          </div>
+        )}
       </div>
       <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-[8px] bg-brand-600 px-3 py-2 text-[13px] text-[#F4F1EA] transition group-hover:bg-brand-700 sm:self-center">
         {w.action} <ArrowRight className="size-3.5" />
@@ -133,7 +148,8 @@ export default async function Home() {
     );
   }
 
-  const work = workFor(persona, await loadPipeline());
+  const [pipeline, activity] = await Promise.all([loadPipeline(), activitySince(persona)]);
+  const work = workFor(persona, pipeline);
   const dept = DEPT_OF[persona.role];
   const exec = persona.role === "DECISION_OWNER";
   const n = work.now.length;
@@ -158,11 +174,29 @@ export default async function Home() {
         </LinkButton>
       </div>
 
+      <MarkSeen personaId={persona.id} seq={activity.head} />
+      {activity.items.length > 0 && (
+        <section className="mb-10">
+          <div className="mb-3 flex items-center gap-2 text-[11.5px] tracking-[0.14em] text-muted uppercase">
+            <Sparkles className="size-3.5 text-brass" /> Since you last looked
+          </div>
+          <div className="card divide-y divide-line-2 overflow-hidden">
+            {activity.items.map((a) => (
+              <Link key={a.seq} href={`/decisions/${a.decision_id}`} className="flex items-center gap-3 px-5 py-2.5 text-[13.5px] hover:bg-canvas/70">
+                <span className="size-1.5 shrink-0 rounded-full bg-brass" />
+                <span className="min-w-0 flex-1 truncate text-ink-2">{a.text}</span>
+                <span className="shrink-0 text-[12px] text-faint">{relTime(a.ts)}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       <YourPart steps={myProcess(persona.role)} />
 
       <Section title="Needs you now" count={n} empty="You’re clear. New work will appear here.">
         {work.now.map((w) => (
-          <NowRow key={w.c.decision_id} w={w} />
+          <NowRow key={w.c.decision_id} w={w} preview={exec} />
         ))}
       </Section>
 

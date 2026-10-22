@@ -27,6 +27,9 @@ export async function resetDemoState(p: { name: string; role: string }) {
         where decision_id = any(${curated})`,
     sql`update decision_cases set facts = compute_case_facts(decision_id) where decision_id = any(${curated})`,
   ]);
+  // the demo clock: sign-off deadlines stop 12 hours after a reset (see laneClock)
+  await sql`insert into config (key, value, description, updated_by) values ('demo_reset_at', ${JSON.stringify({ at: new Date().toISOString() })}::jsonb, 'Last demo reset', ${p.name})
+            on conflict (key) do update set value = excluded.value, updated_by = excluded.updated_by, updated_at = now()`;
   // logged first, so each case's trail after the reset reads as a clean story
   await appendAudit(p.name, p.role, "DEMO_CASES_RESET", null, { cases: curated, live_case: "D-2026-001" });
   const { executeRun } = await import("@/lib/runs");

@@ -1,5 +1,5 @@
 import { Bot, Check, Minus, ShieldCheck, X } from "lucide-react";
-import { cn, dateLabel } from "@/lib/format";
+import { cn, relTime } from "@/lib/format";
 import type { JourneyStep } from "@/lib/journey";
 import { PERSONAS, type Persona } from "@/lib/personas";
 import type { Lane } from "@/lib/signoff";
@@ -135,7 +135,7 @@ export function JourneyBar({ steps, viewer, className, task }: { steps: JourneyS
                 </div>
                 <div className={cn("mt-1 text-[12px]", s.state === "blocked" ? "text-bad" : s.state === "current" ? "text-brass-dark" : "text-muted")}>{s.detail}</div>
                 {s.lanes && s.lanes.some((l) => l.state !== "NOT_STARTED") && <Lanes lanes={s.lanes} viewer={viewer} />}
-                {s.at && <div className="text-[11px] text-faint">{dateLabel(s.at, true)}</div>}
+                {s.at && <div className="text-[11px] text-faint">{relTime(s.at)}</div>}
               </div>
             </li>
           );

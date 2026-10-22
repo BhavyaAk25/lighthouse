@@ -87,7 +87,7 @@ export default async function Overview() {
           </div>
         </Card>
         <Card>
-          <CardHeader title="Lighthouse recommendations" subtitle="Across all recommendation packets" />
+          <CardHeader title="Lighthouse recommendations" subtitle="Across all recommendations" />
           <div className="px-5 pb-5">
             <RecDonut data={mix.map((m) => ({ rec: String(m.rec), n: Number(m.n) }))} />
           </div>

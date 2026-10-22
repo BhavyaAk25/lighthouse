@@ -1,16 +1,15 @@
 "use client";
 
-import * as Switch from "@radix-ui/react-switch";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { ChevronsUpDown, FlaskConical, Gauge, History, Inbox, LayoutDashboard, Layers, LogOut, Menu, ShieldCheck, SlidersHorizontal, Workflow, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
-import { logout, setDemoSafe } from "@/app/actions";
+import { logout } from "@/app/actions";
 import { cn } from "@/lib/format";
 import { ROLE_LABEL, type Persona } from "@/lib/personas";
 import { Wordmark } from "./logo";
+import { PersonaSwitcher } from "./switcher";
 
 type NavItem = { href: string; label: string; icon: typeof Inbox; badge?: boolean; match?: string[] };
 const HOME: NavItem = { href: "/home", label: "My desk", icon: Inbox, badge: true };
@@ -117,57 +116,35 @@ function PersonaCard({ persona }: { persona: Persona }) {
   );
 }
 
-export function Topbar({ demoSafe, pilotClock, onMenu, canToggle }: { demoSafe: boolean; pilotClock: string; onMenu: () => void; canToggle: boolean }) {
-  const [pending, start] = useTransition();
-  const [on, setOn] = useState(demoSafe);
+export function Topbar({ persona, demoSafe, pilotClock, onMenu }: { persona: Persona; demoSafe: boolean; pilotClock: string; onMenu: () => void }) {
   return (
-    <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-line bg-canvas/85 px-4 backdrop-blur-md sm:px-8">
+    <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-canvas/85 px-4 backdrop-blur-md sm:px-8">
       <button className="rounded-lg p-1.5 text-muted hover:bg-line-2 lg:hidden" onClick={onMenu} aria-label="Open menu">
         <Menu className="size-5" />
       </button>
       <div className="flex-1" />
       <Tooltip.Provider delayDuration={150}>
-        <span className="hidden text-[12px] text-faint sm:inline">Pilot clock · {pilotClock}</span>
-        {!canToggle ? (
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <span className="flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-[12px] text-ink-2">
-                <span className={cn("size-1.5 rounded-full", on ? "bg-brass" : "bg-ok animate-pulse-soft")} />
-                {on ? "Replay" : "Live AI"}
-              </span>
-            </Tooltip.Trigger>
-            <Tooltip.Content sideOffset={6} className="z-50 max-w-[260px] rounded-lg bg-ink px-3 py-2 text-[12px] text-white shadow-pop">
-              {on ? "Agents replay saved AI answers (set by the administrator)." : "Agents call free AI models live, with the rules engine as a fallback."}
-            </Tooltip.Content>
-          </Tooltip.Root>
-        ) : (
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
-            <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line bg-white py-1 pr-1 pl-3 text-[12px] text-ink-2">
-              <span className={cn("size-1.5 rounded-full", on ? "bg-brass" : "bg-ok animate-pulse-soft")} />
-              {on ? "Replay" : "Live AI"}
-              <Switch.Root
-                checked={on}
-                disabled={pending}
-                onCheckedChange={(v) => {
-                  setOn(v);
-                  start(async () => {
-                    await setDemoSafe(v);
-                    toast.success(v ? "Demo-safe mode on: agent runs replay saved AI answers." : "Live AI on: agents call Gemini / Groq.");
-                  });
-                }}
-                className="relative h-5 w-9 rounded-full bg-line transition-colors data-[state=checked]:bg-brass"
-              >
-                <Switch.Thumb className="block size-4 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[18px]" />
-              </Switch.Root>
-            </label>
+            <span className="hidden cursor-default text-[12px] text-faint sm:inline">Pilot data as of {pilotClock}</span>
           </Tooltip.Trigger>
           <Tooltip.Content sideOffset={6} className="z-50 max-w-[280px] rounded-lg bg-ink px-3 py-2 text-[12px] text-white shadow-pop">
-            Live AI calls Gemini (free tier) with automatic Groq fallback. Demo-safe replays the last saved AI answers, so the demo never depends on Wi-Fi.
+            The pilot’s sales, inventory and DC data run up to this date. Actions you take (runs, sign-offs, decisions) are stamped with the real time.
           </Tooltip.Content>
         </Tooltip.Root>
-        )}
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>
+            <span className="flex cursor-default items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-[12px] text-ink-2">
+              <span className={cn("size-1.5 rounded-full", demoSafe ? "bg-brass" : "bg-ok animate-pulse-soft")} />
+              {demoSafe ? "Replay" : "Live AI"}
+            </span>
+          </Tooltip.Trigger>
+          <Tooltip.Content sideOffset={6} className="z-50 max-w-[260px] rounded-lg bg-ink px-3 py-2 text-[12px] text-white shadow-pop">
+            {demoSafe ? "Agents replay saved AI answers. Change it under your name, top right." : "Agents call free AI models live, with the rules engine as a fallback. Change it under your name, top right."}
+          </Tooltip.Content>
+        </Tooltip.Root>
       </Tooltip.Provider>
+      <PersonaSwitcher persona={persona} demoSafe={demoSafe} />
     </header>
   );
 }
@@ -178,7 +155,7 @@ export function AppFrame({ persona, queueCount, demoSafe, pilotClock, children }
     <div className="min-h-screen">
       <Sidebar persona={persona} queueCount={queueCount} open={open} onClose={() => setOpen(false)} />
       <div className="lg:pl-[232px]">
-        <Topbar demoSafe={demoSafe} pilotClock={pilotClock} onMenu={() => setOpen(true)} canToggle={persona.role === "ADMIN"} />
+        <Topbar persona={persona} demoSafe={demoSafe} pilotClock={pilotClock} onMenu={() => setOpen(true)} />
         <main className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-8 lg:py-12">{children}</main>
       </div>
     </div>

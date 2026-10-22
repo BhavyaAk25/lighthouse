@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { reviseCase } from "@/app/actions";
 import { Button, buttonClass } from "@/components/ui";
-import { cn, dateLabel } from "@/lib/format";
+import { cn, relTime } from "@/lib/format";
 import type { Persona } from "@/lib/personas";
 import type { Lane } from "@/lib/signoff";
 import type { AgentOutput, AgentType, CaseStatus, EvidenceItem } from "@/lib/types";
@@ -18,6 +18,7 @@ import { AgentCard } from "./agent-card";
 import { DecisionPanel } from "./decision-panel";
 import { EvidenceDrawer } from "./evidence-drawer";
 import { Packet, type PacketData } from "./packet";
+import type { NextItem } from "@/components/next-up";
 import { useRun } from "./use-run";
 
 interface Props {
@@ -33,6 +34,7 @@ interface Props {
   runs: RunView[];
   proposer: string;
   autoSubmit: boolean;
+  next?: NextItem | null;
   caseParams: { discount_pct: number; duration_weeks: number; claim_text: string; vendor_funding_pct: number; promo_type: string };
   timeline: React.ReactNode;
 }
@@ -111,15 +113,18 @@ export function Workspace(props: Props) {
   const canSubmit = draft && (exec || isProposer);
   const hasRun = (Object.keys(props.outputs).length === 4 && !draft) || Object.keys(run.outputs).length > 0;
   const fallbackNotes = Object.values(run.notes).filter((n) => n?.startsWith("AI unavailable"));
+  const router = useRouter();
+  // a lead who proposed the case stays on the full analysis after submitting (their own lane is one click away)
+  const submit = () => run.start(undefined, isProposer && !exec ? () => router.replace(`/decisions/${decisionId}?view=full`, { scroll: false }) : undefined);
 
   // a brand-new case opens straight into its first run
   const auto = useRef(false);
   useEffect(() => {
     if (props.autoSubmit && canSubmit && !auto.current) {
       auto.current = true;
-      void run.start();
+      void submit();
     }
-  }, [props.autoSubmit, canSubmit, run]);
+  }, [props.autoSubmit, canSubmit, submit]);
 
   return (
     <>
@@ -141,13 +146,13 @@ export function Workspace(props: Props) {
                       : `Not submitted yet · waiting on ${props.proposer}`
                     : "Not analyzed yet"}
             </div>
-            <div className="truncate text-[12px] text-muted">
+            <div className="truncate text-[12px] text-muted" suppressHydrationWarning>
               {running
                 ? demoSafe
                   ? "Replaying saved AI answers"
                   : "Gathering evidence, then reasoning"
                 : hasRun && props.runs[0]
-                  ? `${dateLabel(props.runs[0].started_at, true)} · ${props.runs[0].provider_summary ?? ""}${props.runs[0].duration_ms ? ` · ${(props.runs[0].duration_ms / 1000).toFixed(1)}s` : ""}`
+                  ? `${relTime(props.runs[0].started_at)} · ${(props.runs[0].provider_summary ?? "").replace("replay", "replayed AI answers").replace("rules-engine", "rules engine")}${props.runs[0].duration_ms ? ` · ${(props.runs[0].duration_ms / 1000).toFixed(1)}s` : ""}`
                   : "Submitting runs Sales, Finance, Operations and Legal in parallel. Each lead only signs off where their agent raises a concern."}
             </div>
           </div>
@@ -158,14 +163,14 @@ export function Workspace(props: Props) {
               <History className="size-3.5" /> {props.runs.length} runs
             </span>
           )}
-          {(exec || isProposer) && !final && <ReviseDialog decisionId={decisionId} params={props.caseParams} onRevised={() => void run.start()} />}
+          {(exec || isProposer) && !final && <ReviseDialog decisionId={decisionId} params={props.caseParams} onRevised={() => void submit()} />}
           {hasRun && (
             <Link href={`/packet/${decisionId}`} className={buttonClass("secondary", "md")} target="_blank">
-              <FileDown className="size-4" /> Export packet
+              <FileDown className="size-4" /> Export report
             </Link>
           )}
           {canSubmit && (
-            <Button onClick={() => run.start()} disabled={running} size="md">
+            <Button onClick={() => submit()} disabled={running} size="md">
               {running ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
               {running ? "Running" : "Submit for review"}
             </Button>
@@ -213,7 +218,7 @@ export function Workspace(props: Props) {
           {props.timeline}
         </div>
         <div id={hasRun ? "act" : undefined} className="scroll-mt-24 space-y-4">
-          <DecisionPanel persona={persona} decisionId={decisionId} status={status} packet={running || !hasRun ? null : props.packet} lanes={props.lanes} />
+          <DecisionPanel persona={persona} decisionId={decisionId} status={status} packet={running || !hasRun ? null : props.packet} lanes={props.lanes} next={props.next} />
         </div>
       </div>
 

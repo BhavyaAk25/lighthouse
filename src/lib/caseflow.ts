@@ -55,9 +55,20 @@ export const toLaneOutput = (o: Pick<AgentOutput, "recommendation" | "confidence
   reason: o.dissent_reason ?? o.rationale,
 });
 
-export function lanesFrom(outputs: Partial<Record<AgentType, AgentOutput>>, signoffs: Signoff[], cfg: Thresholds, analyzedAt: string | null): Lane[] {
+export function lanesFrom(outputs: Partial<Record<AgentType, AgentOutput>>, signoffs: Signoff[], cfg: Thresholds, analyzedAt: string | null, now?: number): Lane[] {
   const outs = Object.fromEntries(Object.entries(outputs).map(([k, o]) => [k, toLaneOutput(o!)])) as Partial<Record<AgentType, LaneOutput>>;
-  return computeLanes(outs, signoffs, cfg, analyzedAt);
+  return computeLanes(outs, signoffs, cfg, analyzedAt, now);
+}
+
+/**
+ * The time sign-off deadlines are measured against. Real time, except that after a demo reset
+ * the clock stops 12 hours later, so resetting the demo a few days early cannot make every lane overdue.
+ */
+export async function laneClock(): Promise<number> {
+  const [row] = await db()`select value from config where key = 'demo_reset_at'`;
+  const reset = row ? Date.parse(String((row.value as { at?: string }).at ?? "")) : NaN;
+  const now = Date.now();
+  return Number.isFinite(reset) ? Math.min(now, reset + 12 * 3_600_000) : now;
 }
 
 /**
@@ -66,10 +77,11 @@ export function lanesFrom(outputs: Partial<Record<AgentType, AgentOutput>>, sign
  */
 export async function refreshCase(decisionId: string): Promise<{ lanes: Lane[]; status: string } | null> {
   const sql = db();
-  const [[c], [pk], cfg] = await Promise.all([
+  const [[c], [pk], cfg, clock] = await Promise.all([
     sql`select decision_id, status, revision from decision_cases where decision_id = ${decisionId}`,
     sql`select run_id, financial_impact, analyzed_at, created_at, final_decision from lighthouse_decisions where decision_id = ${decisionId}`,
     getThresholds(),
+    laneClock(),
   ]);
   if (!c || !pk) return null;
   const [outRows, soRows] = await Promise.all([
@@ -79,7 +91,7 @@ export async function refreshCase(decisionId: string): Promise<{ lanes: Lane[]; 
   const outputs = Object.fromEntries(outRows.map((o) => [o.agent_type, rowToOutput(o)])) as Partial<Record<AgentType, AgentOutput>>;
   if (AGENTS.some((a) => !outputs[a])) return null;
   const signoffs = soRows.map(rowToSignoff);
-  const lanes = lanesFrom(outputs, signoffs, cfg, iso(pk.analyzed_at ?? pk.created_at));
+  const lanes = lanesFrom(outputs, signoffs, cfg, iso(pk.analyzed_at ?? pk.created_at), clock);
   const rec = reconcileSigned(null, AGENTS.map((a) => outputs[a]!), lanes, cfg, Number(pk.financial_impact ?? 0));
   const final = ["APPROVED", "REJECTED", "REVISION_REQUESTED"].includes(String(c.status));
   const status = final ? String(c.status) : laneSummary(lanes).ready ? "READY_FOR_DECISION" : "IN_REVIEW";

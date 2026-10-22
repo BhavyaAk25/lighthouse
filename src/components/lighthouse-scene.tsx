@@ -511,6 +511,7 @@ export default function LighthouseScene({ className }: { className?: string }) {
   const host = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const audioRef = useRef<HarborAudio | null>(null);
+  const toggleRef = useRef<() => void>(() => {});
   const [muted, setMuted] = useState(soundOff);
   const [heard, setHeard] = useState(false);
 
@@ -641,6 +642,7 @@ export default function LighthouseScene({ className }: { className?: string }) {
       audio.lamp(state.on);
       setHeard(true);
     };
+    toggleRef.current = toggle;
     const onMove = (e: PointerEvent) => {
       const r = el.getBoundingClientRect();
       pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
@@ -755,7 +757,19 @@ export default function LighthouseScene({ className }: { className?: string }) {
 
   return (
     <div className={className} aria-label="Night harbor with a lighthouse. Click the lighthouse to switch its light on or off.">
-      <div ref={host} className={`absolute inset-0 transition-opacity duration-[1400ms] ${ready ? "opacity-100" : "opacity-0"}`} />
+      <div
+        ref={host}
+        tabIndex={0}
+        role="button"
+        aria-label="Lighthouse. Press Enter to switch its light on or off."
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleRef.current();
+          }
+        }}
+        className={`absolute inset-0 outline-none focus-visible:ring-2 focus-visible:ring-[#D9B97A]/60 transition-opacity duration-[1400ms] ${ready ? "opacity-100" : "opacity-0"}`}
+      />
       <button
         type="button"
         onClick={() => {

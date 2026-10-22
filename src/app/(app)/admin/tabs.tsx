@@ -17,7 +17,7 @@ type Registry = Record<string, { name: string; version: string; prompt_version: 
 const TH_META: { k: keyof Thresholds; label: string; unit: string; help: string }[] = [
   { k: "signoff_confidence", label: "Sign-off confidence floor", unit: "share", help: "An agent below this confidence needs its department lead to sign off" },
   { k: "signoff_sla_hours", label: "Sign-off deadline", unit: "hours", help: "After this, a missing Sales/Finance/Ops sign-off escalates to the executive (never Legal)" },
-  { k: "financial_impact_threshold", label: "Financial impact threshold", unit: "$", help: "Above this, the packet flags mandatory owner approval" },
+  { k: "financial_impact_threshold", label: "Financial impact threshold", unit: "$", help: "Above this, the report flags mandatory owner approval" },
   { k: "finance_reject_net", label: "Finance rejection line", unit: "$", help: "Net benefit below this (or -2% of baseline) → REJECT" },
   { k: "min_uplift_pct", label: "Minimum unit uplift", unit: "%", help: "Below this the Sales agent recommends HOLD" },
   { k: "strong_uplift_pct", label: "Strong unit uplift", unit: "%", help: "At or above this the Sales agent can PROCEED" },

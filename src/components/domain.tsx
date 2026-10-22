@@ -28,10 +28,18 @@ export const REC_META: Record<Recommendation, { label: string; tone: "ok" | "inf
   REVIEW_REQUIRED: { label: "Review required", tone: "violet", short: "Review" },
 };
 
+const REC_TIP: Record<Recommendation, string> = {
+  PROCEED: "Go ahead as proposed.",
+  PROCEED_WITH_CONDITIONS: "Go ahead, as long as the listed conditions are met.",
+  HOLD: "Don't launch yet: something has to change first.",
+  REJECT: "Don't launch.",
+  REVIEW_REQUIRED: "A person has to check this before anyone can decide.",
+};
+
 export function RecBadge({ rec, short, className }: { rec: Recommendation; short?: boolean; className?: string }) {
   const m = REC_META[rec];
   return (
-    <Badge tone={m.tone} dot className={className}>
+    <Badge tone={m.tone} dot className={className} title={REC_TIP[rec]}>
       {short ? m.short : m.label}
     </Badge>
   );

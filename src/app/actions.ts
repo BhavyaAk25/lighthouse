@@ -12,7 +12,7 @@ import { PROMO_LABEL } from "@/lib/engine/common";
 import { refreshCase } from "@/lib/caseflow";
 import { decisionCheck } from "@/lib/governance";
 import { DEPT_OF, personaById, ROLE_LABEL } from "@/lib/personas";
-import { isProhibited, laneSummary } from "@/lib/signoff";
+import { DEPT_NAME, isProhibited, laneSummary } from "@/lib/signoff";
 import { computeFacts, getCase, getPilotClock } from "@/lib/repo";
 import { DEFAULT_THRESHOLDS, type Thresholds } from "@/lib/types";
 
@@ -39,7 +39,7 @@ export async function logout() {
 }
 
 export async function setDemoSafe(on: boolean) {
-  const p = await requireRole("ADMIN");
+  const p = await requireSession(); // presenter control, available to whoever is presenting
   (await cookies()).set(DEMO_SAFE_COOKIE, on ? "1" : "0", { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 30 });
   await appendAudit(p.name, p.role, on ? "DEMO_SAFE_ENABLED" : "DEMO_SAFE_DISABLED", null, {});
   revalidatePath("/", "layout");
@@ -201,7 +201,7 @@ export async function recordDecision(decisionId: string, decision: "APPROVED" | 
   revalidatePath("/home");
   return {
     ok: true,
-    message: overruled.length ? `Recorded. You overruled ${overruled.map((d) => d.toLowerCase()).join(", ")}; your reason is on file.` : override ? "Override recorded with your reason." : "Decision recorded and sealed.",
+    message: overruled.length ? `Recorded. You overruled ${overruled.map((d) => DEPT_NAME[d]).join(", ")}; your reason is on file.` : override ? "Override recorded with your reason." : "Decision recorded and sealed.",
   };
 }
 
@@ -248,7 +248,7 @@ export async function verifyAuditChain() {
 
 /** Reset the curated demo cases to the class-demo starting state (see lib/demo.ts). */
 export async function resetDemoCases(): Promise<ActionResult> {
-  const p = await requireRole("ADMIN", "DECISION_OWNER");
+  const p = await requireSession(); // presenter control; the reset itself is written to the audit log
   const { resetDemoState } = await import("@/lib/demo");
   const r = await resetDemoState(p);
   revalidatePath("/", "layout");

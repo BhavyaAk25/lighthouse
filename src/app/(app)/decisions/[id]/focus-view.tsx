@@ -11,6 +11,7 @@ import { REC_WORD, type Lane } from "@/lib/signoff";
 import type { AgentOutput, AgentType, CaseStatus, EvidenceItem } from "@/lib/types";
 import { modelLabel } from "./agent-card";
 import { SignoffPanel, SignoffSummary } from "./decision-panel";
+import { NextUp, type NextItem } from "@/components/next-up";
 import { useRun } from "./use-run";
 
 const METRIC_LABEL: Record<string, string> = {
@@ -55,6 +56,7 @@ export function FocusView({
   claim,
   decidedBy,
   final,
+  next,
 }: {
   persona: Persona;
   agent: AgentType;
@@ -67,6 +69,7 @@ export function FocusView({
   claim: string;
   decidedBy: string | null;
   final: string | null;
+  next: NextItem | null;
 }) {
   const run = useRun(decisionId);
   const [stepIn, setStepIn] = useState(false);
@@ -250,6 +253,7 @@ export function FocusView({
             )}
           </div>
         ) : null}
+        {!run.running && !(lane.state === "PENDING" || lane.state === "OVERDUE" || stepIn) && <NextUp next={next} />}
         <SignoffSummary lanes={lanes} you={agent} />
       </div>
     </div>

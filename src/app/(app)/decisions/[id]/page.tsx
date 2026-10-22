@@ -25,7 +25,8 @@ export async function generateMetadata({ params }: PageProps<"/decisions/[id]">)
 
 export default async function DecisionPage({ params, searchParams }: PageProps<"/decisions/[id]">) {
   const { id } = await params;
-  const autoSubmit = (await searchParams).submit === "1";
+  const sp = await searchParams;
+  const autoSubmit = sp.submit === "1";
   const persona = await requireSession();
   const c = await getCase(id);
   if (!c) notFound();
@@ -37,7 +38,10 @@ export default async function DecisionPage({ params, searchParams }: PageProps<"
   const dept = DEPT_OF[persona.role];
   const draft = c.status === "DRAFT" || c.status === "REVISION_REQUESTED";
   // leads see their own lane; the proposer (or executive) sees the full workspace while the case is a draft
-  const focusAgent = dept && !(draft && c.created_by === persona.name) ? dept : null;
+  const isProposer = c.created_by === persona.name;
+  // the proposer can also follow the whole analysis of their own case (and lands there right after submitting)
+  const fullView = isProposer && !draft && (sp.view === "full" || (sp.submit === "1" && sp.view !== "lane"));
+  const focusAgent = dept && !(draft && isProposer) && !fullView ? dept : null;
   const facts = [
     cat?.name,
     `${PROMO_LABEL[c.promo_type]}${c.discount_pct ? ` ${c.discount_pct}%` : ""}`,
@@ -56,7 +60,10 @@ export default async function DecisionPage({ params, searchParams }: PageProps<"
     lanes: bundle.lanes,
     final: bundle.packet?.final_decision ? { decision: bundle.packet.final_decision, by: bundle.packet.decided_by, at: bundle.packet.decided_at } : null,
   });
-  const myTask = persona.role === "ADMIN" ? null : (workFor(persona, await loadPipeline()).now.find((w) => w.c.decision_id === id)?.action ?? null);
+  const myWork = persona.role === "ADMIN" ? null : workFor(persona, await loadPipeline());
+  const myTask = myWork?.now.find((w) => w.c.decision_id === id)?.action ?? null;
+  const nextWork = myWork?.now.find((w) => w.c.decision_id !== id);
+  const next = nextWork ? { id: nextWork.c.decision_id, title: nextWork.c.title, action: nextWork.action } : null;
   const back = persona.role === "ADMIN" ? { href: "/decisions", label: "Decisions" } : { href: "/home", label: "My desk" };
 
   return (
@@ -77,6 +84,16 @@ export default async function DecisionPage({ params, searchParams }: PageProps<"
         <p className="mt-1.5 text-[12.5px] text-faint">Proposed by {c.created_by === persona.name ? "you" : c.created_by}</p>
       </div>
       <JourneyBar steps={steps} viewer={persona} task={myTask} className="no-print mb-8" />
+      {dept && isProposer && !draft && (
+        <div className="no-print mb-6 inline-flex rounded-full border border-line bg-white p-1 text-[13px]">
+          <Link href={`/decisions/${id}?view=lane`} className={`rounded-full px-3.5 py-1.5 ${!fullView ? "bg-brand-600 text-[#F4F1EA]" : "text-muted hover:text-ink"}`}>
+            My {dept === "OPERATIONS" ? "Operations" : dept[0] + dept.slice(1).toLowerCase()} sign-off
+          </Link>
+          <Link href={`/decisions/${id}?view=full`} className={`rounded-full px-3.5 py-1.5 ${fullView ? "bg-brand-600 text-[#F4F1EA]" : "text-muted hover:text-ink"}`}>
+            Full analysis (my proposal)
+          </Link>
+        </div>
+      )}
       {focusAgent ? (
         <FocusView
           persona={persona}
@@ -90,6 +107,7 @@ export default async function DecisionPage({ params, searchParams }: PageProps<"
           claim={c.claim_text}
           decidedBy={bundle.packet?.decided_by ?? null}
           final={bundle.packet?.final_decision ?? null}
+          next={next}
         />
       ) : (
         <Workspace
@@ -104,6 +122,7 @@ export default async function DecisionPage({ params, searchParams }: PageProps<"
           lanes={bundle.lanes}
           runs={bundle.runs}
           proposer={c.created_by}
+          next={persona.role === "ADMIN" ? undefined : next}
           autoSubmit={autoSubmit}
           caseParams={{ discount_pct: c.discount_pct, duration_weeks: c.duration_weeks, claim_text: c.claim_text, vendor_funding_pct: c.vendor_funding_pct, promo_type: c.promo_type }}
           timeline={<Timeline entries={bundle.audit} />}

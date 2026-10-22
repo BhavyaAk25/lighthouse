@@ -193,11 +193,11 @@
     <div class="eyebrow">4 · Getting ready</div>
     <h2>Before class (10 minutes)</h2>
     <ul class="check">
-      <li>Open the live app. Sign in as <b>Jordan Ellis</b> (PIN 4210).</li>
-      <li><i>Rules &amp; agents → Demo controls → Reset demo cases</i>. Do this <b>on demo day</b>: sign-off deadlines run on real time, so a reset done days earlier makes every lane overdue.</li>
+      <li>Open the live app and sign in as anyone. Click your name (top right): this menu switches person in one click and stays on the same page.</li>
+      <li>In that menu, under <i>Presenter</i>, click <b>Reset demo cases</b>. Any time before class is fine: the demo clock stops 12 hours after a reset, so deadlines never all go overdue.</li>
       <li><i>Rules &amp; agents → Agents &amp; AI → Test providers</i>. Both Gemini and Groq should show OK.</li>
-      <li>Set the top-right switch: <b>Live AI</b> if the network is good, <b>Replay</b> if it isn’t (saved AI answers, identical results). The setting applies to everyone in that browser.</li>
-      <li>Tip: give each teammate one persona, so the hand-offs feel like real people. Switching person is one click (<i>Switch</i>, bottom left).</li>
+      <li>In the same menu, choose <b>Live AI</b> if the network is good, or <b>Replay</b> if it isn’t (saved AI answers, instant, identical results). The setting applies to everyone in that browser.</li>
+      <li>Tip: give each teammate one persona and pass the laptop, or switch from the name menu. After every sign-off or decision a <i>Next for you</i> card points to the next case, and each desk opens with <i>Since you last looked</i>, so the audience sees every hand-off.</li>
     </ul>
     <figure><img class="shot" src="img/login.jpg" /><figcaption>Sign-in groups people by what they do: the executive, the four department leads, and the administrator.</figcaption></figure>
   </section>
@@ -322,7 +322,7 @@
       <tr><td>Gemini (free)</td><td>The newest Gemini Flash model the key can use</td><td>First choice on the deployed site</td></tr>
       <tr><td>Groq (free)</td><td>gpt-oss-120b → Qwen → gpt-oss-20b</td><td>Automatically if Gemini errors or times out (15s). A failed provider is skipped for 10 minutes.</td></tr>
       <tr><td>Rules engine</td><td>Deterministic version of each agent</td><td>If no AI answers; cards are labelled “Rules engine”</td></tr>
-      <tr><td>Replay</td><td>The saved AI answers for each demo case</td><td>Admin switch (top right) when the network is unreliable</td></tr>
+      <tr><td>Replay</td><td>The saved AI answers for each demo case</td><td>Name menu (top right) → Presenter, when the network is unreliable</td></tr>
     </table>
     <div class="call warn"><b>GWU campus network:</b> campus Wi-Fi blocks Google’s Gemini address. The deployed site isn’t affected (Vercel’s servers call Gemini, not your laptop). Running locally on campus, the app falls back to Groq.</div>
   </section>
@@ -382,10 +382,10 @@
     <div class="eyebrow">10 · Help</div>
     <h2>Troubleshooting</h2>
     <ul>
-      <li><b>Every lane says overdue:</b> the reset was done more than 48 hours ago. Reset again, or raise the sign-off deadline in <i>Rules &amp; agents</i>.</li>
+      <li><b>A lane says overdue:</b> only D-2026-006 should (it is set up that way). If others do, reset the demo from the name menu.</li>
       <li><b>An agent card says “Rules engine”:</b> no AI provider answered. The result is still valid. Re-run, or switch to Replay.</li>
       <li><b>Approve is locked:</b> by design. The panel says which department is still open; switch to that person.</li>
-      <li><b>A demo case is already decided:</b> Jordan → <i>Rules &amp; agents → Demo controls → Reset demo cases</i>.</li>
+      <li><b>A demo case is already decided:</b> name menu (top right) → Presenter → <i>Reset demo cases</i>.</li>
       <li><b>Need a printout:</b> on any case, <i>Export packet</i> → Print / Save as PDF. It lists every department’s sign-off.</li>
     </ul>
   </section>

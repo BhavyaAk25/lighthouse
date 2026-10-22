@@ -29,7 +29,7 @@ export function useRun(decisionId: string) {
     return () => clearInterval(t);
   }, [running]);
 
-  const start = async (agent?: AgentType) => {
+  const start = async (agent?: AgentType, after?: () => void) => {
     setRunning(true);
     setOnly(agent ?? null);
     setOutputs({});
@@ -83,7 +83,8 @@ export function useRun(decisionId: string) {
       toast.error(String((e as Error).message ?? e));
     } finally {
       setRunning(false);
-      router.refresh();
+      if (after) after();
+      else router.refresh();
     }
   };
 

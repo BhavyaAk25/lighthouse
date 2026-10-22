@@ -70,9 +70,9 @@ const TONE: Record<Tone, string> = {
   violet: "bg-violet-soft text-[#7A5C2A] ring-[#E9DCC0]",
 };
 
-export function Badge({ tone = "neutral", className, children, dot }: { tone?: Tone; className?: string; children: ReactNode; dot?: boolean }) {
+export function Badge({ tone = "neutral", className, children, dot, title }: { tone?: Tone; className?: string; children: ReactNode; dot?: boolean; title?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-medium ring-1 ring-inset whitespace-nowrap", TONE[tone], className)}>
+    <span title={title} className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-medium ring-1 ring-inset whitespace-nowrap", TONE[tone], className)}>
       {dot && <span className="size-1.5 rounded-full bg-current" />}
       {children}
     </span>

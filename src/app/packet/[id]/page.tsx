@@ -11,7 +11,7 @@ import { loadDecisionBundle } from "@/lib/views";
 import { PrintButton } from "./print-button";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Decision packet" };
+export const metadata = { title: "Decision report" };
 
 const NAMES: Record<AgentType, string> = { SALES: "Sales", FINANCE: "Finance", OPERATIONS: "Operations", LEGAL: "Legal" };
 
@@ -27,14 +27,14 @@ export default async function PacketPage({ params }: PageProps<"/packet/[id]">) 
   return (
     <div className="mx-auto max-w-[860px] bg-white px-8 py-10 text-[13px] leading-relaxed text-ink print:px-0 print:py-0">
       <div className="no-print mb-6 flex items-center justify-between rounded-xl border border-line bg-canvas px-4 py-3">
-        <span className="text-[13px] text-muted">Printable decision packet · use “Save as PDF” in the print dialog</span>
+        <span className="text-[13px] text-muted">Printable decision report · use “Save as PDF” in the print dialog</span>
         <PrintButton />
       </div>
       <header className="flex items-start justify-between border-b border-line pb-5">
         <div className="flex items-center gap-3">
           <LogoMark size={40} />
           <div>
-            <div className="text-[18px] font-semibold tracking-tight">Lighthouse decision packet</div>
+            <div className="text-[18px] font-semibold tracking-tight">Lighthouse decision report</div>
             <div className="text-[12px] text-muted">Walmart U.S. pilot · academic capstone prototype · not affiliated with Walmart Inc.</div>
           </div>
         </div>

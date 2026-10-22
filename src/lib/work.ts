@@ -1,5 +1,5 @@
 import "server-only";
-import { lanesFrom, rowToOutput, rowToSignoff } from "./caseflow";
+import { laneClock, lanesFrom, rowToOutput, rowToSignoff } from "./caseflow";
 import { db } from "./db";
 import { DEPT_OF, type Persona, type Role } from "./personas";
 import { getThresholds } from "./repo";
@@ -63,7 +63,7 @@ const iso = (v: unknown) => (v instanceof Date ? v.toISOString() : v ? String(v)
 
 export async function loadPipeline(): Promise<PipelineCase[]> {
   const sql = db();
-  const [rows, cfg] = await Promise.all([
+  const [rows, cfg, clock] = await Promise.all([
     sql`
     select c.decision_id, c.title, c.status, c.revision, c.created_by, c.updated_at, c.scenario_tag,
            l.run_id, l.synthesized_recommendation rec, l.ai_recommendation ai_rec, l.lighthouse_confidence confidence, l.financial_impact impact,
@@ -72,6 +72,7 @@ export async function loadPipeline(): Promise<PipelineCase[]> {
     where c.decision_id like 'D-2026-%'
     order by c.decision_id`,
     getThresholds(),
+    laneClock(),
   ]);
   const runIds = rows.map((r) => r.run_id).filter(Boolean) as string[];
   const [outs, sos] = await Promise.all([
@@ -96,7 +97,7 @@ export async function loadPipeline(): Promise<PipelineCase[]> {
       final: r.final_decision ? String(r.final_decision) : null,
       decided_by: r.decided_by ? String(r.decided_by) : null,
       final_rationale: r.final_rationale ? String(r.final_rationale) : null,
-      lanes: lanesFrom(r.run_id ? outputs : {}, signoffs, cfg, r.analyzed_at ? iso(r.analyzed_at) : null),
+      lanes: lanesFrom(r.run_id ? outputs : {}, signoffs, cfg, r.analyzed_at ? iso(r.analyzed_at) : null, clock),
       about: SCENARIO[String(r.scenario_tag ?? "")] ?? null,
     };
   });

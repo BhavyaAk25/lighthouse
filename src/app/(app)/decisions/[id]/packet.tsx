@@ -39,7 +39,7 @@ const SEVERITY: Record<string, { label: string; cls: string }> = {
   NONE: { label: "No conflict", cls: "bg-ok-soft text-[#2F6347]" },
   MINOR: { label: "Minor conflict", cls: "bg-info-soft text-[#3E5873]" },
   MATERIAL: { label: "Material conflict", cls: "bg-warn-soft text-[#8A5A12]" },
-  HARD_STOP: { label: "Hard stop", cls: "bg-bad-soft text-[#9C3A2A]" },
+  HARD_STOP: { label: "Blocking issue", cls: "bg-bad-soft text-[#9C3A2A]" },
 };
 
 const BREAKDOWN_LABEL: Record<string, string> = {

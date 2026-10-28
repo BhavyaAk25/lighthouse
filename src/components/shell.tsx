@@ -1,13 +1,12 @@
 "use client";
 
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { ChevronsUpDown, FlaskConical, Gauge, History, Inbox, LayoutDashboard, Layers, LogOut, Menu, ShieldCheck, SlidersHorizontal, Workflow, X } from "lucide-react";
+import { FlaskConical, Gauge, History, Inbox, LayoutDashboard, Layers, Menu, ShieldCheck, SlidersHorizontal, Workflow, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { logout } from "@/app/actions";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/format";
-import { ROLE_LABEL, type Persona } from "@/lib/personas";
+import type { Persona } from "@/lib/personas";
 import { Wordmark } from "./logo";
 import { PersonaSwitcher } from "./switcher";
 
@@ -75,48 +74,17 @@ export function Sidebar({ persona, queueCount, open, onClose }: { persona: Perso
             );
           })}
         </nav>
-        <div className="border-t border-line p-3">
-          <PersonaCard persona={persona} />
+        <div className="border-t border-line px-5 py-4 text-[12px] leading-relaxed text-faint">
+          ISTM 6210 capstone prototype
+          <br />
+          Not affiliated with Walmart Inc.
         </div>
       </aside>
     </>
   );
 }
 
-function PersonaCard({ persona }: { persona: Persona }) {
-  const router = useRouter();
-  const [pending, start] = useTransition();
-  return (
-    <div className="rounded-[10px] p-1.5">
-      <div className="flex items-center gap-2.5">
-        <span className="grid size-9 shrink-0 place-items-center rounded-full text-[12.5px] font-medium text-[#F4F1EA]" style={{ background: persona.color }}>
-          {persona.initials}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[13.5px] font-semibold text-ink">{persona.name}</div>
-          <div className="truncate text-[12px] text-muted">{ROLE_LABEL[persona.role]}</div>
-        </div>
-      </div>
-      <div className="mt-2.5 grid grid-cols-2 gap-1.5">
-        <button
-          onClick={() => router.push("/login")}
-          className="inline-flex h-7 items-center justify-center gap-1 rounded-md border border-line bg-white text-[12px] text-ink-2 hover:bg-canvas"
-        >
-          <ChevronsUpDown className="size-3.5" /> Switch
-        </button>
-        <button
-          disabled={pending}
-          onClick={() => start(() => logout())}
-          className="inline-flex h-7 items-center justify-center gap-1 rounded-md border border-line bg-white text-[12px] text-ink-2 hover:bg-canvas"
-        >
-          <LogOut className="size-3.5" /> Sign out
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export function Topbar({ persona, demoSafe, pilotClock, onMenu }: { persona: Persona; demoSafe: boolean; pilotClock: string; onMenu: () => void }) {
+export function Topbar({ persona, counts, demoSafe, pilotClock, onMenu }: { persona: Persona; counts: Record<string, number>; demoSafe: boolean; pilotClock: string; onMenu: () => void }) {
   return (
     <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-canvas/85 px-4 backdrop-blur-md sm:px-8">
       <button className="rounded-lg p-1.5 text-muted hover:bg-line-2 lg:hidden" onClick={onMenu} aria-label="Open menu">
@@ -144,18 +112,32 @@ export function Topbar({ persona, demoSafe, pilotClock, onMenu }: { persona: Per
           </Tooltip.Content>
         </Tooltip.Root>
       </Tooltip.Provider>
-      <PersonaSwitcher persona={persona} demoSafe={demoSafe} />
+      <PersonaSwitcher persona={persona} counts={counts} demoSafe={demoSafe} />
     </header>
   );
 }
 
-export function AppFrame({ persona, queueCount, demoSafe, pilotClock, children }: { persona: Persona; queueCount: number; demoSafe: boolean; pilotClock: string; children: React.ReactNode }) {
+export function AppFrame({
+  persona,
+  queueCount,
+  counts,
+  demoSafe,
+  pilotClock,
+  children,
+}: {
+  persona: Persona;
+  queueCount: number;
+  counts: Record<string, number>;
+  demoSafe: boolean;
+  pilotClock: string;
+  children: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <div className="min-h-screen">
       <Sidebar persona={persona} queueCount={queueCount} open={open} onClose={() => setOpen(false)} />
       <div className="lg:pl-[232px]">
-        <Topbar persona={persona} demoSafe={demoSafe} pilotClock={pilotClock} onMenu={() => setOpen(true)} />
+        <Topbar persona={persona} counts={counts} demoSafe={demoSafe} pilotClock={pilotClock} onMenu={() => setOpen(true)} />
         <main className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-8 lg:py-12">{children}</main>
       </div>
     </div>

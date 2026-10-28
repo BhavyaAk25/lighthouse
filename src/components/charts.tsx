@@ -57,7 +57,7 @@ export function RecDonut({ data }: { data: { rec: string; n: number }[] }) {
         <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
           <div>
             <div className="tnum text-[20px] font-semibold">{total.toLocaleString()}</div>
-            <div className="text-[11px] text-muted">packets</div>
+            <div className="text-[12px] text-muted">decisions</div>
           </div>
         </div>
       </div>

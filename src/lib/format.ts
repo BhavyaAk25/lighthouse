@@ -48,3 +48,31 @@ export const relTime = (v: string | Date) => {
 };
 
 export const titleCase = (s: string) => s.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+
+/** "81% confident" (one format for confidence everywhere). */
+export const confident = (v: number | null | undefined) => (v === null || v === undefined ? "" : `${Math.round(Number(v) * 100)}% confident`);
+
+/** Shorten long dollar figures inside prose: "-$1,279,278" -> "-$1.28M", "$352,140" -> "$352K". */
+export function plainMoney(text: string): string {
+  return text
+    .replace(/\s*—\s*/g, ", ") // AI prose loves em dashes; plain commas read calmer
+    .replace(/\b(BLOCKED|CLEAR|WARNING|PENDING|HOLD|REJECT|PROCEED_WITH_CONDITIONS|PROCEED|REVIEW_REQUIRED)\b/g, (w) => w.toLowerCase().replace(/_/g, " "))
+    .replace(/\bdecision owner\b/gi, "executive")
+    .replace(/\bthe governance (layer|recommendation)\b/gi, (_m, w: string) => (w === "layer" ? "Lighthouse" : "Lighthouse’s recommendation"))
+    .replace(/\bconfidence (?:of )?0\.(\d{2})\b/g, (_m, d: string) => `${Number(d)}% confidence`)
+    .replace(/(-|−)?\$\s?(\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?/g, (_m, neg, num) => {
+    const n = Number(String(num).replace(/,/g, ""));
+    const sign = neg ? "−" : "";
+    if (n >= 1e9) return `${sign}$${(n / 1e9).toFixed(1)}B`;
+    if (n >= 1e6) return `${sign}$${(n / 1e6).toFixed(n >= 1e7 ? 1 : 2)}M`;
+    if (n >= 1e3) return `${sign}$${Math.round(n / 1e3)}K`;
+    return `${sign}$${n}`;
+  });
+}
+
+/** The first n sentences of a paragraph (for AI prose shown at a glance). */
+export function firstSentences(text: string, n = 1): string {
+  // split only at a sentence end (punctuation, then a space and a capital/quote), never inside "$2.12M" or "e.g."
+  const parts = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=[A-Z“"(])/);
+  return parts.slice(0, n).join(" ").trim();
+}

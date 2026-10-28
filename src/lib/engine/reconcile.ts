@@ -143,7 +143,7 @@ export function reconcile(c: DecisionCase, outputs: AgentOutput[], cfg: Threshol
         : { key: "OPERATIONS_CAPACITY", label: "Operations capacity", status: "CLEAR", detail: "Within capacity limits." };
   const staleCount = Number(sales.data_quality.sales_stale) + Number(ops.data_quality.ops_stale);
   const evidenceGate: Gate = invalid.length
-    ? { key: "EVIDENCE_QUALITY", label: "Evidence quality", status: "BLOCKED", detail: `${invalid.length} agent output(s) invalid due to missing evidence.` }
+    ? { key: "EVIDENCE_QUALITY", label: "Evidence quality", status: "BLOCKED", detail: `${invalid.length === 1 ? "One agent is" : `${invalid.length} agents are`} missing evidence, so ${invalid.length === 1 ? "its answer is" : "their answers are"} not counted.` }
     : staleCount
       ? { key: "EVIDENCE_QUALITY", label: "Evidence quality", status: "WARNING", detail: "Stale evidence; confidence downgraded." }
       : { key: "EVIDENCE_QUALITY", label: "Evidence quality", status: "CLEAR", detail: "Evidence complete and fresh." };

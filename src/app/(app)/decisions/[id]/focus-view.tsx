@@ -5,7 +5,7 @@ import { useState } from "react";
 import { WaitingNote } from "@/components/desk";
 import { AGENT_META, AgentAvatar, ProvTag, RecBadge, RiskBadge } from "@/components/domain";
 import { Button, Card, ConfidenceRing } from "@/components/ui";
-import { money, titleCase } from "@/lib/format";
+import { firstSentences, money, plainMoney, titleCase } from "@/lib/format";
 import type { Persona } from "@/lib/personas";
 import { REC_WORD, type Lane } from "@/lib/signoff";
 import type { AgentOutput, AgentType, CaseStatus, EvidenceItem } from "@/lib/types";
@@ -73,6 +73,7 @@ export function FocusView({
 }) {
   const run = useRun(decisionId);
   const [stepIn, setStepIn] = useState(false);
+  const [readMore, setReadMore] = useState(false);
   const isLegal = agent === "LEGAL";
   const output = run.running ? run.outputs[agent] : serverOutput;
   const evidence = run.evidence.length && run.running ? run.evidence : serverEvidence;
@@ -91,7 +92,7 @@ export function FocusView({
       <div className="min-w-0 space-y-6">
         {isLegal && claim && (
           <div>
-            <div className="mb-2 text-[11.5px] tracking-[0.14em] text-muted uppercase">Customer-facing claim</div>
+            <div className="mb-1.5 text-[13px] text-muted">The customer-facing claim</div>
             <p className="font-display text-[22px] leading-tight text-ink">“{claim}”</p>
           </div>
         )}
@@ -129,7 +130,14 @@ export function FocusView({
           ) : (
             output && (
               <>
-                <p className="mt-4 text-[14.5px] leading-relaxed text-ink-2">{output.rationale}</p>
+                <p className="mt-4 text-[15px] leading-relaxed text-ink-2">
+                  {readMore ? plainMoney(output.rationale) : firstSentences(plainMoney(output.rationale), 2)}
+                  {firstSentences(output.rationale, 2).length < output.rationale.trim().length - 5 && (
+                    <button onClick={() => setReadMore(!readMore)} className="ml-1.5 text-[13.5px] text-muted underline-offset-2 hover:text-ink hover:underline">
+                      {readMore ? "Less" : "Read more"}
+                    </button>
+                  )}
+                </p>
                 {output.conditions.length > 0 && (
                   <ul className="mt-4 space-y-1.5">
                     {output.conditions.map((c, i) => (
@@ -167,7 +175,7 @@ export function FocusView({
 
         {isLegal && rules.length > 0 && !run.running && (
           <div>
-            <div className="mb-3 text-[11.5px] tracking-[0.14em] text-muted uppercase">Triggered rules · {rules.length}</div>
+            <div className="mb-3 text-[15px] text-ink">Rules this triggers <span className="tnum text-muted">{rules.length}</span></div>
             <div className="card divide-y divide-line-2">
               {rules.map((r) => {
                 const v = r.value as { severity: string; review_required: boolean; prohibited: boolean; jurisdictions: string[]; citation: string; condition: string };

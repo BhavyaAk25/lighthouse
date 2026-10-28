@@ -25,8 +25,8 @@
 
   --color-ink: #12171d;
   --color-ink-2: #33373d;
-  --color-muted: #6b6f76;
-  --color-faint: #9a9c9f;
+  --color-muted: #585c63;
+  --color-faint: #72767c;
   --color-line: #e6e1d6;
   --color-line-2: #efece5;
   --color-canvas: #f7f5f0;
@@ -74,6 +74,13 @@
 
 :root {
   color-scheme: light;
+}
+
+/* one visible keyboard focus style everywhere (mouse clicks stay clean) */
+:where(a, button, [role="button"], input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 html,

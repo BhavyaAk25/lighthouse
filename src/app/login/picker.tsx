@@ -59,7 +59,7 @@ export function PersonaPicker({ personas, currentId }: { personas: Persona[]; cu
   const admin = personas.filter((p) => p.role === "ADMIN");
   const group = (label: string, people: Persona[]) => (
     <div className="mt-6">
-      <div className="text-[11px] tracking-[0.14em] text-faint uppercase">{label}</div>
+      <div className="text-[13px] text-muted">{label}</div>
       <div className="mt-1 divide-y divide-line-2 border-b border-line-2">
         {people.map((p) => row(p))}
       </div>

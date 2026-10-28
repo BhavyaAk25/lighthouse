@@ -1,14 +1,13 @@
 import { ArrowRight, Check, Hourglass, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { LaneDots, RecBadge } from "@/components/domain";
+import { RecBadge } from "@/components/domain";
 import { Card, LinkButton } from "@/components/ui";
-import type { AgentType } from "@/lib/types";
 import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { cn, money, relTime } from "@/lib/format";
+import { cn, confident, money, relTime } from "@/lib/format";
 import { activitySince } from "@/lib/activity";
 import { MarkSeen } from "@/components/mark-seen";
-import { REC_WORD } from "@/lib/signoff";
+import { laneSentence, REC_WORD } from "@/lib/signoff";
 import { DEPT_OF, ROLE_LABEL } from "@/lib/personas";
 import { DEPT_NAME } from "@/lib/signoff";
 import type { Recommendation } from "@/lib/types";
@@ -25,7 +24,7 @@ function greeting() {
 function YourPart({ steps }: { steps: { label: string; you: boolean }[] }) {
   return (
     <div className="mb-12">
-      <div className="mb-3 text-[11.5px] tracking-[0.14em] text-muted uppercase">Your part in the process</div>
+      <h2 className="mb-3 text-[15px] text-ink">Your part in the process</h2>
       <ol className="grid gap-2 sm:auto-cols-fr sm:grid-flow-col">
         {steps.map((s, i) => (
           <li
@@ -38,7 +37,7 @@ function YourPart({ steps }: { steps: { label: string; you: boolean }[] }) {
             <span className={cn("tnum mt-px grid size-5 shrink-0 place-items-center rounded-full text-[11px]", s.you ? "bg-brass text-white" : "bg-canvas text-faint")}>{i + 1}</span>
             <span>
               {s.label}
-              {s.you && <span className="mt-1 block text-[11px] tracking-[0.12em] text-brass-dark uppercase">You</span>}
+              {s.you && <span className="mt-1 block text-[12px] font-medium text-brass-dark">You</span>}
             </span>
           </li>
         ))}
@@ -47,7 +46,7 @@ function YourPart({ steps }: { steps: { label: string; you: boolean }[] }) {
   );
 }
 
-function NowRow({ w, preview }: { w: WorkItem; preview?: boolean }) {
+function NowRow({ w, preview, primary }: { w: WorkItem; preview?: boolean; primary?: boolean }) {
   const changed = preview && w.c.ai_rec && w.c.rec && w.c.ai_rec !== w.c.rec;
   return (
     <Link href={`/decisions/${w.c.decision_id}#act`} className="group flex flex-col gap-3 px-5 py-4 hover:bg-canvas/70 sm:flex-row sm:items-center">
@@ -60,35 +59,49 @@ function NowRow({ w, preview }: { w: WorkItem; preview?: boolean }) {
         <div className="mt-1 text-[15px] text-ink">{w.c.title}</div>
         <div className="mt-1 text-[13px] text-muted">{w.why}</div>
         {preview && w.c.lanes.some((l) => l.state !== "NOT_STARTED") && (
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted">
-            <LaneDots lanes={w.c.lanes.map((l) => ({ dept: l.dept, state: l.state, lead: l.lead.name }))} className="-ml-1.5" />
-            {w.c.confidence !== null && <span className="tnum">Confidence {Math.round(w.c.confidence * 100)}%</span>}
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[13px] text-muted">
+            {w.c.confidence !== null && <span className="tnum">{confident(w.c.confidence)}</span>}
             {changed && (
-              <span className="text-brass-dark">
-                AI alone said {REC_WORD[w.c.ai_rec!]}; sign-offs made it {REC_WORD[w.c.rec!]}
-              </span>
+              <>
+                <span aria-hidden>·</span>
+                <span className="text-brass-dark">
+                  AI alone said {REC_WORD[w.c.ai_rec!]}; after sign-off, {REC_WORD[w.c.rec!]}
+                </span>
+              </>
             )}
           </div>
         )}
       </div>
-      <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-[8px] bg-brand-600 px-3 py-2 text-[13px] text-[#F4F1EA] transition group-hover:bg-brand-700 sm:self-center">
+      <span
+        className={cn(
+          "inline-flex shrink-0 items-center gap-1.5 self-start rounded-[8px] px-3 py-2 text-[13px] transition sm:self-center",
+          primary ? "bg-brand-600 text-[#F4F1EA] group-hover:bg-brand-700" : "border border-line bg-white text-ink-2 group-hover:border-[#CFC8BA]",
+        )}
+      >
         {w.action} <ArrowRight className="size-3.5" />
       </span>
     </Link>
   );
 }
 
-function WaitRow({ w, highlight }: { w: WorkItem; highlight?: AgentType }) {
+function WaitRow({ w }: { w: WorkItem }) {
   return (
     <Link href={`/decisions/${w.c.decision_id}`} className="flex items-start gap-3 px-5 py-3.5 hover:bg-canvas/70">
       <Hourglass className="mt-0.5 size-4 shrink-0 text-brass" strokeWidth={1.6} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[14px] text-ink">{w.c.title}</div>
         <div className="text-[12.5px] text-muted">
-          Waiting on <span className="text-ink-2">{w.waitingOn}</span> · {w.why}
+          {w.c.status === "READY_FOR_DECISION" ? (
+            `With ${w.waitingOn} to decide · ${laneSentence(w.c.lanes).toLowerCase()}`
+          ) : w.c.lanes.some((l) => l.state !== "NOT_STARTED") ? (
+            laneSentence(w.c.lanes)
+          ) : (
+            <>
+              Waiting on <span className="text-ink-2">{w.waitingOn}</span> · {w.why}
+            </>
+          )}
         </div>
       </div>
-      {w.c.lanes.some((l) => l.state !== "NOT_STARTED") && <LaneDots lanes={w.c.lanes.map((l) => ({ dept: l.dept, state: l.state, lead: l.lead.name }))} highlight={highlight} className="hidden sm:inline-flex" />}
       <span className="font-mono text-[11.5px] text-faint">{w.c.decision_id}</span>
     </Link>
   );
@@ -98,7 +111,7 @@ function Section({ title, count, children, empty }: { title: string; count: numb
   return (
     <section className="mb-10">
       <div className="mb-3 flex items-baseline gap-2">
-        <h2 className="text-[11.5px] tracking-[0.14em] text-muted uppercase">{title}</h2>
+        <h2 className="text-[15px] text-ink">{title}</h2>
         <span className="tnum text-[12px] text-faint">{count}</span>
       </div>
       {count === 0 ? <p className="rounded-[12px] border border-dashed border-line px-5 py-5 text-[13.5px] text-muted">{empty}</p> : <div className="card divide-y divide-line-2 overflow-hidden">{children}</div>}
@@ -177,9 +190,9 @@ export default async function Home() {
       <MarkSeen personaId={persona.id} seq={activity.head} />
       {activity.items.length > 0 && (
         <section className="mb-10">
-          <div className="mb-3 flex items-center gap-2 text-[11.5px] tracking-[0.14em] text-muted uppercase">
-            <Sparkles className="size-3.5 text-brass" /> Since you last looked
-          </div>
+          <h2 className="mb-3 flex items-center gap-2 text-[15px] text-ink">
+            <Sparkles className="size-4 text-brass" strokeWidth={1.7} /> Since you last looked
+          </h2>
           <div className="card divide-y divide-line-2 overflow-hidden">
             {activity.items.map((a) => (
               <Link key={a.seq} href={`/decisions/${a.decision_id}`} className="flex items-center gap-3 px-5 py-2.5 text-[13.5px] hover:bg-canvas/70">
@@ -195,15 +208,15 @@ export default async function Home() {
       <YourPart steps={myProcess(persona.role)} />
 
       <Section title="Needs you now" count={n} empty="You’re clear. New work will appear here.">
-        {work.now.map((w) => (
-          <NowRow key={w.c.decision_id} w={w} preview={exec} />
+        {work.now.map((w, i) => (
+          <NowRow key={w.c.decision_id} w={w} preview={exec} primary={i === 0} />
         ))}
       </Section>
 
       {work.waiting.length > 0 && (
         <Section title={exec ? "In department sign-off" : "Your proposals"} count={work.waiting.length} empty="">
           {work.waiting.slice(0, 6).map((w) => (
-            <WaitRow key={w.c.decision_id} w={w} highlight={dept} />
+            <WaitRow key={w.c.decision_id} w={w} />
           ))}
           {work.waiting.length > 6 && (
             <Link href="/flow" className="block px-5 py-3 text-[13px] text-muted hover:bg-canvas/70 hover:text-ink">

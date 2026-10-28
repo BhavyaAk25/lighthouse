@@ -73,7 +73,9 @@ export function buildJourney(i: JourneyInput): JourneyStep[] {
             : "Rejected by Legal"
           : sum.pending.length && !decided
             ? `${sum.cleared} of 4 cleared · waiting on ${sum.pending.map((l) => DEPT_NAME[l.dept]).join(", ")}`
-            : `All cleared${sum.auto ? ` · ${sum.auto} automatically` : ""}`,
+            : sum.blocked.length
+              ? `${sum.blocked.map((l) => DEPT_NAME[l.dept]).join(", ")} blocked · the rest cleared`
+              : `All cleared${sum.auto ? ` · ${sum.auto} automatically` : ""}`,
   };
   const decide: JourneyStep = decided
     ? { key: "decide", label: "Executive decides", who: i.final?.by ?? EXECUTIVE.name, role: "DECISION_OWNER", state: "done", detail: finalD === "APPROVED" ? "Approved" : "Rejected", at: i.final?.at }

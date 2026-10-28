@@ -15,7 +15,7 @@ const DEPT: Record<string, string> = { SALES: "Sales", FINANCE: "Finance", OPERA
 const word = (s: unknown) => String(s ?? "").replace(/_/g, " ").toLowerCase();
 const first = (n: string) => n.split(" ")[0];
 
-function describe(action: string, actor: string, id: string, p: Record<string, unknown>): string | null {
+export function describe(action: string, actor: string, id: string, p: Record<string, unknown>): string | null {
   const who = first(actor);
   switch (action) {
     case "AGENTS_RUN_COMPLETED":
@@ -68,3 +68,4 @@ export async function activitySince(persona: Persona): Promise<{ items: Activity
 }
 
 export const seenCookieName = COOKIE;
+export const ACTIVITY_ACTIONS = ['AGENTS_RUN_COMPLETED', 'AGENT_RERUN_COMPLETED', 'DEPARTMENT_SIGNOFF_RECORDED', 'DECISION_RECORDED', 'DECISION_OVERRIDE_RECORDED', 'CASE_REVISED', 'CASE_CREATED'];

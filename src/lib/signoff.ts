@@ -167,7 +167,13 @@ export function signedOutputs(outputs: AgentOutput[], lanes: Lane[]): AgentOutpu
       valid: true,
       validation_issues: o.valid ? o.validation_issues : [...o.validation_issues, `Evidence gap accepted by ${who}.`],
       hard_constraint: s.disposition === "BLOCKED" ? `${who} blocked: ${s.condition_text ?? ""}`.trim() : supportive ? null : o.hard_constraint,
-      risk_level: s.disposition === "BLOCKED" && o.agent_type === "LEGAL" ? "CRITICAL" : supportive && o.agent_type === "LEGAL" ? capRisk(o.risk_level, "MEDIUM") : o.risk_level,
+      // a lead who signs a positive position owns the residual risk: it is no longer critical
+      risk_level:
+        s.disposition === "BLOCKED" && o.agent_type === "LEGAL"
+          ? "CRITICAL"
+          : supportive
+            ? capRisk(o.risk_level, o.agent_type === "LEGAL" ? "MEDIUM" : "HIGH")
+            : o.risk_level,
     };
     if (!o.valid && s.disposition !== "BLOCKED") out.conditions = [...out.conditions, `${DEPT_NAME[o.agent_type]} evidence gap accepted by ${who}; refresh before scale-up.`];
     return out;
@@ -214,4 +220,19 @@ export function reconcileSigned(c: DecisionCase | null, outputs: AgentOutput[], 
           detail: `All four departments cleared${sum.auto ? ` (${sum.auto} automatically)` : ""}${sum.adjusted.length ? `; ${sum.adjusted.map((l) => DEPT_NAME[l.dept]).join(", ")} adjusted the AI position` : ""}.`,
         };
   return { ...rec, gates: [signGate, ...gates], requires_legal_review: legal?.required ?? rec.requires_legal_review };
+}
+
+/** One plain sentence about where the four departments stand (used instead of coloured dots). */
+export function laneSentence(lanes: Lane[]): string {
+  const sum = laneSummary(lanes);
+  if (!sum.analyzed) return "Not analyzed yet";
+  const first = (l: Lane) => l.lead.name.split(" ")[0];
+  const legal = lanes.find((l) => l.dept === "LEGAL");
+  if (legal?.state === "PROHIBITED") return "Prohibited by a legal rule";
+  const parts: string[] = [];
+  if (sum.pending.length) parts.push(`Waiting on ${sum.pending.map((l) => `${DEPT_NAME[l.dept]} (${first(l)}${l.state === "OVERDUE" ? ", overdue" : ""})`).join(", ")}`);
+  for (const l of sum.blocked) if (l.state === "BLOCKED") parts.push(`${DEPT_NAME[l.dept]} blocked`);
+  for (const l of sum.adjusted) parts.push(`${first(l)} changed ${DEPT_NAME[l.dept]}`);
+  if (!parts.length) return sum.auto === 4 ? "All four cleared automatically" : "All four departments cleared";
+  return parts.join(" · ");
 }

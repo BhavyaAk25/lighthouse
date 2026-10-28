@@ -8,6 +8,7 @@ import { requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { money, relTime, titleCase } from "@/lib/format";
 import { getPilotClock } from "@/lib/repo";
+import { ACTIVITY_ACTIONS, describe } from "@/lib/activity";
 import type { AgentType, CaseStatus, Recommendation } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +56,7 @@ export default async function Overview() {
         from agent_outputs group by 1`,
     sql`select c.decision_id, c.title, c.status, c.scenario_tag, l.synthesized_recommendation from decision_cases c
         left join lighthouse_decisions l using (decision_id) where c.decision_id like 'D-2026-0%' order by c.decision_id`,
-    sql`select seq, ts, actor, role, action, decision_id from audit_log order by seq desc limit 9`,
+    sql`select seq, ts, actor, action, decision_id, payload from audit_log where decision_id is not null and action = any(${ACTIVITY_ACTIONS}) order by seq desc limit 8`,
     sql`select o.agent_type, count(distinct o.decision_id)::int lanes, count(r.review_id)::int signed,
                count(r.review_id) filter (where r.disposition = 'CONFIRMED')::int confirmed,
                count(r.review_id) filter (where r.disposition = 'ADJUSTED')::int adjusted,
@@ -74,7 +75,7 @@ export default async function Overview() {
         <Stat label="Open cases" value={k.open} sub="In sign-off or with the executive" />
         <Stat label="In department sign-off" value={k.legal} sub="Waiting on a lead" />
         <Stat label="Material conflicts" value={`${k.conflict_rate ?? 0}%`} sub="Last 90 days" />
-        <Stat label="Avg Lighthouse confidence" value={Number(k.avg_conf ?? 0).toFixed(2)} sub="Synthesis score" />
+        <Stat label="Average confidence" value={`${Math.round(Number(k.avg_conf ?? 0) * 100)}%`} sub="Across all recommendations" />
         <Stat label="Approved value" value={money(k.approved_value)} sub="Revenue + markdown, 90 days" />
         <Stat label="Human overrides" value={`${k.override_rate ?? 0}%`} sub="Always with rationale" />
       </div>
@@ -117,7 +118,7 @@ export default async function Overview() {
                   {d.synthesized_recommendation ? <RecBadge rec={d.synthesized_recommendation as Recommendation} short /> : <StatusBadge status={d.status as CaseStatus} />}
                 </div>
                 <div className="mt-1 text-[13px] font-semibold text-ink group-hover:text-brand-700">{SCENARIO_COPY[String(d.scenario_tag)] ?? titleCase(String(d.scenario_tag))}</div>
-                <div className="mt-0.5 truncate text-[12px] text-muted">{String(d.title)}</div>
+                <div className="mt-0.5 truncate text-[12.5px] text-muted">{String(d.title).replace(/ - /g, " · ")}</div>
               </Link>
             ))}
           </div>
@@ -172,20 +173,17 @@ export default async function Overview() {
               }
             />
             <ul className="space-y-2.5 px-5 pb-5">
-              {activity.map((a) => (
-                <li key={Number(a.seq)} className="flex items-start justify-between gap-3 text-[12.5px]">
-                  <span className="min-w-0">
-                    <span className="font-medium text-ink">{String(a.actor)}</span>{" "}
-                    <span className="text-ink-2">{String(a.action).replace(/_/g, " ").toLowerCase()}</span>
-                    {a.decision_id && (
-                      <Link href={`/decisions/${a.decision_id}`} className="ml-1 font-mono text-[11.5px] text-brand-700 hover:underline">
-                        {String(a.decision_id)}
-                      </Link>
-                    )}
-                  </span>
-                  <span className="shrink-0 text-[11.5px] text-faint">{relTime(a.ts as string)}</span>
-                </li>
-              ))}
+              {activity.map((a) => {
+                const text = describe(String(a.action), String(a.actor), String(a.decision_id), (a.payload ?? {}) as Record<string, unknown>);
+                return text ? (
+                  <li key={Number(a.seq)} className="flex items-start justify-between gap-3 text-[13px]">
+                    <Link href={`/decisions/${a.decision_id}`} className="min-w-0 text-ink-2 hover:text-ink">
+                      {text}
+                    </Link>
+                    <span className="shrink-0 text-[12px] text-faint">{relTime(a.ts as string)}</span>
+                  </li>
+                ) : null;
+              })}
             </ul>
           </Card>
         </div>

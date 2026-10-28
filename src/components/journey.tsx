@@ -2,8 +2,6 @@ import { Bot, Check, Minus, ShieldCheck, X } from "lucide-react";
 import { cn, relTime } from "@/lib/format";
 import type { JourneyStep } from "@/lib/journey";
 import { PERSONAS, type Persona } from "@/lib/personas";
-import type { Lane } from "@/lib/signoff";
-import { AGENT_META, LANE_META } from "./domain";
 
 const ROLE_WORD: Record<string, string> = { DECISION_OWNER: "Executive", PROPOSER: "Proposer", LEADS: "Department leads", AI: "AI agents", SYSTEM: "Lighthouse" };
 
@@ -14,28 +12,6 @@ function Who({ step, isYou }: { step: JourneyStep; isYou: boolean }) {
       {step.role === "AI" ? <Bot className="size-3.5 text-muted" strokeWidth={1.6} /> : step.role === "SYSTEM" ? <ShieldCheck className="size-3.5 text-muted" strokeWidth={1.6} /> : null}
       <span className={cn("truncate text-[12.5px]", isYou ? "text-brass-dark" : "text-ink-2")}>{isYou ? "You" : ROLE_WORD[step.role] ?? step.who}</span>
       {!isYou && p && <span className="truncate text-[11.5px] text-faint">· {p.name}</span>}
-    </div>
-  );
-}
-
-/** The four parallel department lanes inside the sign-off step. */
-function Lanes({ lanes, viewer }: { lanes: Lane[]; viewer?: Persona }) {
-  return (
-    <div className="mt-2 grid grid-cols-2 gap-1 md:mx-auto md:max-w-[190px]">
-      {lanes.map((l) => {
-        const you = viewer?.name === l.lead.name;
-        const m = LANE_META[l.state];
-        return (
-          <span
-            key={l.dept}
-            title={`${AGENT_META[l.dept].name} · ${l.lead.name} · ${m.label}`}
-            className={cn("flex items-center gap-1.5 rounded-md border px-1.5 py-1 text-[11px]", you ? "border-brass bg-brass-soft" : "border-line-2 bg-white")}
-          >
-            <span className={cn("block size-1.5 shrink-0 rounded-full", m.dot)} />
-            <span className={cn("truncate", you ? "text-brass-dark" : "text-ink-2")}>{you ? "You" : AGENT_META[l.dept].name}</span>
-          </span>
-        );
-      })}
     </div>
   );
 }
@@ -134,7 +110,6 @@ export function JourneyBar({ steps, viewer, className, task }: { steps: JourneyS
                   <Who step={s} isYou={isMine(s, viewer)} />
                 </div>
                 <div className={cn("mt-1 text-[12px]", s.state === "blocked" ? "text-bad" : s.state === "current" ? "text-brass-dark" : "text-muted")}>{s.detail}</div>
-                {s.lanes && s.lanes.some((l) => l.state !== "NOT_STARTED") && <Lanes lanes={s.lanes} viewer={viewer} />}
                 {s.at && <div className="text-[11px] text-faint">{relTime(s.at)}</div>}
               </div>
             </li>

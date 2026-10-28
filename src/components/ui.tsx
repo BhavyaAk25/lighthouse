@@ -95,7 +95,7 @@ export function Stat({ label, value, sub, icon, tone = "neutral", className }: {
 export function SectionTitle({ children, action, className }: { children: ReactNode; action?: ReactNode; className?: string }) {
   return (
     <div className={cn("mb-3 flex items-center justify-between", className)}>
-      <h2 className="text-[11.5px] font-medium uppercase tracking-[0.14em] text-muted">{children}</h2>
+      <h2 className="text-[15px] text-ink">{children}</h2>
       {action}
     </div>
   );
@@ -118,7 +118,7 @@ export function ConfidenceRing({ value, size = 44, stroke = 4, label = true }: {
   const c = 2 * Math.PI * r;
   const color = v >= 0.75 ? "var(--color-ok)" : v >= 0.6 ? "var(--color-brand-600)" : v >= 0.45 ? "var(--color-warn)" : "var(--color-bad)";
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
+    <div className="relative shrink-0" style={{ width: size, height: size }} role="img" aria-label={`${Math.round(v * 100)}% confident`}>
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-line-2)" strokeWidth={stroke} fill="none" />
         <circle
@@ -136,7 +136,7 @@ export function ConfidenceRing({ value, size = 44, stroke = 4, label = true }: {
       </svg>
       {label && (
         <span className="tnum absolute inset-0 grid place-items-center font-semibold text-ink" style={{ fontSize: size * 0.27 }}>
-          {v.toFixed(2)}
+          {Math.round(v * 100)}%
         </span>
       )}
     </div>

@@ -3,10 +3,9 @@
 import { AlertTriangle, Bot, Check, ChevronDown, FileSearch, Loader2, ShieldCheck, Wrench } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { AGENT_META, AgentAvatar, LANE_META, laneLabel, RecBadge, RiskBadge } from "@/components/domain";
-import { REC_WORD, type Lane } from "@/lib/signoff";
+import { AGENT_META, AgentAvatar, RecBadge, RiskBadge } from "@/components/domain";
 import { ConfidenceRing } from "@/components/ui";
-import { cn, int, money, pct } from "@/lib/format";
+import { cn, int, money, pct, plainMoney } from "@/lib/format";
 import type { AgentOutput, AgentType } from "@/lib/types";
 
 export interface ToolStep {
@@ -57,7 +56,6 @@ export function AgentCard({
   note,
   onEvidence,
   index,
-  lane,
 }: {
   agent: AgentType;
   output?: AgentOutput;
@@ -66,7 +64,6 @@ export function AgentCard({
   note?: string;
   onEvidence: () => void;
   index: number;
-  lane?: Lane;
 }) {
   const meta = AGENT_META[agent];
   const [open, setOpen] = useState(false);
@@ -120,7 +117,7 @@ export function AgentCard({
                   );
                 })}
               </div>
-              <p className={cn("mt-3 text-[13px] leading-relaxed text-ink-2", !open && "line-clamp-3")}>{output.rationale}</p>
+              <p className={cn("mt-3 text-[13.5px] leading-relaxed text-ink-2", !open && "line-clamp-3")}>{plainMoney(output.rationale)}</p>
               {output.dissent_reason && open && (
                 <p className="mt-2 rounded-lg bg-warn-soft px-2.5 py-1.5 text-[12.5px] text-[#8A5A12]">
                   <span className="font-semibold">Dissent:</span> {output.dissent_reason}
@@ -200,31 +197,6 @@ export function AgentCard({
           )}
         </AnimatePresence>
       </div>
-      {lane && output && !running && lane.state !== "NOT_STARTED" && <LaneFooter lane={lane} />}
     </motion.div>
-  );
-}
-
-/** Who owns this agent and what they did with its answer. */
-function LaneFooter({ lane }: { lane: Lane }) {
-  const m = LANE_META[lane.state];
-  const s = lane.signoff;
-  return (
-    <div className={cn("border-t px-4 py-3", lane.state === "PENDING" || lane.state === "OVERDUE" ? "border-[#E9DCC0] bg-brass-soft/60" : "border-line-2 bg-canvas/50")}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-2 text-[12.5px]">
-          <span className={cn("block size-2 rounded-full", m.dot)} />
-          <span className={m.text}>{laneLabel(lane)}</span>
-        </span>
-        <span className="truncate text-[12px] text-muted">{lane.lead.name}</span>
-      </div>
-      {s && s.disposition !== "CONFIRMED" && lane.dept !== "LEGAL" && (
-        <div className="mt-1.5 text-[12.5px] text-ink-2">
-          AI said {REC_WORD[s.ai_recommendation]} → {s.disposition === "BLOCKED" ? "blocked" : REC_WORD[s.position]}
-        </div>
-      )}
-      {s?.condition_text && <p className="mt-1 line-clamp-2 text-[12px] text-muted">“{s.condition_text}”</p>}
-      {!s && lane.state !== "AUTO" && lane.reasons.length > 0 && <p className="mt-1 text-[12px] text-muted">Needs a sign-off: {lane.reasons.join("; ")}.</p>}
-    </div>
   );
 }

@@ -165,7 +165,7 @@ export function workFor(persona: Persona, pipeline: PipelineCase[]): MyWork {
               ? `${legal.lead.name} (Legal) rejected it, so it can only be rejected or revised.`
               : blocks.length
                 ? `${who(blocks)} blocked it. You can overrule with a reason.`
-                : `All four departments cleared. Lighthouse recommends ${REC_WORD[c.rec ?? ""] ?? "a decision"}.${sum.adjusted.length ? ` ${who(sum.adjusted)} changed the AI’s answer.` : ""}`;
+                : `All four departments cleared. Lighthouse recommends ${REC_WORD[c.rec ?? ""] ?? "a decision"}.`;
         now.push({ c, action: ACTIONS.decide, why });
       } else if (c.status === "IN_REVIEW" && sum.escalatable) {
         now.push({ c, action: ACTIONS.escalated, why: `${who(sum.pending)} missed the sign-off deadline. You can decide without them.` });

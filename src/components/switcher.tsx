@@ -2,11 +2,11 @@
 
 import * as Popover from "@radix-ui/react-popover";
 import * as Switch from "@radix-ui/react-switch";
-import { Check, ChevronDown, KeyRound, Loader2, Lock, RotateCcw } from "lucide-react";
+import { Check, ChevronDown, KeyRound, Loader2, Lock, LogOut, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { login, resetDemoCases, setDemoSafe } from "@/app/actions";
+import { login, logout, resetDemoCases, setDemoSafe } from "@/app/actions";
 import { cn } from "@/lib/format";
 import { PERSONAS, ROLE_LABEL, type Persona } from "@/lib/personas";
 
@@ -21,7 +21,7 @@ const GROUPS: { label: string; filter: (p: Persona) => boolean }[] = [
  * so a hand-off (Hannah submits, Priya signs, Maya decides) is one click each.
  * Presenter tools live here too: Live AI / Replay and the demo reset.
  */
-export function PersonaSwitcher({ persona, demoSafe }: { persona: Persona; demoSafe: boolean }) {
+export function PersonaSwitcher({ persona, counts, demoSafe }: { persona: Persona; counts: Record<string, number>; demoSafe: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
@@ -66,7 +66,7 @@ export function PersonaSwitcher({ persona, demoSafe }: { persona: Persona; demoS
         <Popover.Content align="end" sideOffset={8} className="z-50 w-[300px] rounded-[14px] border border-line bg-white p-2 shadow-pop">
           {GROUPS.map((g) => (
             <div key={g.label} className="mb-1">
-              <div className="px-2.5 pt-2 pb-1 text-[10.5px] tracking-[0.14em] text-faint uppercase">{g.label}</div>
+              <div className="px-2.5 pt-2 pb-1 text-[12px] text-muted">{g.label}</div>
               {PERSONAS.filter(g.filter).map((p) => (
                 <button
                   key={p.id}
@@ -83,7 +83,15 @@ export function PersonaSwitcher({ persona, demoSafe }: { persona: Persona; demoS
                     </span>
                     <span className="block text-[11.5px] text-muted">{ROLE_LABEL[p.role]}</span>
                   </span>
-                  {busy === p.id ? <Loader2 className="size-4 animate-spin text-muted" /> : p.id === persona.id ? <Check className="size-4 text-brass" /> : null}
+                  {busy === p.id ? (
+                    <Loader2 className="size-4 animate-spin text-muted" />
+                  ) : p.id === persona.id ? (
+                    <Check className="size-4 text-brass" />
+                  ) : counts[p.id] ? (
+                    <span className="tnum min-w-5 rounded-full bg-brand-600 px-1.5 text-center text-[11px] text-[#F4F1EA]" title={`${counts[p.id]} waiting for ${p.name.split(" ")[0]}`}>
+                      {counts[p.id]}
+                    </span>
+                  ) : null}
                 </button>
               ))}
               {g.label === "Keeps the system" && pinFor && (
@@ -114,7 +122,7 @@ export function PersonaSwitcher({ persona, demoSafe }: { persona: Persona; demoS
             </div>
           ))}
           <div className="mt-1 border-t border-line-2 px-2.5 pt-2.5 pb-1.5">
-            <div className="mb-2 text-[10.5px] tracking-[0.14em] text-faint uppercase">Presenter</div>
+            <div className="mb-2 text-[12px] text-muted">Presenter</div>
             <label className="flex cursor-pointer items-center justify-between gap-3 py-1 text-[13px] text-ink-2">
               <span>
                 {replay ? "Replay saved AI answers" : "Live AI"}
@@ -154,6 +162,12 @@ export function PersonaSwitcher({ persona, demoSafe }: { persona: Persona; demoS
               {pending ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCcw className="size-3.5" />} Reset demo cases
             </button>
           </div>
+          <button
+            onClick={() => start(() => logout())}
+            className="mt-1 flex w-full items-center gap-2 rounded-[9px] px-2.5 py-2 text-[13px] text-muted transition hover:bg-canvas hover:text-ink"
+          >
+            <LogOut className="size-4" /> Sign out
+          </button>
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

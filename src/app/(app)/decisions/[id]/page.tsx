@@ -1,7 +1,7 @@
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { StatusBadge, SyntheticNotice } from "@/components/domain";
+import { StatusBadge } from "@/components/domain";
 import { isDemoSafe, requireSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PROMO_LABEL } from "@/lib/engine/common";
@@ -76,7 +76,6 @@ export default async function DecisionPage({ params, searchParams }: PageProps<"
           <span className="font-mono text-[12px] text-faint">{c.decision_id}</span>
           <StatusBadge status={c.status} />
           {c.revision > 1 && <span className="text-[12px] text-muted">Revision {c.revision}</span>}
-          <SyntheticNotice />
         </div>
         <h1 className="font-display mt-3 max-w-4xl text-[28px] leading-[1.08] text-ink">{c.title.replace(/ - /g, " · ")}</h1>
         <p className="mt-3 text-[14px] text-muted">{facts.join("  ·  ")}</p>

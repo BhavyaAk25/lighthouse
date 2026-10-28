@@ -1,6 +1,6 @@
 import { CircleDollarSign, Gavel, Scale, ShieldAlert, ShieldCheck, TrendingUp, Truck } from "lucide-react";
 import type { ReactNode } from "react";
-import { cn, titleCase } from "@/lib/format";
+import { cn } from "@/lib/format";
 import type { AgentType, CaseStatus, Provenance, Recommendation, RiskLevel } from "@/lib/types";
 import { Badge } from "./ui";
 
@@ -45,13 +45,14 @@ export function RecBadge({ rec, short, className }: { rec: Recommendation; short
   );
 }
 
+/** Risk is mentioned only when it matters (high or critical), as a quiet text label rather than another pill. */
 export function RiskBadge({ risk }: { risk: RiskLevel }) {
-  const tone = risk === "LOW" ? "ok" : risk === "MEDIUM" ? "warn" : "bad";
+  if (risk !== "HIGH" && risk !== "CRITICAL") return null;
   return (
-    <Badge tone={tone} className={cn(risk === "CRITICAL" && "bg-bad text-white ring-bad")}>
-      {risk === "CRITICAL" ? <ShieldAlert className="size-3" /> : null}
-      {titleCase(risk)} risk
-    </Badge>
+    <span className={cn("inline-flex items-center gap-1 text-[12.5px]", risk === "CRITICAL" ? "text-bad" : "text-warn")}>
+      <ShieldAlert className="size-3.5" strokeWidth={1.8} />
+      {risk === "CRITICAL" ? "Critical risk" : "High risk"}
+    </span>
   );
 }
 
@@ -124,22 +125,4 @@ export function laneLabel(l: { dept: AgentType; state: string; signoff?: { posit
     return l.signoff.position === "PROCEED" ? "Approved" : "Approved with conditions";
   }
   return LANE_META[l.state]?.label ?? l.state;
-}
-
-/** Four small dots, one per department (Sales, Finance, Operations, Legal). */
-export function LaneDots({ lanes, highlight, className }: { lanes: { dept: AgentType; state: string; lead?: string }[]; highlight?: AgentType; className?: string }) {
-  return (
-    <span className={cn("inline-flex items-center gap-1.5", className)} aria-label="Department sign-off">
-      {lanes.map((l) => (
-        <span
-          key={l.dept}
-          title={`${AGENT_META[l.dept].name}${l.lead ? ` · ${l.lead}` : ""} · ${LANE_META[l.state]?.label ?? l.state}`}
-          className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10.5px] tracking-wide", highlight === l.dept ? "bg-brass-soft text-brass-dark" : "text-faint")}
-        >
-          <span className={cn("block size-2 rounded-full", LANE_META[l.state]?.dot)} />
-          {AGENT_META[l.dept].name[0]}
-        </span>
-      ))}
-    </span>
-  );
 }

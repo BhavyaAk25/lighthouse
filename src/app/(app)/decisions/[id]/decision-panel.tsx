@@ -1,19 +1,39 @@
 "use client";
 
 import { CheckCircle2, Loader2, Lock, RotateCcw, ShieldAlert, ThumbsDown, ThumbsUp, XCircle } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { recordDecision, recordSignoff } from "@/app/actions";
-import { AGENT_META, AgentAvatar, LANE_META, laneLabel, REC_META } from "@/components/domain";
+import { AGENT_META, AgentAvatar, LANE_META, laneLabel } from "@/components/domain";
 import { Badge, Button, Card } from "@/components/ui";
-import { approvalLock } from "@/lib/governance";
+import { approvalLock, decisionCheck } from "@/lib/governance";
 import { cn, relTime } from "@/lib/format";
 import type { Persona } from "@/lib/personas";
 import { laneSummary, REC_WORD, type Lane } from "@/lib/signoff";
 import type { AgentType, CaseStatus, Recommendation } from "@/lib/types";
 import type { PacketView } from "@/lib/views";
 import { NextUp, type NextItem } from "@/components/next-up";
+
+/** Optional reason starters: tap one, then edit it. Saves typing on stage; the reason stays the person's own. */
+function Starters({ items, onPick }: { items: string[]; onPick: (t: string) => void }) {
+  if (!items.length) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Reason starters">
+      {items.map((t) => (
+        <button
+          key={t}
+          type="button"
+          onClick={() => onPick(t)}
+          className="rounded-full border border-line bg-white px-2.5 py-1 text-left text-[12.5px] text-ink-2 transition hover:border-brass hover:text-ink"
+        >
+          {t}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 const textareaCls =
   "w-full rounded-xl border border-line bg-white px-3 py-2.5 text-[13.5px] outline-none transition placeholder:text-faint focus:border-brand-400 focus:shadow-glow";
@@ -45,7 +65,7 @@ export function DecisionPanel({
     <div className="space-y-4">
       {packet.final_decision && <FinalDecision packet={packet} />}
       {persona.role === "DECISION_OWNER" && (packet.final_decision || status === "REVISION_REQUESTED") && next !== undefined && <NextUp next={next} />}
-      <SignoffSummary lanes={lanes} />
+      <SignoffSummary lanes={lanes} compact />
       {persona.role === "DECISION_OWNER" && !packet.final_decision && status !== "REVISION_REQUESTED" && <ExecutivePanel decisionId={decisionId} packet={packet} lanes={lanes} />}
       {persona.role === "ADMIN" && (
         <Card className="p-5">
@@ -63,14 +83,14 @@ export function DecisionPanel({
 }
 
 /** One row per department: who owns it and where their sign-off stands. */
-export function SignoffSummary({ lanes, you }: { lanes: Lane[]; you?: AgentType }) {
+export function SignoffSummary({ lanes, you, compact }: { lanes: Lane[]; you?: AgentType; compact?: boolean }) {
   const sum = laneSummary(lanes);
   if (!sum.analyzed) return null;
   return (
     <Card className="p-5">
       <div className="flex items-baseline justify-between">
         <h3 className="text-[14px] font-semibold">Department sign-off</h3>
-        <span className="tnum text-[12.5px] text-muted">{sum.cleared} of 4 cleared</span>
+        <span className="tnum text-[12.5px] text-muted">{sum.cleared} of 4 done</span>
       </div>
       <div className="mt-3 space-y-2">
         {lanes.map((l) => {
@@ -96,7 +116,7 @@ export function SignoffSummary({ lanes, you }: { lanes: Lane[]; you?: AgentType 
                   AI said {REC_WORD[s.ai_recommendation]} → {l.state === "BLOCKED" ? (l.dept === "LEGAL" ? "rejected" : "blocked") : REC_WORD[s.position]}
                 </div>
               )}
-              {s?.condition_text && <p className="mt-1 line-clamp-2 pl-[34px] text-[12px] text-muted">“{s.condition_text}”</p>}
+              {s?.condition_text && !compact && <p className="mt-1 line-clamp-2 pl-[34px] text-[12.5px] text-muted">“{s.condition_text}”</p>}
               {l.state === "PROHIBITED" && <p className="mt-1 pl-[34px] text-[12px] text-bad">A legal rule prohibits this case.</p>}
               {(l.state === "PENDING" || l.state === "OVERDUE") && (
                 <p className="mt-1 pl-[34px] text-[12px] text-muted">
@@ -148,11 +168,14 @@ function ExecutivePanel({ decisionId, packet, lanes }: { decisionId: string; pac
   const overruling = sum.blocked.filter((l) => l.dept !== "LEGAL");
   const bypassing = sum.pending.filter((l) => l.escalated);
   const highRisk = packet.risk_level === "HIGH" || packet.risk_level === "CRITICAL";
+  const clean = !lock && !overruling.length && !bypassing.length && sum.pending.length === 0;
   const needReason = highRisk || !supportive || overruling.length > 0 || bypassing.length > 0;
 
-  const act = (d: "APPROVED" | "REJECTED" | "REVISION_REQUESTED") =>
+  const [confirm, setConfirm] = useState<"APPROVED" | "REJECTED" | null>(null);
+  const record = (d: "APPROVED" | "REJECTED" | "REVISION_REQUESTED") =>
     start(async () => {
       const r = await recordDecision(decisionId, d, rationale);
+      setConfirm(null);
       if (!r.ok) toast.error(r.error);
       else {
         toast.success(r.message ?? "Recorded");
@@ -160,12 +183,29 @@ function ExecutivePanel({ decisionId, packet, lanes }: { decisionId: string; pac
         router.refresh();
       }
     });
+  // approve and reject are final, so check the rules here first and then ask once before sealing
+  const act = (d: "APPROVED" | "REJECTED" | "REVISION_REQUESTED") => {
+    if (d === "REVISION_REQUESTED") return record(d);
+    const c = decisionCheck({ synthesized_recommendation: rec, risk_level: packet.risk_level }, lanes, d, rationale);
+    if (!c.ok) return toast.error(c.error);
+    setConfirm(d);
+  };
+  const starters = [
+    ...(overruling.length ? [`The strategic value outweighs ${AGENT_META[overruling[0].dept].name}’s concern; I accept that risk.`] : []),
+    ...(bypassing.length ? ["Deciding without the overdue sign-off; the evidence gap is acceptable for this window."] : []),
+    // only offer what is true for this case: "all cleared" never appears next to a block or a lock
+    ...(clean && supportive ? ["All four departments cleared and the conditions are accepted."] : []),
+    ...(lock
+      ? [lanes.find((l) => l.dept === "LEGAL")?.state === "PROHIBITED" ? "A legal rule prohibits this promotion, so it cannot run as proposed." : "Legal has to clear this first; send it back once that is resolved."]
+      : []),
+    ...(!supportive && !overruling.length && !lock ? ["I agree with Lighthouse: hold this until the open issues are fixed."] : []),
+    "Reduce the discount and resubmit with the supplier funding confirmed.",
+  ].slice(0, 3);
 
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-[15px] font-semibold">Your decision</h3>
-        <span className="text-[12px] text-muted">Recommended: {REC_META[rec].short}</span>
       </div>
       {lock && (
         <div className="mt-3 flex gap-2.5 rounded-xl border border-[#E9DCC0] bg-brass-soft px-3 py-2.5 text-[12.5px] text-[#7A5C2A]">
@@ -183,8 +223,9 @@ function ExecutivePanel({ decisionId, packet, lanes }: { decisionId: string; pac
           {bypassing.map((l) => `${AGENT_META[l.dept].name} (${l.lead.name})`).join(", ")} missed the sign-off deadline. You can decide without them, with a reason.
         </p>
       )}
-      <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} className={cn(textareaCls, "mt-3")} placeholder="Your reason" />
-      {needReason && <p className="mt-1.5 text-[11.5px] text-muted">A reason of 20+ characters is required.</p>}
+      <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} className={cn(textareaCls, "mt-3")} placeholder="Your reason" aria-label="Your reason" />
+      {needReason && <p className="mt-1.5 text-[12.5px] text-muted">A reason of 20+ characters is required.</p>}
+      <Starters items={starters} onPick={setRationale} />
       <div className="mt-3 grid grid-cols-3 gap-2">
         <Button variant="success" onClick={() => act("APPROVED")} disabled={pending || !!lock} title={lock ?? undefined}>
           {pending ? <Loader2 className="size-4 animate-spin" /> : lock ? <Lock className="size-4" /> : <ThumbsUp className="size-4" />} Approve
@@ -196,6 +237,26 @@ function ExecutivePanel({ decisionId, packet, lanes }: { decisionId: string; pac
           <RotateCcw className="size-4" /> Send back
         </Button>
       </div>
+      <Dialog.Root open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-[2px]" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[92vw] max-w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-pop">
+            <Dialog.Title className="font-display text-[22px] leading-tight text-ink">
+              {confirm === "APPROVED" ? "Approve" : "Reject"} {decisionId}?
+            </Dialog.Title>
+            <Dialog.Description className="mt-2 text-[14px] text-muted">This is sealed in the audit trail and can’t be changed afterwards.</Dialog.Description>
+            {rationale.trim() && <p className="mt-3 rounded-[10px] bg-canvas px-3.5 py-2.5 text-[14px] text-ink-2">“{rationale.trim()}”</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              <Dialog.Close asChild>
+                <Button variant="secondary">Cancel</Button>
+              </Dialog.Close>
+              <Button variant={confirm === "APPROVED" ? "success" : "primary"} disabled={pending} onClick={() => confirm && record(confirm)}>
+                {pending ? <Loader2 className="size-4 animate-spin" /> : confirm === "APPROVED" ? "Approve and seal" : "Reject and seal"}
+              </Button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </Card>
   );
 }
@@ -260,7 +321,7 @@ export function SignoffPanel({ decisionId, lane }: { decisionId: string; lane: L
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-[13.5px] text-ink">
                 {o.l}
-                {!legal && (o.v === "BLOCK" ? ai === "REJECT" : o.v === ai) && <span className="ml-2 text-[11px] tracking-[0.1em] text-faint uppercase">AI</span>}
+                {!legal && (o.v === "BLOCK" ? ai === "REJECT" : o.v === ai) && <span className="ml-2 rounded-full bg-canvas px-1.5 text-[11.5px] text-muted">AI’s answer</span>}
               </span>
               {o.d && <span className="text-[11.5px] text-muted">{o.d}</span>}
             </div>
@@ -277,8 +338,22 @@ export function SignoffPanel({ decisionId, lane }: { decisionId: string; lane: L
         className={cn(textareaCls, "mt-3")}
         placeholder={needNote ? (legal ? "Legal note" : pos === "BLOCK" ? "Why it can’t go ahead (the executive sees this)" : "Why you are changing the agent’s answer") : "Note (optional)"}
       />
+      <Starters
+        items={
+          legal
+            ? pos === "BLOCK"
+              ? ["The claim cannot be substantiated as written."]
+              : ["Claim wording revised; substantiation is on file.", "Required disclosures added to all creative."]
+            : same && pos !== "BLOCK"
+              ? ["Checked against our plan; the agent is right."]
+              : pos === "BLOCK"
+                ? ["The loss is too large to support from our side."]
+                : ["Supplier confirmed extra funding after the run.", "Mitigation in place: staggered launch and capped quantities."]
+        }
+        onPick={setNote}
+      />
       {needNote && !legal && (
-        <p className="mt-1.5 text-[11.5px] text-muted">
+        <p className="mt-1.5 text-[12.5px] text-muted">
           {pos === "BLOCK" && same
             ? "Blocking needs a reason (20+ characters). The executive can overrule it, but only with a reason of their own."
             : "Changing the AI’s answer needs a reason (20+ characters). It lowers Lighthouse’s confidence and goes on the record."}

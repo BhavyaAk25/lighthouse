@@ -20,7 +20,7 @@ export function NextUp({ next }: { next: NextItem | null }) {
   return (
     <Link href={`/decisions/${next.id}#act`} className="group card flex items-center gap-3 border-brass px-4 py-3 hover:shadow-pop">
       <div className="min-w-0 flex-1">
-        <div className="text-[10.5px] tracking-[0.14em] text-brass-dark uppercase">Next for you</div>
+        <div className="text-[12.5px] text-brass-dark">Next for you</div>
         <div className="mt-0.5 truncate text-[13.5px] text-ink">
           <span className="font-mono text-[11.5px] text-faint">{next.id}</span> {next.title}
         </div>

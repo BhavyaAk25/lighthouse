@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { FileDown, History, Loader2, PencilLine, Play, RefreshCw, Sparkles, X } from "lucide-react";
+import { ChevronDown, FileDown, History, Loader2, PencilLine, Play, RefreshCw, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -17,9 +17,13 @@ import type { PacketView, RunView } from "@/lib/views";
 import { AgentCard } from "./agent-card";
 import { DecisionPanel } from "./decision-panel";
 import { EvidenceDrawer } from "./evidence-drawer";
+import { DecisionBrief } from "./brief";
 import { Packet, type PacketData } from "./packet";
 import type { NextItem } from "@/components/next-up";
 import { useRun } from "./use-run";
+
+const PROVIDER: Record<string, string> = { gemini: "live AI (Gemini)", groq: "live AI (Groq)", replay: "replayed AI answers", "rules-engine": "rules engine" };
+const providerWords = (s: string | null) => [...new Set((s ?? "").split(/,\s*/).filter(Boolean).map((x) => PROVIDER[x] ?? x))].join(" and ");
 
 interface Props {
   persona: Persona;
@@ -70,6 +74,7 @@ export function Workspace(props: Props) {
   const run = useRun(decisionId);
   const { running } = run;
   const [drawer, setDrawer] = useState<AgentType | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   // show streamed state until the server has persisted this run, then fall back to server data
   const live = running || (!!run.runId && props.packet?.run_id !== run.runId);
@@ -152,7 +157,7 @@ export function Workspace(props: Props) {
                   ? "Replaying saved AI answers"
                   : "Gathering evidence, then reasoning"
                 : hasRun && props.runs[0]
-                  ? `${relTime(props.runs[0].started_at)} · ${(props.runs[0].provider_summary ?? "").replace("replay", "replayed AI answers").replace("rules-engine", "rules engine")}${props.runs[0].duration_ms ? ` · ${(props.runs[0].duration_ms / 1000).toFixed(1)}s` : ""}`
+                  ? `${relTime(props.runs[0].started_at)} · ${providerWords(props.runs[0].provider_summary)}${props.runs[0].duration_ms ? ` · ${(props.runs[0].duration_ms / 1000).toFixed(1)}s` : ""}`
                   : "Submitting runs Sales, Finance, Operations and Legal in parallel. Each lead only signs off where their agent raises a concern."}
             </div>
           </div>
@@ -188,39 +193,74 @@ export function Workspace(props: Props) {
         </div>
       )}
 
-      {/* agents, each owned by a department lead */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {AGENTS.map((a, i) => (
-          <AgentCard
-            key={a}
-            index={i}
-            agent={a}
-            output={outputs[a]}
-            running={running && (!run.only || run.only === a)}
-            steps={run.steps[a] ?? []}
-            note={run.notes[a]}
-            onEvidence={() => setDrawer(a)}
-            lane={live ? undefined : props.lanes.find((l) => l.dept === a)}
-          />
-        ))}
-      </div>
-
-      {/* packet + decision */}
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="min-w-0 space-y-6">
-          {packetData && hasRun ? (
-            <Packet p={packetData} synthesizing={running && !!run.rec && !run.synth} />
-          ) : (
-            <div className="rounded-[12px] border border-dashed border-line px-6 py-12 text-center">
-              <p className="font-display text-[19px] text-ink">Lighthouse’s recommendation will appear here.</p>
+      {(() => {
+        const agentGrid = (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {AGENTS.map((a, i) => (
+              <AgentCard
+                key={a}
+                index={i}
+                agent={a}
+                output={outputs[a]}
+                running={running && (!run.only || run.only === a)}
+                steps={run.steps[a] ?? []}
+                note={run.notes[a]}
+                onEvidence={() => setDrawer(a)}
+              />
+            ))}
+          </div>
+        );
+        const settled = hasRun && !live && !!packetData;
+        if (!settled)
+          // while the agents run (or before they have), the four agents are the story
+          return (
+            <>
+              {agentGrid}
+              <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+                <div className="min-w-0 space-y-6">
+                  {packetData && hasRun ? (
+                    <Packet p={packetData} synthesizing={running && !!run.rec && !run.synth} />
+                  ) : (
+                    <div className="rounded-[12px] border border-dashed border-line px-6 py-12 text-center">
+                      <p className="font-display text-[19px] text-ink">Lighthouse’s recommendation will appear here.</p>
+                    </div>
+                  )}
+                </div>
+                <div id={hasRun ? "act" : undefined} className="scroll-mt-24 space-y-4">
+                  <DecisionPanel persona={persona} decisionId={decisionId} status={status} packet={null} lanes={props.lanes} />
+                </div>
+              </div>
+            </>
+          );
+        // once analyzed: the brief and the decision; the detail is one click away
+        return (
+          <>
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+              <div className="min-w-0">
+                <DecisionBrief p={packetData!} lanes={props.lanes} />
+                <button
+                  onClick={() => setShowAll((v) => !v)}
+                  aria-expanded={showAll}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-4 py-2 text-[13.5px] text-ink-2 transition hover:border-[#CFC8BA] hover:text-ink"
+                >
+                  {showAll ? "Hide the full analysis" : "See the full analysis: four agents, evidence and checks"}
+                  <ChevronDown className={cn("size-4 transition-transform", showAll && "rotate-180")} />
+                </button>
+              </div>
+              <div id="act" className="scroll-mt-24 space-y-4">
+                <DecisionPanel persona={persona} decisionId={decisionId} status={status} packet={props.packet} lanes={props.lanes} next={props.next} />
+              </div>
             </div>
-          )}
-          {props.timeline}
-        </div>
-        <div id={hasRun ? "act" : undefined} className="scroll-mt-24 space-y-4">
-          <DecisionPanel persona={persona} decisionId={decisionId} status={status} packet={running || !hasRun ? null : props.packet} lanes={props.lanes} next={props.next} />
-        </div>
-      </div>
+            {showAll && (
+              <div className="mt-6 space-y-6">
+                {agentGrid}
+                <Packet p={packetData!} />
+                {props.timeline}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       <EvidenceDrawer agent={drawer} open={!!drawer} onClose={() => setDrawer(null)} evidence={evidence} output={drawer ? outputs[drawer] : undefined} decisionId={decisionId} />
     </>
